@@ -1,6 +1,8 @@
-
 This application is able to fingherprint both statically and dynamically an application.
 
-This fingerprint can then be used to understand if the given application can run on another systems.
+This fingerprint can then be used to understand if the given application can run on another system.
 
+Some documentation:
+ - http://rpm.org/wiki/PackagerDocs/Dependencies
+ - 
 
