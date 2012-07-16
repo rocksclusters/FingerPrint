@@ -8,7 +8,9 @@ import StringIO
 
 from FingerPrint.swirl import *
 
+
 def main():
+
     s = Swirl("ls", datetime.now())
     dset = DependencySet()
     s.setDependencySet(dset)

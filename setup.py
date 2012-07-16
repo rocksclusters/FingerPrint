@@ -2,25 +2,6 @@
 
 from distutils.core import setup
 
-
-setup(
-    name = 'FingerPrint',
-    version = '1.00',
-    description = 'This is my Python module.',
-
-    author = 'Phil Papadopoulos',
-    author_email =  'philip.papadopoulos@gmail.com',
-    maintainer = 'Luca Clementi',
-    maintainer_email =  'luca.clementi@gmail.com',
-    
-    packages = ['FingerPrint'],
-    package_dir = {'FingerPrint': 'lib'},
-    
-    
-    scripts=['scripts/fingerprint'],
-)
-
-
 #
 # courtesy of Darren
 # http://da44en.wordpress.com/2002/11/22/using-distutils/
@@ -54,4 +35,29 @@ class TestCommand(Command):
         tests = TestLoader().loadTestsFromNames(testfiles)
         t = TextTestRunner(verbosity = 1)
         t.run(tests)
+
+
+# 
+# main configuration of distutils
+# 
+setup(
+    name = 'FingerPrint',
+    version = '1.00',
+    description = 'This is my Python module.',
+
+    author = 'Phil Papadopoulos',
+    author_email =  'philip.papadopoulos@gmail.com',
+    maintainer = 'Luca Clementi',
+    maintainer_email =  'luca.clementi@gmail.com',
+    #main package, most of the code is inside here
+    packages = ['FingerPrint'],
+    package_dir = {'FingerPrint': 'lib'},
+    #needs this for detecting file type
+    py_modules=['magic'],
+    #the command line called by users    
+    scripts=['scripts/fingerprint'],
+    #additional command to build this distribution
+    cmdclass = { 'test': TestCommand,  }
+)
+
 

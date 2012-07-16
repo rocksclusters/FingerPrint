@@ -1,7 +1,10 @@
 #!/bin/python
 #
 # LC
-#
+# 
+# hold the in memory representation of a swirl
+# list of binaries with their associated dependecy
+# 
 
 from datetime import datetime
 import StringIO
@@ -12,22 +15,66 @@ class Swirl:
     def __init__(self, name, creationDate):
         self.name = name
         self.creationDate = creationDate
+        self.fileList = []
 
     def setDependencySet(self, dependencySet):
         self.dependencySet = dependencySet
 
     def save(self, saver):
         """this method is used to serialize this class hierarcy
+        TODO not used yet
         """
         saver.save(self)
+
+    def addFile(self, swirlFile):
+        """a a swirlFile"""
+        self.fileList.append(swirlFile)
+        
 
     def getDate(self):
         return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")        
 
     def __str__( self ):
+        #header
         string = self.name + " " + self.getDate() + "\n"
+        #file list
+        string += " -- File List -- \n"
+        for i in self.fileList:
+            string += str(i) + "\n"
+        #dependency set
+        string += " -- Dependency Set -- \n"
         string += str(self.dependencySet)
         return string
+
+
+class SwirlFile(Swirl):
+    """
+    hold a file which is supported by this swirl
+    """
+    def __init__(self, path):
+        self.path=path
+        self.arch=None
+        self.type=None
+        self.dyn=True
+
+    def set64bit(self):
+        self.arch="x86_64"
+
+    def __str__(self):
+        string = ""
+        if self.type == "Data":
+            string = "data "
+        else:
+            string = "bin  "
+        if self.arch == "x86_64":
+            string += "x86_64 "
+        elif self.arch == "i386":
+            string += "i386   "
+        else:
+            string += "       "
+        string += self.path
+        return string
+
         
 class DependencySet(Swirl):
     """does it make sense to have recursive dependency set?
@@ -64,6 +111,7 @@ class Dependency(Swirl):
 class XmlSerializer:
     """this serilizes the swirl into xml
     we can have multiple classes for serializing in other format
+    TODO I don't really like this class structure yet...
     TODO this should be moved in another .py file
     """
 

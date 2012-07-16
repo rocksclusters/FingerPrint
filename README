@@ -2,7 +2,24 @@ This application is able to fingherprint both statically and dynamically an appl
 
 This fingerprint can then be used to understand if the given application can run on another system.
 
+
+INSTALL
+To install from source run
+
+python setup.py install
+
+This will install FingerPrint in your python
+
+To run some unittest run
+
+python setup.py test
+
+
+
 Some documentation:
  - http://rpm.org/wiki/PackagerDocs/Dependencies
 
+
+Included python magic 
+(all credits to https://github.com/ahupp/python-magic)
 
