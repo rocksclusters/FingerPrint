@@ -69,7 +69,12 @@ class XmlSerializer:
             else:
                 self.save_depset(i)
         self.fd.write("</depset>\n")
-        
+    
+    def read(self):
+        """this should implement the read from xml
+        """
+        pass
+            
 
 
 def main():
@@ -87,6 +92,9 @@ def main():
     xml = XmlSerializer(output)
     xml.save(s)
     print "XML:\n", output.getvalue()
+    output.seek(0)
+    newSwirl = xml.read()
+    
     
     
     
