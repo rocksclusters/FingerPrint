@@ -51,7 +51,7 @@ setup(
     maintainer_email =  'luca.clementi@gmail.com',
     #main package, most of the code is inside here
     packages = ['FingerPrint'],
-    package_dir = {'FingerPrint': 'lib'},
+    package_dir = {'FingerPrint': 'FingerPrint'},
     #needs this for detecting file type
     py_modules=['magic'],
     #the command line called by users    

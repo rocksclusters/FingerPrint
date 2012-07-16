@@ -8,6 +8,8 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def setUp(self):
         """setup for your unittest"""
+        import sys
+        sys.path.append("../")
         pass
 
     def test_shuffle(self):
