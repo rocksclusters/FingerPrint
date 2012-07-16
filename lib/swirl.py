@@ -24,9 +24,9 @@ class Swirl:
     def getDate(self):
         return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")        
 
-    def basicPrint(self):
+    def __str__( self ):
         string = self.name + " " + self.getDate() + "\n"
-        string += self.dependencySet.basicPrint()
+        string += str(self.dependencySet)
         return string
         
 class DependencySet(Swirl):
@@ -38,17 +38,31 @@ class DependencySet(Swirl):
         self.depSet = []
 
     def addDependency(self, dependency):
-        self.depSet.append(dependency)
+        self.depSet.append(Dependency(dependency))
     
-    def basicPrint(self):
+    def __str__( self ):
         string=""
         for i in self.depSet:
-            string += i + "\n"  
+            string += str(i) + "\n"  
         return string
+
+
+class Dependency(Swirl):
+    """ This class represent a single dependency
+    """
+
+    def __init__(self, name):
+        self.depname = name
+
+    def __str__( self ):
+        return self.depname
+
+
 
 class XmlSerializer:
     """this serilizes the swirl into xml
     we can have multiple classes for serializing in other format
+    TODO this should be moved in another .py file
     """
 
     def __init__(self, fd):
@@ -64,8 +78,8 @@ class XmlSerializer:
     def save_depset(self, dependencySet):
         self.fd.write("<depset>\n")
         for i in dependencySet.depSet:
-            if type(i) is str:
-                self.fd.write("<dep>" + i + "</dep>\n")
+            if isinstance(i, Dependency):
+                self.fd.write("<dep>" + i.depname + "</dep>\n")
             else:
                 self.save_depset(i)
         self.fd.write("</depset>\n")

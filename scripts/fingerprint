@@ -16,7 +16,7 @@ def main():
     dset.addDependency("libcurl 3")
     dset.addDependency("libcrypt 3.2")
     dset.addDependency("bash")
-    print s.basicPrint()
+    print s
     
     #save xml
     output = StringIO.StringIO()
