@@ -53,6 +53,8 @@ class Dependency(Swirl):
 
     def __init__(self, name):
         self.depname = name
+        self.filehash = None
+
 
     def __str__( self ):
         return self.depname
