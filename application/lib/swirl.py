@@ -77,28 +77,3 @@ class XmlSerializer:
             
 
 
-def main():
-    s = Swirl("ls", datetime.now())
-    dset = DependencySet()
-    s.setDependencySet(dset)
-    dset.addDependency("glic 3.2")
-    dset.addDependency("libcurl 3")
-    dset.addDependency("libcrypt 3.2")
-    dset.addDependency("bash")
-    print s.basicPrint()
-    
-    #save xml
-    output = StringIO.StringIO()
-    xml = XmlSerializer(output)
-    xml.save(s)
-    print "XML:\n", output.getvalue()
-    output.seek(0)
-    newSwirl = xml.read()
-    
-    
-    
-    
-
-if __name__ == "__main__":
-    main()
-
