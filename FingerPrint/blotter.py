@@ -7,8 +7,44 @@
 
 import os
 import magic
+from subprocess import PIPE, Popen
+import StringIO
+import re
 
 from swirl import *
+
+
+RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
+
+
+
+def getDependencies_ELF(swirlFile):
+    """find dinamic libryries for elf files"""
+    d = []
+    inputBuffer = StringIO.StringIO(swirlFile.path)
+    outputBuffer = StringIO.StringIO()
+    p = Popen([RPM_FIND_DEPS], stdin=PIPE, stdout=PIPE)
+    grep_stdout = p.communicate(input=swirlFile.path)[0]
+    for line in grep_stdout.split('\n'):
+        #i need to take the parenthesis out of the game
+        tempList = re.split('\(|\)',line)
+        if len(tempList) > 2:
+            newDep = Dependency(tempList[0])
+            #there is also tempList[1] but I don't know what to do with it yet
+            if tempList[3].find("64") >= 0 :
+                newDep.set64Bits()
+            d.append(newDep)
+    return d
+
+
+def getDependencies(swirlFile):
+    """pass a swirlFile return a dependencySet """
+    functionName = "getDependencies_" + swirlFile.type
+    #TODO add checking
+    import sys
+    thismodule = sys.modules[__name__]
+    function = getattr(thismodule, functionName)
+    return function(swirlFile)
 
 
 class Blotter:
@@ -21,16 +57,12 @@ class Blotter:
         for i in fileList:
             self.loadFileFromSystem(i)
         #not try to get their dependency
-        dset = DependencySet()
-        self.swirl.setDependencySet(dset)
-        dset.addDependency("glic 3.2")
-        dset.addDependency("libcurl 3")
-        dset.addDependency("libcrypt 3.2")
-        dset.addDependency("bash")
+        self.findDependencies()
+
 
     def loadFileFromSystem(self, fileName):
-        """helper function to automatically load from the current system this 
-        file properties (it should be called only by bloter)"""
+        """helper function given a filename it load that filename into the 
+        current swirl with its properties"""
         swirlFile = SwirlFile(fileName)
         m=magic.Magic()
         typeStr=m.from_file(fileName)
@@ -48,9 +80,21 @@ class Blotter:
             #everything else is Data
             swirlFile.type="Data"
         self.swirl.addFile(swirlFile)
+
        
     def getSwirl(self):
-        """
-        """
+        """return the current swirl """
         return self.swirl 
+
+
+    def findDependencies(self):
+        """file must be already loaded into swirl """
+        for i in self.swirl.getBinaryFiles():
+            depList = getDependencies(i)
+            self.swirl.addDependencies(depList)
+
+
+
+
+
 

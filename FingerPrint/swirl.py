@@ -16,9 +16,14 @@ class Swirl:
         self.name = name
         self.creationDate = creationDate
         self.fileList = []
+        self.dependencySet = []
 
-    def setDependencySet(self, dependencySet):
-        self.dependencySet = dependencySet
+    def addDependencies(self, dependencySet):
+        #TODO remove duplicate
+        if type(dependencySet) is list:
+            self.dependencySet += dependencySet
+        else:
+            self.dependencySet.append( dependencySet )
 
     def save(self, saver):
         """this method is used to serialize this class hierarcy
@@ -27,16 +32,26 @@ class Swirl:
         saver.save(self)
 
     def addFile(self, swirlFile):
-        """a a swirlFile"""
+        """add a file to the list of the tracked files"""
         self.fileList.append(swirlFile)
-        
 
-    def getDate(self):
+       
+    def getBinaryFiles(self): 
+        """Return a list of binary file with dinamic libraries"""
+        retList=[]
+        for i in self.fileList:
+            if i.isBinary():
+                retList.append(i)
+        return retList
+
+
+    def getDateString(self):
         return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")        
+
 
     def __str__( self ):
         #header
-        string = self.name + " " + self.getDate() + "\n"
+        string = self.name + " " + self.getDateString() + "\n"
         #file list
         string += " -- File List -- \n"
         for i in self.fileList:
@@ -58,7 +73,14 @@ class SwirlFile(Swirl):
         self.dyn=True
 
     def set64bit(self):
+        #TODO use integer to save memory
         self.arch="x86_64"
+
+    #TODO add all the method set32bit setBinary setData
+
+    def isBinary(self):
+        return self.type == 'ELF' and self.dyn
+
 
     def __str__(self):
         string = ""
@@ -79,6 +101,7 @@ class SwirlFile(Swirl):
 class DependencySet(Swirl):
     """does it make sense to have recursive dependency set?
     or should they just be a flat list?
+    TODO not used at the moment
     """ 
 
     def __init__(self):
@@ -101,10 +124,17 @@ class Dependency(Swirl):
     def __init__(self, name):
         self.depname = name
         self.filehash = None
+        self.arch = None
 
+    def set64Bits(self):
+        self.arch='x86_64'
 
     def __str__( self ):
-        return self.depname
+        return self.arch + "  " + self.depname
+
+    def __repr__(self):
+        #to print list properly i need this (python oddities)
+        return "\n" + self.__str__()
 
 
 
