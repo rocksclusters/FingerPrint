@@ -44,14 +44,6 @@ class Swirl:
         else:
             return False
 
-
-    def addDependencies(self, dependency):
-        #TODO should dependency be part of swirl file?
-        if type(dependency) is list:
-            self.dependency += dependency
-        else:
-            self.dependency.append( dependency )
-
     def save(self, saver):
         """this method is used to serialize this class hierarcy
         TODO not used yet
@@ -100,6 +92,8 @@ class SwirlFile(Swirl):
         self.type=None
         #do we need this?
         self.dyn=True
+        self.dependencies=[]
+        self.provides=[]
 
     def isBinary(self):
         return self.type.startswith( 'ELF' ) 
@@ -112,6 +106,13 @@ class SwirlFile(Swirl):
         """ """
         self.type = 'ELF_exe'
 
+    def addDependency(self, dep):
+        """ dep must be a Dependency object"""
+        self.dependencies.append(dep)
+
+    def addProvide(self, provide):
+        """ provide is a Provide object"""
+        self.provides.append(provide)
 
     def __str__(self):
         string = ""
@@ -119,13 +120,11 @@ class SwirlFile(Swirl):
             string = "data     "
         else:
             string = self.type + "  "
-        if self.arch == "x86_64":
-            string += "x86_64 "
-        elif self.arch == "i386":
-            string += "i386   "
-        else:
-            string += "       "
-        string += self.path
+        string += self.path + "\n"
+        if len(self.dependencies) > 0:
+            string += "Deps: " + str(self.dependencies) + "\n"
+        if len(self.provides) > 0:
+            string += "Prov: " + str(self.provides) + "\n"
         return string
 
         
@@ -161,13 +160,28 @@ class Dependency(Swirl):
         self.symbolVersion = None
 
     def __str__( self ):
-        string = self.arch + "  " + self.depname
-        if self.symbolVersion:
-            string += " " + self.symbolVersion
+        string = self.depname
         return string
 
     def __repr__(self):
         #to print list properly i need this (python oddities)
-        return "\n" + self.__str__()
+        return "\n    " + self.__str__() 
+
+
+
+class Provide(Swirl):
+    """ This class represent a single dependency
+    """
+
+    def __init__(self, name):
+        self.provname = name
+
+    def __str__( self ):
+        string = self.provname
+        return string
+
+    def __repr__(self):
+        #to print list properly i need this (python oddities)
+        return "\n    " + self.__str__()
 
 

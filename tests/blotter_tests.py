@@ -14,7 +14,9 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_shuffle(self):
         # test loading file in blotter
-        files = ["/bin/ls", "/usr/bin/find", "/etc/passwd", "/lib/libcryptsetup.so.4.0.0"]
+        files = ["/bin/ls", "/usr/bin/find", "/etc/passwd", 
+            "/lib/libcryptsetup.so.4.0.0", "/lib/x86_64-linux-gnu/libm.so.6",
+            "/lib/x86_64-linux-gnu/libm-2.15.so"]
         b=Blotter("Test", files)
         print "lib:", b.getSwirl()
         #self.assertEqual(self.seq, range(10))

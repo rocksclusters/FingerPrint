@@ -17,6 +17,7 @@ from swirl import *
 #may in the future we could also use 
 #objdump -p
 RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
+RPM_FIND_PROV="/usr/lib/rpm/find-provides"
 
 
 
@@ -25,40 +26,45 @@ which are the dependencies of the file
 """
 
 def getDependencies_ELF_exe(swirlFile):
-    #same stuff
-    return getDependencies_ELF_sha(swirlFile)
+    #same stuff as ELF_sha
+    getDependencies_ELF_sha(swirlFile)
 
 def getDependencies_ELF_sha(swirlFile):
-    """find dinamic libryries for elf files"""
-    depList = []
-    inputBuffer = StringIO.StringIO(swirlFile.path)
-    outputBuffer = StringIO.StringIO()
+    """find dependencies and provides for for elf files"""
+    #find deps
     p = Popen([RPM_FIND_DEPS], stdin=PIPE, stdout=PIPE)
     grep_stdout = p.communicate(input=swirlFile.path)[0]
     for line in grep_stdout.split('\n'):
-        #i need to take the parenthesis out of the game
-        tempList = re.split('\(|\)',line)
-        if len(tempList) > 2:
-            newDep = Dependency(tempList[0])
-            #there is also tempList[1] but I don't know what to do with it yet
-            if tempList[3].find("64bit") >= 0 :
-                newDep.set64bits()
-            elif tempList[3].find("32bit") >= 0 :
-                newDep.set32bits()
-            if len(tempList[1]) > 0:
-                newDep.symbolVersion = tempList[1]
-            depList.append(newDep)
-    return depList
+        if len(line) > 0:
+            newDep = Dependency(line)
+            swirlFile.addDependency(newDep)
+            #i need to take the parenthesis out of the game
+            tempList = re.split('\(|\)',line)
+            if len(tempList) > 2:
+                #set the 32/64 bits 
+                #probably unecessary
+                if tempList[3].find("64bit") >= 0 :
+                    newDep.set64bits()
+                elif tempList[3].find("32bit") >= 0 :
+                    newDep.set32bits()
+    #find provides
+    p = Popen([RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
+    grep_stdout = p.communicate(input=swirlFile.path)[0]
+    for line in grep_stdout.split('\n'):
+        if len(line) > 0 :
+            newProv = Provide(line)
+            swirlFile.addProvide(newProv)
+    
 
 
-def getDependencies(swirlFile):
+def setDependencies(swirlFile):
     """pass a swirlFile return a dependencySet """
     functionName = "getDependencies_" + swirlFile.type
     #TODO add checking
     import sys
     thismodule = sys.modules[__name__]
     function = getattr(thismodule, functionName)
-    return function(swirlFile)
+    function(swirlFile)
 
 
 class Blotter:
@@ -114,8 +120,7 @@ class Blotter:
     def findDependencies(self):
         """file must be already loaded into swirl """
         for i in self.swirl.getBinaryFiles():
-            depList = getDependencies(i)
-            self.swirl.addDependencies(depList)
+            setDependencies(i)
 
 
 
