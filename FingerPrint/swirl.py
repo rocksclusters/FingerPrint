@@ -18,6 +18,27 @@ class Swirl:
         self.fileList = []
         self.dependencySet = []
 
+    #TODO use integer to save memory
+    #this function are used by SwirlFile and Dependency subclasses
+    def set64bits(self):
+        self.arch="x86_64"
+
+    def set32bits(self):
+        self.arch="i386"
+
+    def is32bits(self):
+        if self.arch == "i386":
+            return True
+        else:
+            return False
+
+    def is64bits(self):
+        if self.arch == "x86_64":
+            return True
+        else:
+            return False
+
+
     def addDependencies(self, dependencySet):
         #TODO remove duplicate
         if type(dependencySet) is list:
@@ -72,12 +93,6 @@ class SwirlFile(Swirl):
         self.type=None
         self.dyn=True
 
-    def set64bit(self):
-        #TODO use integer to save memory
-        self.arch="x86_64"
-
-    #TODO add all the method set32bit setBinary setData
-
     def isBinary(self):
         return self.type == 'ELF' and self.dyn
 
@@ -125,12 +140,15 @@ class Dependency(Swirl):
         self.depname = name
         self.filehash = None
         self.arch = None
-
-    def set64Bits(self):
-        self.arch='x86_64'
+        #http://www.trevorpounds.com/blog/?p=33
+        #http://www.akkadia.org/drepper/symbol-versioning
+        self.symbolVersion = None
 
     def __str__( self ):
-        return self.arch + "  " + self.depname
+        string = self.arch + "  " + self.depname
+        if self.symbolVersion:
+            string += " " + self.symbolVersion
+        return string
 
     def __repr__(self):
         #to print list properly i need this (python oddities)

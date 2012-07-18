@@ -10,15 +10,9 @@ from FingerPrint.swirl import *
 
 
 def main():
-
-    s = Swirl("ls", datetime.now())
-    dset = DependencySet()
-    s.setDependencySet(dset)
-    dset.addDependency("glic 3.2")
-    dset.addDependency("libcurl 3")
-    dset.addDependency("libcrypt 3.2")
-    dset.addDependency("bash")
-    print s
+    #TODO implement a main method here
+    print "TODO"
+    return
     
     #save xml
     output = StringIO.StringIO()

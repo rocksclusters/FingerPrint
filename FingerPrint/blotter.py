@@ -14,6 +14,8 @@ import re
 from swirl import *
 
 
+#may in the future we could also use 
+#objdump -p
 RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
 
 
@@ -31,8 +33,12 @@ def getDependencies_ELF(swirlFile):
         if len(tempList) > 2:
             newDep = Dependency(tempList[0])
             #there is also tempList[1] but I don't know what to do with it yet
-            if tempList[3].find("64") >= 0 :
-                newDep.set64Bits()
+            if tempList[3].find("64bit") >= 0 :
+                newDep.set64bits()
+            elif tempList[3].find("32bit") >= 0 :
+                newDep.set32bits()
+            if len(tempList[1]) > 0:
+                newDep.symbolVersion = tempList[1]
             d.append(newDep)
     return d
 
