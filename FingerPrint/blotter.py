@@ -20,9 +20,17 @@ RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
 
 
 
-def getDependencies_ELF(swirlFile):
+"""The getDependencies functions given a swirl file the have to figure out 
+which are the dependencies of the file
+"""
+
+def getDependencies_ELF_exe(swirlFile):
+    #same stuff
+    getDependencies_ELF_sha(swirlFile)
+
+def getDependencies_ELF_sha(swirlFile):
     """find dinamic libryries for elf files"""
-    d = []
+    depList = []
     inputBuffer = StringIO.StringIO(swirlFile.path)
     outputBuffer = StringIO.StringIO()
     p = Popen([RPM_FIND_DEPS], stdin=PIPE, stdout=PIPE)
@@ -39,8 +47,8 @@ def getDependencies_ELF(swirlFile):
                 newDep.set32bits()
             if len(tempList[1]) > 0:
                 newDep.symbolVersion = tempList[1]
-            d.append(newDep)
-    return d
+            depList.append(newDep)
+    return depList
 
 
 def getDependencies(swirlFile):
@@ -56,8 +64,7 @@ def getDependencies(swirlFile):
 class Blotter:
 
     def __init__(self, name, fileList):
-        """give a file list and a name construct a swirl into memory
-        """
+        """give a file list and a name construct a swirl into memory """
         self.swirl = Swirl(name, datetime.now())
         #load files from system      
         for i in fileList:
@@ -72,18 +79,29 @@ class Blotter:
         swirlFile = SwirlFile(fileName)
         m=magic.Magic()
         typeStr=m.from_file(fileName)
-        if typeStr.startswith('ELF 64-bit LSB executable') and os.access(fileName, os.X_OK):
+        #TODO fix this
+        #for now all the files are dynamic
+        if typeStr.startswith('ELF 64-bit LSB executable'): #and os.access(fileName, os.X_OK):
             #ELF 64 bit
-            swirlFile.arch="x86_64"
-            swirlFile.type="ELF"
+            swirlFile.set64bits()
+            swirlFile.setExecutable()
             swirlFile.dyn=True
-        elif typeStr.startswith('ELF 32-bit LSB executable') and os.access(fileName, os.X_OK):
+        elif typeStr.startswith('ELF 32-bit LSB executable'):
             #ELF 32 bit
-            swirlFile.arch="i386"
-            swirlFile.type="ELF"
+            swirlFile.set32bits()
+            swirlFile.setExecutable()
+            swirlFile.dyn=True
+        elif typeStr.startswith('ELF 64-bit LSB shared object'):
+            #everything else is Data
+            swirlFile.set64bits()
+            swirlFile.setShared()
+            swirlFile.dyn=True
+        elif typeStr.startswith('ELF 64-bit LSB shared object'):
+            #everything else is Data
+            swirlFile.set32bits()
+            swirlFile.setShared()
             swirlFile.dyn=True
         else:
-            #everything else is Data
             swirlFile.type="Data"
         self.swirl.addFile(swirlFile)
 

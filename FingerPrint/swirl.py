@@ -9,6 +9,12 @@
 from datetime import datetime
 import StringIO
 
+
+"""Swirl hold in memory the representation of a swirl.
+The two main components are SwirlFile aka file tracked by this swirl
+and Dependency aka dependency which one of the swirl file needs to run
+"""
+
 class Swirl:
     """main swirl class
     """
@@ -16,7 +22,7 @@ class Swirl:
         self.name = name
         self.creationDate = creationDate
         self.fileList = []
-        self.dependencySet = []
+        self.dependency = []
 
     #TODO use integer to save memory
     #this function are used by SwirlFile and Dependency subclasses
@@ -39,12 +45,12 @@ class Swirl:
             return False
 
 
-    def addDependencies(self, dependencySet):
-        #TODO remove duplicate
-        if type(dependencySet) is list:
-            self.dependencySet += dependencySet
+    def addDependencies(self, dependency):
+        #TODO should dependency be part of swirl file?
+        if type(dependency) is list:
+            self.dependency += dependency
         else:
-            self.dependencySet.append( dependencySet )
+            self.dependency.append( dependency )
 
     def save(self, saver):
         """this method is used to serialize this class hierarcy
@@ -79,30 +85,40 @@ class Swirl:
             string += str(i) + "\n"
         #dependency set
         string += " -- Dependency Set -- \n"
-        string += str(self.dependencySet)
+        string += str(self.dependency)
         return string
 
 
 class SwirlFile(Swirl):
     """
-    hold a file which is supported by this swirl
+    describe a file which tracked by this swirl
+    at the moment only ELF aka binary file are supported
     """
     def __init__(self, path):
         self.path=path
         self.arch=None
         self.type=None
+        #do we need this?
         self.dyn=True
 
     def isBinary(self):
-        return self.type == 'ELF' and self.dyn
+        return self.type.startswith( 'ELF' ) 
+
+    def setShared(self):
+        """ """
+        self.type = 'ELF_sha'    
+
+    def setExecutable(self):
+        """ """
+        self.type = 'ELF_exe'
 
 
     def __str__(self):
         string = ""
         if self.type == "Data":
-            string = "data "
+            string = "data     "
         else:
-            string = "bin  "
+            string = self.type + "  "
         if self.arch == "x86_64":
             string += "x86_64 "
         elif self.arch == "i386":
