@@ -22,9 +22,6 @@ To run some unittest run
 
  # python setup.py test
 
-Some documentation:
- - http://rpm.org/wiki/PackagerDocs/Dependencies
-
  -- Third party software --
 
  - python magic 
