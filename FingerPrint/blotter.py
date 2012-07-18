@@ -26,7 +26,7 @@ which are the dependencies of the file
 
 def getDependencies_ELF_exe(swirlFile):
     #same stuff
-    getDependencies_ELF_sha(swirlFile)
+    return getDependencies_ELF_sha(swirlFile)
 
 def getDependencies_ELF_sha(swirlFile):
     """find dinamic libryries for elf files"""
