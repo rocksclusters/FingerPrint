@@ -16,9 +16,11 @@ Ramdom notes
 if there is "dynamically linked (uses shared libs)" means that some of it needs dinamic libraries
 
 
- --  objdump
+ --  objdump simbol mane
+
 
 Use objdump -T file to get the list of symbols aka functions or variable names in the file
+below the output:
 
 #this are function used by this file but not defined
 0000000000000000      DF *UND*  0000000000000000  Base        dm_task_destroy
@@ -31,6 +33,24 @@ Use objdump -T file to get the list of symbols aka functions or variable names i
 0000000000007f00 g    DF .text  000000000000010e  CRYPTSETUP_1.0 crypt_keyslot_destroy
 # This is a string internally defined
 00000000004bed70 g    DO .rodata    0000000000000010  Base        wait_doc
+
+You can also use the nm -D to see symbols but the output is worst.
+
+ --  objdump library needed
+
+If you run objdump -x filename it shows all header information among them you are interested 
+to the:
+
+Dynamic Section:
+  NEEDED               libselinux.so.1
+  NEEDED               librt.so.1
+...
+Version References:
+...
+
+
+You can also use the readelf -d -V filename to the similar output.
+
 
 
  --  External links to good documentation
