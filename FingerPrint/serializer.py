@@ -8,11 +8,23 @@
 
 from datetime import datetime
 import StringIO
-
+import pickle
 
 """
 """
 
+
+class PickleSerializer:
+    """ this class serialize a swirl into a pickle file format"""
+
+    def __init__(self, fd):
+        self.fd = fd
+
+    def save(self, swirl):
+        pickle.dump(swirl, self.fd)
+
+    def load(self):
+        return pickle.load(self.fd)
 
 
 class XmlSerializer:

@@ -6,10 +6,11 @@
 from datetime import datetime
 import os
 import StringIO
-from FingerPrint.blotter import Blotter
 from optparse import OptionParser
 
 from FingerPrint.swirl import *
+from FingerPrint.blotter import Blotter
+from FingerPrint.serializer import PickleSerializer
 
 
 def main():
@@ -47,7 +48,13 @@ def main():
         print "list of global dependecies:\n", blotter.getSwirl().getDependencies()
         print "list of global provides:\n", blotter.getSwirl().getProvides()
     if options.filename:
-        print "TODO"
+        outputfd = open(options.filename, 'w')
+        pickle = PickleSerializer( outputfd )
+        pickle.save(blotter.getSwirl() )
+        outputfd.close()
+        print "file %s saved" % options.filename
+
+
     return
     
     #save xml
