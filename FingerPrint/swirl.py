@@ -15,14 +15,13 @@ The two main components are SwirlFile aka file tracked by this swirl
 and Dependency aka dependency which one of the swirl file needs to run
 """
 
-class Swirl:
+class Swirl(object):
     """main swirl class
     """
     def __init__(self, name, creationDate):
         self.name = name
         self.creationDate = creationDate
-        self.fileList = []
-        self.dependency = []
+        self.swirlFiles = []
 
     #TODO use integer to save memory
     #this function are used by SwirlFile and Dependency subclasses
@@ -44,40 +43,70 @@ class Swirl:
         else:
             return False
 
+
+    def getDependencies(self):
+        """the all the dependency of this swirl"""
+        tempDep=[]
+        for file in self.swirlFiles:
+            for dep in file.dependencies:
+                if dep not in tempDep:
+                    tempDep.append(dep)
+        #tempDep now contains all the dependency
+        #I need to take the provides off of it
+        provides = map( lambda x: x.provname, self.getProvides())
+        #this removes from tempDep provides element :-o
+        tempDep[:] = [i for i in tempDep if not i.depname in provides]
+        return tempDep
+
+
+    def getProvides(self):
+        """get the full list of Provide in this swirl
+        deleting duplicate"""
+        tempPro=[]
+        for file in self.swirlFiles:
+            for prov in file.provides:
+                if prov not in tempPro:
+                    tempPro.append(prov)
+        return tempPro
+
+
     def save(self, saver):
         """this method is used to serialize this class hierarcy
         TODO not used yet
         """
         saver.save(self)
 
+
     def addFile(self, swirlFile):
         """add a file to the list of the tracked files"""
-        self.fileList.append(swirlFile)
+        self.swirlFiles.append(swirlFile)
 
        
     def getBinaryFiles(self): 
-        """Return a list of binary file with dinamic libraries"""
+        """Return a list of file which should be checked for dependency or provides"""
         retList=[]
-        for i in self.fileList:
+        for i in self.swirlFiles:
             if i.isBinary():
                 retList.append(i)
         return retList
 
 
     def getDateString(self):
-        return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")        
+        return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")
 
+    def __eq__(self, other):
+        #I need this to get the 
+        # depA in depList working
+        return self.__dict__ == other.__dict__
 
     def __str__( self ):
         #header
         string = self.name + " " + self.getDateString() + "\n"
         #file list
         string += " -- File List -- \n"
-        for i in self.fileList:
+        for i in self.swirlFiles:
             string += str(i) + "\n"
         #dependency set
-        string += " -- Dependency Set -- \n"
-        string += str(self.dependency)
         return string
 
 

@@ -18,8 +18,11 @@ class TestSequenceFunctions(unittest.TestCase):
             "/lib/libcryptsetup.so.4.0.0", "/lib/x86_64-linux-gnu/libm.so.6",
             "/lib/x86_64-linux-gnu/libm-2.15.so"]
         b=Blotter("Test", files)
-        print "lib:", b.getSwirl()
+        print "swirl structure:\n", b.getSwirl()
         #self.assertEqual(self.seq, range(10))
+        print "list of global dependecies:\n", b.getSwirl().getDependencies()
+        print "list of global provides:\n", b.getSwirl().getProvides()
+        
 
 
 
