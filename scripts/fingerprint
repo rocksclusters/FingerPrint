@@ -4,14 +4,50 @@
 #
 
 from datetime import datetime
+import os
 import StringIO
+from FingerPrint.blotter import Blotter
+from optparse import OptionParser
 
 from FingerPrint.swirl import *
 
 
 def main():
     #TODO implement a main method here
-    print "TODO"
+    usage = "usage: %prog [options] inputfile1 ... inputfileN"
+    parser = OptionParser()
+    parser.add_option("-f", "--file", dest="filename", default=None,
+                      help="write output swirl into FILE", metavar="FILE")
+    parser.add_option("-n", "--name", dest="name", default="Swirl",
+                      help="the name of this swirl, default to Swirl")
+    #TODO change this to default=False
+    parser.add_option("-v", action="store_true", dest="verbose", default=True,
+                  help="Be moderately verbose")
+    #parser.add_option("-q", "--quiet",
+    #                  action="store_false", dest="verbose", default=True,
+    #                  help="don't print swirl to output")
+    
+    (options, args) = parser.parse_args()
+
+    #maybe in the future we can read them from a file or stdin
+    #for now it works
+    filenameList = args
+    if len(filenameList) < 1:
+        parser.error("you need to specify at least one inputfile")
+        parser.print_help()
+    for fileName in filenameList:
+        if not os.path.exists(fileName):
+            parser.error("The file %s does not exist on this system." % fileName)
+            parser.print_help()
+    #creating blotter
+    blotter = Blotter(options.name, filenameList)
+    if options.verbose:
+        print "swirl structure:\n", blotter.getSwirl()
+        #self.assertEqual(self.seq, range(10))
+        print "list of global dependecies:\n", blotter.getSwirl().getDependencies()
+        print "list of global provides:\n", blotter.getSwirl().getProvides()
+    if options.filename:
+        print "TODO"
     return
     
     #save xml
@@ -21,9 +57,6 @@ def main():
     print "XML:\n", output.getvalue()
     output.seek(0)
     newSwirl = xml.read()
-    
-    
-    
     
 
 if __name__ == "__main__":

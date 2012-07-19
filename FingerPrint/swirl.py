@@ -52,7 +52,7 @@ class Swirl(object):
                 if dep not in tempDep:
                     tempDep.append(dep)
         #tempDep now contains all the dependency
-        #I need to take the provides off of it
+        #I need to take the provides available in this swirl off of it
         provides = map( lambda x: x.provname, self.getProvides())
         #this removes from tempDep provides element :-o
         tempDep[:] = [i for i in tempDep if not i.depname in provides]
