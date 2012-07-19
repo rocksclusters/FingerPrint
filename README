@@ -7,6 +7,8 @@ This fingerprint can then be used to understand if the given application can
 run on another system.
 
 
+
+
  --  INSTALL  --
 
 To install from source run
@@ -16,11 +18,14 @@ To install from source run
 This will install FingerPrint in your python. FingerPrint consist of:
  - a bunch of python module inside the FingerPrint module
  - magic.py
- - a command line called fingerprint (not working yet)
+ - a command line called fingerprint
 
 To run some unittest run
 
  # python setup.py test
+
+
+
 
  -- Third party software --
 

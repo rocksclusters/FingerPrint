@@ -22,7 +22,7 @@ def main():
     parser.add_option("-n", "--name", dest="name", default="Swirl",
                       help="the name of this swirl, default to Swirl")
     #TODO change this to default=False
-    parser.add_option("-v", action="store_true", dest="verbose", default=True,
+    parser.add_option("-v", action="store_true", dest="verbose", default=False,
                   help="Be moderately verbose")
     #parser.add_option("-q", "--quiet",
     #                  action="store_false", dest="verbose", default=True,
