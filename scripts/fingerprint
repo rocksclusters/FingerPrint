@@ -18,26 +18,37 @@ def main():
     usage = "usage: %prog [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
-                      help="write output swirl into FILE", metavar="FILE")
+                    help="write output swirl into FILE", metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
-                      help="the name of this swirl, default to Swirl")
+                    help="the name of this swirl, default to Swirl")
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
-                      help="the name of this swirl, default to Swirl")
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
-                  help="Output a textual representation of the swirl")
-    #parser.add_option("-q", "--quiet",
-    #                  action="store_false", dest="verbose", default=True,
-    #                  help="don't print swirl to output")
+                    help="a file containing a list of file which will be " + \
+                    "included to this swirl")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", 
+                    default=False,
+                    help="Output a textual representation of the swirl")
     
     (options, args) = parser.parse_args()
 
-    #maybe in the future we can read them from a file or stdin
-    #for now it works
-    filenameList = args
+    #check if we read the list of file from a file
+    filenameList = []
+    if options.filelist :
+        #read the input filelist from file
+        try:
+            filelistfd = open(options.filelist)
+            for i in filelistfd:
+                filenameList.append(i.strip())
+        except IOError as e:
+            parser.print_help()
+            parser.error("The file %s does not exist on this system." % options.filelist)
+    if filenameList == []:
+        #get the filelist from command line
+        filenameList = args
     if len(filenameList) < 1:
         parser.print_help()
-        parser.error("you need to specify at least one inputfile")
+        parser.error("you need to specify at least one inputfile or the FILELIST parameter")
     for fileName in filenameList:
+        #TODO move this in blotter
         if not os.path.exists(fileName):
             parser.print_help()
             parser.error("The file %s does not exist on this system." % fileName)

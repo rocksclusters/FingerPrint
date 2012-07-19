@@ -27,14 +27,30 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_commandline(self):
         """ """
-        outputfilename='output.swirl'
-        self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-f', outputfilename] + self.files), 0,
-            msg="fingerprint failed to analize the files: " + str(self.files))
-        self.assertTrue( os.path.isfile(outputfilename), 
-            msg="the output file %s was not created properly" % outputfilename )
-        #os.remove(outputfilename)
+        #test empty command line
         self.assertNotEqual(subprocess.call(['python', './scripts/fingerprint']), 0,
             msg="empty command line should fail but it did not")
+        #lets create a command wtih input file on the command line
+        outputfilename='output.swirl'
+        self.assertEqual( 
+            subprocess.call(['python', './scripts/fingerprint', '-f', outputfilename] + self.files), 0,
+                msg="fingerprint failed to analize the files: " + str(self.files))
+        self.assertTrue( os.path.isfile(outputfilename), 
+            msg="the output file %s was not created properly" % outputfilename )
+        os.remove(outputfilename)
+        filelist='filelist'
+        fd=open(filelist,'w')
+        for i in self.files:
+            fd.write(i + '\n')
+        fd.close()
+        self.assertEqual( 
+            subprocess.call(['python', './scripts/fingerprint', '-f', outputfilename, '-l', filelist]), 0,
+            msg="fingerprint failed to load filelist: " + filelist)
+        self.assertTrue( os.path.isfile(outputfilename), 
+            msg="the output file %s was not created properly" % outputfilename )
+        os.remove(outputfilename)
+        
+
         
 
 if __name__ == '__main__':
