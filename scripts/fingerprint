@@ -16,7 +16,7 @@ from FingerPrint.serializer import PickleSerializer
 def main():
     #TODO implement a main method here
     usage = "usage: %prog [options] inputfile1 ... inputfileN"
-    parser = OptionParser()
+    parser = OptionParser(usage)
     parser.add_option("-f", "--file", dest="filename", default=None,
                       help="write output swirl into FILE", metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
@@ -34,12 +34,12 @@ def main():
     #for now it works
     filenameList = args
     if len(filenameList) < 1:
-        parser.error("you need to specify at least one inputfile")
         parser.print_help()
+        parser.error("you need to specify at least one inputfile")
     for fileName in filenameList:
         if not os.path.exists(fileName):
-            parser.error("The file %s does not exist on this system." % fileName)
             parser.print_help()
+            parser.error("The file %s does not exist on this system." % fileName)
     #creating blotter
     blotter = Blotter(options.name, filenameList)
     if options.verbose:
@@ -54,16 +54,7 @@ def main():
         outputfd.close()
         print "file %s saved" % options.filename
 
-
     return
-    
-    #save xml
-    output = StringIO.StringIO()
-    xml = XmlSerializer(output)
-    xml.save(s)
-    print "XML:\n", output.getvalue()
-    output.seek(0)
-    newSwirl = xml.read()
     
 
 if __name__ == "__main__":
