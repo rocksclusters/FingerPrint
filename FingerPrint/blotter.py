@@ -98,16 +98,17 @@ class Blotter:
             swirlFile.setExecutable()
             swirlFile.dyn=True
         elif typeStr.startswith('ELF 64-bit LSB shared object'):
-            #everything else is Data
+            #shared library 64
             swirlFile.set64bits()
             swirlFile.setShared()
             swirlFile.dyn=True
-        elif typeStr.startswith('ELF 64-bit LSB shared object'):
-            #everything else is Data
+        elif typeStr.startswith('ELF 32-bit LSB shared object'):
+            #shared library 32
             swirlFile.set32bits()
             swirlFile.setShared()
             swirlFile.dyn=True
         else:
+            #everything else id Data
             swirlFile.type="Data"
         self.swirl.addFile(swirlFile)
 

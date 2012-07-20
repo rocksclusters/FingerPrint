@@ -14,7 +14,6 @@ class TestSequenceFunctions(unittest.TestCase):
         self.files = ["/bin/ls", "/usr/bin/find", "/etc/passwd", 
             "/lib/libcryptsetup.so.4.0.0", "/lib/x86_64-linux-gnu/libm.so.6",
             "/lib/x86_64-linux-gnu/libm-2.15.so"]
-        pass
 
     def test_blotter(self):
         # test loading file in blotter
@@ -49,9 +48,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="the output file %s was not created properly" % outputfilename )
         os.remove(outputfilename)
-        
 
-        
 
 if __name__ == '__main__':
     unittest.main()
