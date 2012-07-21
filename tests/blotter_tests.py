@@ -17,7 +17,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_blotter(self):
         # test loading file in blotter
-        
+        print "     -----------------------      creating a blotter via API     -------------------------"
         b=Blotter("Test", self.files)
         print "swirl structure:\n", b.getSwirl()
         #self.assertEqual(self.seq, range(10))
@@ -27,6 +27,7 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_commandline(self):
         """ """
         #test empty command line
+        print "     -----------------------  running fingerprint command line   -------------------------"
         self.assertNotEqual(subprocess.call(['python', './scripts/fingerprint']), 0,
             msg="empty command line should fail but it did not")
         #lets create a command wtih input file on the command line

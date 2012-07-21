@@ -10,6 +10,8 @@ import magic
 from subprocess import PIPE, Popen
 import StringIO
 import re
+import ctypes
+
 
 from FingerPrint.swirl import *
 
@@ -22,6 +24,10 @@ should implement
 
 
 class PluginMount(type):
+    """
+    Insipired by Marty Alchin
+    http://martyalchin.com/2008/jan/10/simple-plugin-framework/
+    """
     def __init__(cls, name, bases, attrs):
         if not hasattr(cls, 'plugins'):
             # This branch only executes when processing the mount point itself.
@@ -31,8 +37,7 @@ class PluginMount(type):
             cls.plugins = {}
         else:
             # This must be a plugin implementation, which should be registered.
-            # Simply appending it to the list is all that's needed to keep
-            # track of it later.
+            # we use a dictionary here for fast lookup during dependecy verification
             cls.plugins[cls.pluginName] = cls
 
     def get_plugins(cls):
@@ -41,29 +46,37 @@ class PluginMount(type):
 
 class PluginManager(object):
     """
-    Mount point for plugins which refer to actions that can be performed.
+    Super class of the various plugins. All the plugins should inherit from this class
 
     Plugins implementing this reference should provide the following attributes:
 
-    ========  ========================================================
-    ========  ========================================================
+    pluginName: this must be a unique string representing the plugin name
+    
+
+    TODO write this 
+
     """
+
     __metaclass__ = PluginMount
     systemPath = []
 
 
+    @classmethod
     def addSystemPaths(self, paths):
         """add additional path to the search for dependency """
         self.systemPath += paths
 
-    def isDepsatified(self, dependency):
+    @classmethod
+    def isDepsatisfied(self, dependency):
         """verify that the dependency passed can be satified on this system
         and return True if so
         """
-        pass
+        #let get the plugin
+        #TODO catch exception key not found
+        plugin = self.plugins[dependency.getPluginName()]
+        return plugin.isDepsatisfied( dependency )
 
-
-
+    @classmethod
     def getSwirl(self, fileName):
         """helper function given a filename it return a Swirl 
         if the given plugin does not support the given fileName should just 
@@ -74,6 +87,11 @@ class PluginManager(object):
             temp = plugin.getSwirl(fileName)
             if temp != None:
                 return temp
+        #nobady claimed the file let's make it a Data fil
+        swirlFile = SwirlFile(fileName)
+        swirlFile.type="Data"
+        return swirlFile
+ 
 
 
 class ElfPlugin(PluginManager):
@@ -81,11 +99,20 @@ class ElfPlugin(PluginManager):
 
     pluginName="ELF"
  
-    def isDepsatified(self, dependency):
+    @classmethod
+    def isDepsatisfied(self, dependency):
         """verify that the dependency passed can be satified on this system
         and return True if so
         """
-        pass
+        soname = dependency.depname.split('(')[0]
+        try:
+            #TODO this verify only the soname we need to check for version too!
+            ctypes.cdll.LoadLibrary(soname) 
+            return True
+        except OSError:
+            return False
+
+        
 
     @classmethod
     def setDepsRequs(self, swirlFile):
@@ -102,8 +129,9 @@ class ElfPlugin(PluginManager):
         grep_stdout = p.communicate(input=swirlFile.path)[0]
         for line in grep_stdout.split('\n'):
             if len(line) > 0:
-                newDep = Dependency(line)
-                swirlFile.addDependency(newDep)
+                newDep = Dependency( line )
+                newDep.setPluginName( self.pluginName )
+                swirlFile.addDependency( newDep )
                 #i need to take the parenthesis out of the game
                 tempList = re.split('\(|\)',line)
                 if len(tempList) > 2:
@@ -119,7 +147,9 @@ class ElfPlugin(PluginManager):
         for line in grep_stdout.split('\n'):
             if len(line) > 0 :
                 newProv = Provide(line)
+                newProv.setPluginName( self.pluginName )
                 swirlFile.addProvide(newProv)
+        
 
 
     @classmethod
@@ -130,11 +160,11 @@ class ElfPlugin(PluginManager):
         ATT: only one plugin should return a SwirlFile for a given file
         """
         m=magic.Magic()
-        typeStr=m.from_file(fileName)
+        typeStr=m.from_file( fileName )
         #for now all the files are dynamic
-        if typeStr.startswith('ELF '):
-            swirlFile = SwirlFile(fileName)
-            swirlFile.pluginName = self.pluginName
+        if typeStr.startswith( 'ELF ' ):
+            swirlFile = SwirlFile( fileName )
+            swirlFile.setPluginName( self.pluginName )
             swirlFile.dyn = True
         else:
             #this is not our business

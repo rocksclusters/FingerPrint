@@ -9,6 +9,7 @@ import os
 import ctypes
 
 from swirl import *
+from FingerPrint.plugins.base import *
 
 
 """Given a swirl it detect if it can run on this system
@@ -31,11 +32,11 @@ class Sergeant:
         """actually perform the check on the system and return True if all 
         the dependencies can be satisfied on the current system
         """
+        pl = PluginManager()
         depList = self.swirl.getDependencies()
         for dep in depList:
             print "checking ", dep
-            if not self.isDepsatified(dep):
-                print "dep failed: ", dep
+            if not pl.isDepsatisfied(dep):
                 return False
         #all deps can be satified!
         return True

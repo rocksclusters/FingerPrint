@@ -97,6 +97,7 @@ class Swirl(object):
     def __eq__(self, other):
         #I need this to get the 
         # depA in depList working
+        #TODO is it still needed?
         return self.__dict__ == other.__dict__
 
     def __str__( self ):
@@ -123,6 +124,15 @@ class SwirlFile(Swirl):
         self.dyn=True
         self.dependencies=[]
         self.provides=[]
+        self.pluginName=None
+
+    def setPluginName(self, name):
+        """this hold the name of the plugin who handled this
+        attribute used by SwirlFile Dependency and Provide"""
+        self.pluginName = name
+    
+    def getPluginName(self):
+        return self.pluginName
 
     def isBinary(self):
         return self.type.startswith( 'ELF' ) 
@@ -176,7 +186,7 @@ class DependencySet(Swirl):
         return string
 
 
-class Dependency(Swirl):
+class Dependency(SwirlFile):
     """ This class represent a single dependency
     """
 
@@ -184,6 +194,7 @@ class Dependency(Swirl):
         self.depname = name
         self.filehash = None
         self.arch = None
+        self.pluginName = None
         #http://www.trevorpounds.com/blog/?p=33
         #http://www.akkadia.org/drepper/symbol-versioning
         self.symbolVersion = None
@@ -198,7 +209,7 @@ class Dependency(Swirl):
 
 
 
-class Provide(Swirl):
+class Provide(SwirlFile):
     """ This class represent a single dependency
     """
 

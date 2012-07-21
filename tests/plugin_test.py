@@ -2,6 +2,8 @@
 
 import unittest
 import subprocess
+import sys
+sys.path.append("../")
 from FingerPrint.blotter import *
 from FingerPrint.swirl import *
 from FingerPrint.plugins.base import *
@@ -10,8 +12,6 @@ class TestiPlugin(unittest.TestCase):
 
     def setUp(self):
         """setup for your unittest"""
-        import sys
-        sys.path.append("../")
         self.files = ["/bin/ls", "/usr/bin/find", "/etc/passwd", 
             "/lib/libcryptsetup.so.4.0.0", "/lib/x86_64-linux-gnu/libm.so.6",
             "/lib/x86_64-linux-gnu/libm-2.15.so"]
@@ -24,6 +24,8 @@ class TestiPlugin(unittest.TestCase):
             self.swirl.addFile(swirlFile)
         print "----------- plugin test ----------------"
         print self.swirl
+        print self.swirl
+        print self.swirl.getDependencies()
             
 
         

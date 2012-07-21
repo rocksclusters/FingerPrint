@@ -6,6 +6,7 @@ from FingerPrint.sergeant import *
 from FingerPrint.swirl import *
 from FingerPrint.serializer import PickleSerializer
 
+
 class TestSequenceFunctions(unittest.TestCase):
 
     def setUp(self):
