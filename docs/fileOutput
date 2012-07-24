@@ -51,7 +51,10 @@ Version References:
 
 You can also use the readelf -d -V filename to the similar output.
 
-
+ --  Gcc
+You can ask the gcc to tell you where is a particular library with 
+gcc -Wl,-t -o /tmp/testfile -lm
+you are gonna get an error but in the output it will tell you where libm is
 
  --  External links to good documentation
 

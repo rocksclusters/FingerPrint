@@ -16,8 +16,15 @@ import ctypes
 from FingerPrint.swirl import SwirlFile, Dependency, Provide
 from FingerPrint.plugins import PluginManager
 
-"""This is the base class that implement the interface that all the plugins subclasses 
-should implement
+"""This is the implementation for ELF files
+Requirements:
+ - /usr/lib/rpm/find-requires /usr/lib/rpm/find-provides from rpm
+ - lsconfig in the path
+
+TODO:
+- add user path to search for libraries
+- add detection of "Version References" in libraries in isDepsatisfied
+
 """
 
 
@@ -26,6 +33,9 @@ class ElfPlugin(PluginManager):
     """this plugin manages all ELF file format"""
 
     pluginName="ELF"
+
+    #internal
+    _ldconfig_64bits = "x86-64"
  
     @classmethod
     def isDepsatisfied(self, dependency):
@@ -35,8 +45,19 @@ class ElfPlugin(PluginManager):
         soname = dependency.depname.split('(')[0]
         try:
             #TODO this verify only the soname we need to check for version too!
-            ctypes.cdll.LoadLibrary(soname) 
-            return True
+            p = Popen(["ldconfig","-p"], stdin=PIPE, stdout=PIPE)
+            grep_stdout = p.communicate(input=None)[0]
+            for line in grep_stdout.split('\n'):
+                if len(line) > 0 and soname in line:
+                    #ok that's the right line let's check the 32/64 bits
+                    if dependency.is64bits() and self._ldconfig_64bits in line:
+                        #ok we found it
+                        #TODO add extra checking for version reference
+                        print "dep found: ",line
+                        return True
+                    elif dependency.is32bits() and not self._ldconfig_64bits in line:
+                        return True
+            return False
         except OSError:
             return False
 
