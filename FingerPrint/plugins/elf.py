@@ -72,7 +72,6 @@ class ElfPlugin(PluginManager):
                         newDep.set32bits()
                 else:
                     #no parenthesis aka 32 bit 
-                    #TODO verify this
                     newDep.set32bits()
         #find provides
         p = Popen([RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
