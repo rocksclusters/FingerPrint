@@ -8,7 +8,7 @@
 import os
 import ctypes
 
-from swirl import *
+from swirl import Swirl
 from FingerPrint.plugins import PluginManager
 
 

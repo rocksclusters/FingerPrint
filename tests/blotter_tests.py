@@ -2,8 +2,10 @@
 
 import unittest
 import subprocess
-from FingerPrint.blotter import *
-from FingerPrint.swirl import *
+import os
+
+from FingerPrint.blotter import Blotter
+from FingerPrint.swirl import Swirl
 
 class TestSequenceFunctions(unittest.TestCase):
 

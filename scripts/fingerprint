@@ -9,7 +9,7 @@ import StringIO
 from optparse import OptionParser
 
 import FingerPrint
-from FingerPrint.swirl import *
+from FingerPrint.swirl import Swirl
 from FingerPrint.blotter import Blotter
 from FingerPrint.serializer import PickleSerializer
 

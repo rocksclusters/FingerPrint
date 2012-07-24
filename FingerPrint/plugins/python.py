@@ -7,7 +7,7 @@
 
 import os
 
-from FingerPrint.swirl import *
+from FingerPrint.swirl import SwirlFile, Dependency
 from FingerPrint.plugins import PluginManager
 
 
@@ -36,17 +36,17 @@ class PythonPlugin(PluginManager):
         """given a fileName pointing to a python script it returns a swirlFile 
         with all the dependency and provide associated with the fileName
         """
-
         swirlFile = SwirlFile( fileName )
         swirlFile.setPluginName( self.pluginName )
         swirlFile.dyn = True
         #find deps
         fd=open(fileName)
+        #this is as quick and as dirty as it could be
         for line in fd:
-            if 'import ' in line:
+            if 'import ' in line and not '"' in line:
                 #this is an import line
                 #TODO this is not sufficient but it will get me started
-                newDep = Dependency( line.rstrip() )
+                newDep = Dependency( line.strip() )
                 newDep.setPluginName( self.pluginName )
                 swirlFile.addDependency( newDep )
         #TODO add provide

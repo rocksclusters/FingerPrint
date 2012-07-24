@@ -1,11 +1,12 @@
 
 
 import unittest
-import subprocess
+from datetime import datetime
 import sys
+
 sys.path.append("../")
-from FingerPrint.blotter import *
-from FingerPrint.swirl import *
+from FingerPrint.blotter import Blotter
+from FingerPrint.swirl import Swirl
 from FingerPrint.plugins import PluginManager
 #now we can import the plugins 
 

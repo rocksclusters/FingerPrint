@@ -5,13 +5,9 @@
 # using existing static analysis tool to create a swirl into memory
 #
 
-import os
-import magic
-from subprocess import PIPE, Popen
-import StringIO
-import re
+from datetime import datetime
 
-from swirl import *
+from swirl import Swirl
 from FingerPrint.plugins import PluginManager
 
 

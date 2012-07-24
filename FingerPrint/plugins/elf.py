@@ -13,7 +13,7 @@ import re
 import ctypes
 
 
-from FingerPrint.swirl import *
+from FingerPrint.swirl import SwirlFile, Dependency, Provide
 from FingerPrint.plugins import PluginManager
 
 """This is the base class that implement the interface that all the plugins subclasses 

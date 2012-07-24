@@ -2,8 +2,8 @@
 
 import unittest
 import subprocess
-from FingerPrint.sergeant import *
-from FingerPrint.swirl import *
+from FingerPrint.sergeant import Sergeant
+from FingerPrint.swirl import Swirl
 from FingerPrint.serializer import PickleSerializer
 
 
