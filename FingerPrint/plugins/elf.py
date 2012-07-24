@@ -62,13 +62,18 @@ class ElfPlugin(PluginManager):
                 swirlFile.addDependency( newDep )
                 #i need to take the parenthesis out of the game
                 tempList = re.split('\(|\)',line)
-                if len(tempList) > 2:
+                if len(tempList) > 3:
                     #set the 32/64 bits 
                     #probably unecessary
                     if tempList[3].find("64bit") >= 0 :
                         newDep.set64bits()
                     elif tempList[3].find("32bit") >= 0 :
+                        #this should never happen
                         newDep.set32bits()
+                else:
+                    #no parenthesis aka 32 bit 
+                    #TODO verify this
+                    newDep.set32bits()
         #find provides
         p = Popen([RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
         grep_stdout = p.communicate(input=swirlFile.path)[0]
