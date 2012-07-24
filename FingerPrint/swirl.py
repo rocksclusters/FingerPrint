@@ -158,7 +158,7 @@ class SwirlFile(Swirl):
         if self.type == "Data":
             string = "data     "
         else:
-            string = self.type + "  "
+            string = str(self.type) + "  "
         string += self.path + "\n"
         if len(self.dependencies) > 0:
             string += "Deps: " + str(self.dependencies) + "\n"

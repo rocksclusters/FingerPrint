@@ -6,7 +6,9 @@ import sys
 sys.path.append("../")
 from FingerPrint.blotter import *
 from FingerPrint.swirl import *
-from FingerPrint.plugins.base import *
+from FingerPrint.plugins import PluginManager
+#now we can import the plugins 
+
 
 class TestiPlugin(unittest.TestCase):
 
@@ -14,16 +16,15 @@ class TestiPlugin(unittest.TestCase):
         """setup for your unittest"""
         self.files = ["/bin/ls", "/usr/bin/find", "/etc/passwd", 
             "/lib/libcryptsetup.so.4.0.0", "/lib/x86_64-linux-gnu/libm.so.6",
-            "/lib/x86_64-linux-gnu/libm-2.15.so"]
+            "/lib/x86_64-linux-gnu/libm-2.15.so", "/usr/lib/python2.7/xml/dom/minidom.py"]
 
     def test_plugin(self):
         self.swirl = Swirl("test", datetime.now())
-        pl = PluginManager()
         for i in self.files:
-            swirlFile = pl.getSwirl(i)
+            swirlFile = PluginManager.getSwirl(i)
             self.swirl.addFile(swirlFile)
         print "----------- plugin test ----------------"
-        print self.swirl
+        print "plugins: ", PluginManager.get_plugins()
         print self.swirl
         print self.swirl.getDependencies()
             

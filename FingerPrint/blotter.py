@@ -12,7 +12,7 @@ import StringIO
 import re
 
 from swirl import *
-from FingerPrint.plugins.base import *
+from FingerPrint.plugins import PluginManager
 
 
 
@@ -26,9 +26,8 @@ class Blotter:
     def __init__(self, name, fileList):
         """give a file list and a name construct a swirl into memory """
         self.swirl = Swirl(name, datetime.now())
-        pl = PluginManager()
         for i in fileList:
-            swirlFile = pl.getSwirl(i)
+            swirlFile = PluginManager.getSwirl(i)
             self.swirl.addFile(swirlFile)
 
        
