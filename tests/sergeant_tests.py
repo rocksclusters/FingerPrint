@@ -16,6 +16,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.swirlfile = "tests/test.swirl"
 
     def test_sergeant(self):
+        print "     -----------------------  Verifying system compatibility with sergeant   -------------------------"
         # test loading file in blotter
         inputfd = open(self.swirlfile)
         pickle = PickleSerializer( inputfd )
@@ -23,7 +24,8 @@ class TestSequenceFunctions(unittest.TestCase):
         inputfd.close()
         print "file %s loaded" % self.swirlfile
         serg=Sergeant(swirl)
-        self.assertTrue( serg.check(), msg="the chekc on test.swirl failed")
+        self.assertTrue( serg.check(), msg="The check on %s failed." 
+                    % self.swirlfile)
 
         
 
