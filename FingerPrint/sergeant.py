@@ -53,6 +53,10 @@ class Sergeant:
         #all deps can be satified!
         return True
 
+    def getError(self):
+        """TODO return a string descripting what failed the check"""
+        return ""
+
 
     def isDepsatified(self, dependency):
         """verify that the dependency passed can be satified on this system

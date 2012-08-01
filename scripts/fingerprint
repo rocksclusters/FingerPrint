@@ -8,7 +8,7 @@ import os
 import StringIO
 from optparse import OptionParser
 
-import FingerPrint
+import FingerPrint, FingerPrint.sergeant
 from FingerPrint.swirl import Swirl
 from FingerPrint.blotter import Blotter
 from FingerPrint.serializer import PickleSerializer
@@ -18,17 +18,36 @@ def main():
     usage = "usage: %prog [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
-                    help="write output swirl into FILE", metavar="FILE")
+                    help="write or read swirl FILE", metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
-                    help="the name of this swirl, default to Swirl")
+                    help="the name of the swirl, default to Swirl")
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
                     help="a file containing a list of file which will be " + \
                     "included to this swirl")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", 
                     default=False,
                     help="Output a textual representation of the swirl")
+    parser.add_option("-s", "--scan", action="store_true", dest="scan",
+                    help="Scan the current system for compatibility with given swirl")
+
+
     
     (options, args) = parser.parse_args()
+
+    if options.scan :
+        #we have to scan let's read the swirl
+        serg = FingerPrint.sergeant.readFromPickle(options.filename)
+        if not serg.check():
+            #error let print some stuff
+            print "On the current system the swirl %s can not be completely " +\
+                    "verified.\n\n" % options.filename
+            print "Error:\n", serg.getError()
+            return -1
+        else:
+            print "Swirl %s pass the test" % options.filename
+            return 0
+
+
 
     #check if we read the list of file from a file
     filenameList = []
@@ -65,8 +84,7 @@ def main():
         pickle.save(blotter.getSwirl() )
         outputfd.close()
         print "file %s saved" % options.filename
-
-    return
+    return 0
     
 
 if __name__ == "__main__":
