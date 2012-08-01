@@ -49,38 +49,34 @@ class ElfPlugin(PluginManager):
         and return True if so
         """
         soname = dependency.depname.split('(')[0]
-        try:
-            #TODO this verify only the soname we need to check for version too!
-            p = Popen(["ldconfig","-p"], stdin=PIPE, stdout=PIPE)
-            grep_stdout = p.communicate(input=None)[0]
-            for line in grep_stdout.split('\n'):
-                #dependency is 64 and library is 64
-                #or dependency is 32 and library is 32
-                if len(line) > 0 and soname in line and \
-                    ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
-                    (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
-                    temp = line.split('=>')
-                    if len(temp) == 2:
-                        provider=temp[1].strip()
-                        if cls._verifyFindProvides(provider, dependency.depname):
+        #for each library we have in the system
+        for line in cls._getOutputAsList(["ldconfig","-p"]):
+            #if dependency is 64 and library is 64 of
+            # dependency is 32 and library is 32:
+            if len(line) > 0 and soname in line and \
+                ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
+                (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
+                #line is a library with the proper soname let's check for 
+                #the minor version
+                temp = line.split('=>')
+                if len(temp) == 2:
+                    provider=temp[1].strip()
+                    realProvider = cls._readlinkabs(provider)
+                    for line in cls._getOutputAsList([cls._RPM_FIND_PROV], realProvider):
+                        if len(line) > 0 and dependency.depname in line:
                             return True
-            return False
-        except OSError:
-            print "Error locating ldconfig"
-            return False
+        return False
 
 
     @classmethod
-    def _verifyFindProvides(cls, provider, requirement):
+    def _getOutputAsList(cls, binary, inputString=None):
+        """ run popen pipe inputString and return the output 
+        as a list of string one for each line
         """
-        """
-        fixedProvider = cls._readlinkabs(provider)
-        p = Popen([cls._RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
-        grep_stdout = p.communicate(input=fixedProvider)[0]
-        for line in grep_stdout.split('\n'):
-            if len(line) > 0 and requirement in line:
-                return True
-        return False
+        p = Popen(binary, stdin=PIPE, stdout=PIPE)
+        grep_stdout = p.communicate(input=inputString)[0]
+        return grep_stdout.split('\n')
+
                 
 
     @classmethod
@@ -104,9 +100,7 @@ class ElfPlugin(PluginManager):
         the provides to it """
 
         #find deps
-        p = Popen([cls._RPM_FIND_DEPS], stdin=PIPE, stdout=PIPE)
-        grep_stdout = p.communicate(input=swirlFile.path)[0]
-        for line in grep_stdout.split('\n'):
+        for line in cls._getOutputAsList([cls._RPM_FIND_DEPS], swirlFile.path):
             if len(line) > 0:
                 newDep = Dependency( line )
                 newDep.setPluginName( cls.pluginName )
@@ -125,9 +119,8 @@ class ElfPlugin(PluginManager):
                     #no parenthesis aka 32 bit 
                     newDep.set32bits()
         #find provides
-        p = Popen([cls._RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
-        grep_stdout = p.communicate(input=swirlFile.path)[0]
-        for line in grep_stdout.split('\n'):
+        
+        for line in cls._getOutputAsList([cls._RPM_FIND_PROV], swirlFile.path):
             if len(line) > 0 :
                 newProv = Provide(line)
                 newProv.setPluginName( cls.pluginName )
