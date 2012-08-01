@@ -34,7 +34,6 @@ class Sergeant:
         """
         depList = self.swirl.getDependencies()
         for dep in depList:
-            print "checking ", dep
             if not PluginManager.isDepsatisfied(dep):
                 return False
         #all deps can be satified!

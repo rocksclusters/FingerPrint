@@ -204,7 +204,7 @@ class Dependency(SwirlFile):
         return string
 
     def __repr__(self):
-        #to print list properly i need this (python oddities)
+        #to print list properly i need this method
         return "\n    " + self.__str__() 
 
 
@@ -221,7 +221,7 @@ class Provide(SwirlFile):
         return string
 
     def __repr__(self):
-        #to print list properly i need this (python oddities)
+        #to print list properly i need this method
         return "\n    " + self.__str__()
 
 
