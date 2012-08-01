@@ -6,7 +6,7 @@
 from datetime import datetime
 import os
 import StringIO
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 
 import FingerPrint, FingerPrint.sergeant
 from FingerPrint.swirl import Swirl
@@ -15,8 +15,26 @@ from FingerPrint.serializer import PickleSerializer
 
 
 def main():
-    usage = "usage: %prog [options] inputfile1 ... inputfileN"
+    #
+    # set up the option parser
+    # 
+    usage = "usage: %prog [-c|-y|-d] [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
+    #what are we going to do
+    group = OptionGroup(parser, "Required Options",
+                    "You must select one of these options")
+    parser.add_option_group(group)
+
+    parser.add_option("-c", "--create", action="store_true", dest="create",
+                    default=False,
+                    help="Create a swirl from the given input file names")
+    parser.add_option("-y", "--verify", action="store_true", dest="verify",
+                    default=False,
+                    help="Scan the current system to verify compatibility with given swirl")
+    parser.add_option("-d", "--display", action="store_true", dest="display",
+                    default=False,
+                    help="Display the content of the given swirl file")
+    #varioius option
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE", metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
@@ -27,15 +45,18 @@ def main():
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", 
                     default=False,
                     help="Output a textual representation of the swirl")
-    parser.add_option("-s", "--scan", action="store_true", dest="scan",
-                    help="Scan the current system for compatibility with given swirl")
-
-
-    
     (options, args) = parser.parse_args()
+   
+ 
+    #
+    # switch based on user input
+    #
+    if (options.verify + options.create + options.display) != 1:
+        #too many flags
+        parser.error("Only one of the flag -y -c -d can be used at a time" )
 
-    if options.scan :
-        #we have to scan let's read the swirl
+    if options.verify :
+        #verify the current swirl
         serg = FingerPrint.sergeant.readFromPickle(options.filename)
         if not serg.check():
             #error let print some stuff
@@ -47,44 +68,52 @@ def main():
             print "Swirl %s pass the test" % options.filename
             return 0
 
-
-
-    #check if we read the list of file from a file
-    filenameList = []
-    if options.filelist :
-        #read the input filelist from file
-        try:
-            filelistfd = open(options.filelist)
-            for i in filelistfd:
-                filenameList.append(i.strip())
-        except IOError as e:
+    elif options.create :
+        #create a swirl 
+        filenameList = []
+        if options.filelist :
+            #read the input filelist from file
+            try:
+                filelistfd = open(options.filelist)
+                for i in filelistfd:
+                    filenameList.append(i.strip())
+            except IOError as e:
+                parser.print_help()
+                parser.error("The file %s does not exist on this system." % options.filelist)
+        if filenameList == []:
+            #get the filelist from command line
+            filenameList = args
+        if len(filenameList) < 1:
             parser.print_help()
-            parser.error("The file %s does not exist on this system." % options.filelist)
-    if filenameList == []:
-        #get the filelist from command line
-        filenameList = args
-    if len(filenameList) < 1:
+            parser.error("you need to specify at least one inputfile or the FILELIST parameter")
+        for fileName in filenameList:
+            #TODO move this in blotter
+            if not os.path.exists(fileName):
+                parser.print_help()
+                parser.error("The file %s does not exist on this system." % fileName)
+        #creating blotter
+        blotter = Blotter(options.name, filenameList)
+        if options.verbose:
+            print "swirl structure:\n", blotter.getSwirl()
+            #self.assertEqual(self.seq, range(10))
+            print "list of global dependecies:\n", blotter.getSwirl().getDependencies()
+            print "list of global provides:\n", blotter.getSwirl().getProvides()
+        if options.filename:
+            #this should be always true
+            outputfd = open(options.filename, 'w')
+            pickle = PickleSerializer( outputfd )
+            pickle.save(blotter.getSwirl() )
+            outputfd.close()
+            print "file %s saved" % options.filename
+        #success
+        return 0
+    elif options.display :
+        #display the swirl
+        print "TODO implement a print output of the swirl"
+        return 0
+    else:
         parser.print_help()
-        parser.error("you need to specify at least one inputfile or the FILELIST parameter")
-    for fileName in filenameList:
-        #TODO move this in blotter
-        if not os.path.exists(fileName):
-            parser.print_help()
-            parser.error("The file %s does not exist on this system." % fileName)
-    #creating blotter
-    blotter = Blotter(options.name, filenameList)
-    if options.verbose:
-        print "swirl structure:\n", blotter.getSwirl()
-        #self.assertEqual(self.seq, range(10))
-        print "list of global dependecies:\n", blotter.getSwirl().getDependencies()
-        print "list of global provides:\n", blotter.getSwirl().getProvides()
-    if options.filename:
-        outputfd = open(options.filename, 'w')
-        pickle = PickleSerializer( outputfd )
-        pickle.save(blotter.getSwirl() )
-        outputfd.close()
-        print "file %s saved" % options.filename
-    return 0
+        parser.error( "You must select at least one option between -d -c -y" )
     
 
 if __name__ == "__main__":
