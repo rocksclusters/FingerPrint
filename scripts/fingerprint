@@ -109,7 +109,12 @@ def main():
         return 0
     elif options.display :
         #display the swirl
-        print "TODO implement a print output of the swirl"
+        if options.filename :
+            serg = FingerPrint.sergeant.readFromPickle(options.filename)
+            print "File name: ", options.filename
+            print "Swirl Structure:\n", serg.getSwirl()
+            print "Global Dependencies:\n " , serg.getSwirl().getDependencies()
+            print "Global Provide:\n", serg.getSwirl().getProvides()
         return 0
     else:
         parser.print_help()

@@ -154,16 +154,16 @@ class SwirlFile(Swirl):
         self.provides.append(provide)
 
     def __str__(self):
-        string = ""
+        string = "File type: "
         if self.type == "Data":
-            string = "data     "
+            string += "data     "
         else:
-            string = str(self.type) + "  "
-        string += self.path + "\n"
+            string += str(self.type) + "  "
+        string += " File name: " + self.path + "\n"
         if len(self.dependencies) > 0:
-            string += "Deps: " + str(self.dependencies) + "\n"
+            string += "  Deps: " + str(self.dependencies) + "\n"
         if len(self.provides) > 0:
-            string += "Prov: " + str(self.provides) + "\n"
+            string += "  Prov: " + str(self.provides) + "\n"
         return string
 
         
