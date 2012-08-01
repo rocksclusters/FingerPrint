@@ -2,9 +2,8 @@
 
 import unittest
 import subprocess
-from FingerPrint.sergeant import Sergeant
+import FingerPrint.sergeant
 from FingerPrint.swirl import Swirl
-from FingerPrint.serializer import PickleSerializer
 
 
 class TestSequenceFunctions(unittest.TestCase):
@@ -18,12 +17,8 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_sergeant(self):
         print "     -----------------------  Verifying system compatibility with sergeant   -------------------------"
         # test loading file in blotter
-        inputfd = open(self.swirlfile)
-        pickle = PickleSerializer( inputfd )
-        swirl = pickle.load()
-        inputfd.close()
         print "file %s loaded" % self.swirlfile
-        serg=Sergeant(swirl)
+        serg = FingerPrint.sergeant.readFromPickle(self.swirlfile)
         self.assertTrue( serg.check(), msg="The check on %s failed." 
                     % self.swirlfile)
 

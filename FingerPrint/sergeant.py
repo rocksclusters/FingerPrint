@@ -10,10 +10,24 @@ import ctypes
 
 from swirl import Swirl
 from FingerPrint.plugins import PluginManager
+from FingerPrint.serializer import PickleSerializer
+
+
 
 
 """Given a swirl it detect if it can run on this system
 """
+
+
+def readFromPickle(fileName):
+    """helper function to get a swirl from a filename"""
+    inputfd = open(fileName)
+    pickle = PickleSerializer( inputfd )
+    swirl = pickle.load()
+    inputfd.close()
+    return Sergeant(swirl)
+
+
 
 
 
