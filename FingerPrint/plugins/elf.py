@@ -37,8 +37,14 @@ class ElfPlugin(PluginManager):
     #internal
     _ldconfig_64bits = "x86-64"
  
+    #may in the future we could also use 
+    #objdump -p
+    _RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
+    _RPM_FIND_PROV="/usr/lib/rpm/find-provides"
+
+
     @classmethod
-    def isDepsatisfied(self, dependency):
+    def isDepsatisfied(cls, dependency):
         """verify that the dependency passed can be satified on this system
         and return True if so
         """
@@ -48,38 +54,62 @@ class ElfPlugin(PluginManager):
             p = Popen(["ldconfig","-p"], stdin=PIPE, stdout=PIPE)
             grep_stdout = p.communicate(input=None)[0]
             for line in grep_stdout.split('\n'):
-                if len(line) > 0 and soname in line:
-                    #ok that's the right line let's check the 32/64 bits
-                    if dependency.is64bits() and self._ldconfig_64bits in line:
-                        #ok we found it
-                        #TODO add extra checking for version reference
-                        print "dep found: ",line
-                        return True
-                    elif dependency.is32bits() and not self._ldconfig_64bits in line:
-                        return True
+                #dependency is 64 and library is 64
+                #or dependency is 32 and library is 32
+                if len(line) > 0 and soname in line and \
+                    ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
+                    (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
+                    temp = line.split('=>')
+                    if len(temp) == 2:
+                        provider=temp[1].strip()
+                        if cls._verifyFindProvides(provider, dependency.depname):
+                            return True
             return False
         except OSError:
+            print "Error locating ldconfig"
             return False
 
+
+    @classmethod
+    def _verifyFindProvides(cls, provider, requirement):
+        """
+        """
+        fixedProvider = cls._readlinkabs(provider)
+        p = Popen([cls._RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
+        grep_stdout = p.communicate(input=fixedProvider)[0]
+        for line in grep_stdout.split('\n'):
+            if len(line) > 0 and requirement in line:
+                return True
+        return False
+                
+
+    @classmethod
+    def _readlinkabs(cls, l):
+        """
+        If l is a symlink it returns an absolute path for the destination 
+        if not simply return l
+        Used to find the real library path not the symbolic lynk
+        """
+        if not os.path.islink(l) :
+            return l
+        p = os.readlink(l)
+        if os.path.isabs(p):
+            return p
+        return os.path.join(os.path.dirname(l), p)
         
 
     @classmethod
-    def setDepsRequs(self, swirlFile):
+    def _setDepsRequs(cls, swirlFile):
         """given a SwirlFile object it add to it all the dependency and all 
         the provides to it """
 
-        #may in the future we could also use 
-        #objdump -p
-        RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
-        RPM_FIND_PROV="/usr/lib/rpm/find-provides"
-
         #find deps
-        p = Popen([RPM_FIND_DEPS], stdin=PIPE, stdout=PIPE)
+        p = Popen([cls._RPM_FIND_DEPS], stdin=PIPE, stdout=PIPE)
         grep_stdout = p.communicate(input=swirlFile.path)[0]
         for line in grep_stdout.split('\n'):
             if len(line) > 0:
                 newDep = Dependency( line )
-                newDep.setPluginName( self.pluginName )
+                newDep.setPluginName( cls.pluginName )
                 swirlFile.addDependency( newDep )
                 #i need to take the parenthesis out of the game
                 tempList = re.split('\(|\)',line)
@@ -95,18 +125,18 @@ class ElfPlugin(PluginManager):
                     #no parenthesis aka 32 bit 
                     newDep.set32bits()
         #find provides
-        p = Popen([RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
+        p = Popen([cls._RPM_FIND_PROV], stdin=PIPE, stdout=PIPE)
         grep_stdout = p.communicate(input=swirlFile.path)[0]
         for line in grep_stdout.split('\n'):
             if len(line) > 0 :
                 newProv = Provide(line)
-                newProv.setPluginName( self.pluginName )
+                newProv.setPluginName( cls.pluginName )
                 swirlFile.addProvide(newProv)
         
 
 
     @classmethod
-    def getSwirl(self, fileName):
+    def getSwirl(cls, fileName):
         """helper function given a filename it return a Swirl 
         if the given plugin does not support the given fileName should just 
         return None
@@ -117,7 +147,7 @@ class ElfPlugin(PluginManager):
         #for now all the files are dynamic
         if typeStr.startswith( 'ELF ' ):
             swirlFile = SwirlFile( fileName )
-            swirlFile.setPluginName( self.pluginName )
+            swirlFile.setPluginName( cls.pluginName )
             swirlFile.dyn = True
         else:
             #this is not our business
@@ -140,7 +170,7 @@ class ElfPlugin(PluginManager):
             swirlFile.set32bits()
             swirlFile.setShared()
         #add deps and provs
-        self.setDepsRequs(swirlFile)
+        cls._setDepsRequs(swirlFile)
         return swirlFile
 
        
