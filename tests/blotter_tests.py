@@ -60,11 +60,12 @@ class TestSequenceFunctions(unittest.TestCase):
         # test loading file in blotter
         print "     -----------------------     Creating a blotter via API     -------------------------"
         b=Blotter("Test", self.files)
-        self.assertIsNotNone(b.getSwirl())
+        self.assertNotEqual(b.getSwirl(), None, 
+                msg="API: blotter could not instantiate Swirl with file %s" % self.files)
         self.assertTrue( len(b.getSwirl().getDependencies()) > 0, 
-                msg="API: blotter could not find any dependency")
+                msg="API: blotter could not find any dependency in file %s" % self.files)
         self.assertTrue( len(b.getSwirl().getProvides()) > 0, 
-                msg="API: blotter could not find any provides")
+                msg="API: blotter could not find any provides %s" % self.files)
 
 
     def test_commandline(self):
