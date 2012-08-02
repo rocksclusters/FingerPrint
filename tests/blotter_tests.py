@@ -3,6 +3,7 @@
 import unittest
 import subprocess
 import os
+import glob
 from datetime import datetime
 
 
@@ -18,10 +19,17 @@ class TestSequenceFunctions(unittest.TestCase):
         """setup for your unittest"""
         import sys
         sys.path.append("../")
-        #TODO find a better way to find filelist
-        self.files = ["/bin/ls", "/usr/bin/find", "/etc/passwd", 
-            "/lib/libcryptsetup.so.4.0.0", "/lib/x86_64-linux-gnu/libm.so.6",
-            "/lib/x86_64-linux-gnu/libm-2.15.so"]
+        self.files = ["/bin/ls", "/etc/passwd", "/etc/hosts"]
+        #TODO find executable on path
+        if os.path.isfile("/usr/bin/find") :
+            self.files.append("/usr/bin/find")
+        elif os.path.isfile("/bin/find") :
+            self.files.append("/bin/find")
+        self.files.append("/bin/dbus-daemon")
+        self.files += glob.glob("/lib*/libcryptsetup.so.*")
+        self.files += glob.glob("/lib*/libdmraid.so.*")
+        self.files += glob.glob("/lib*/libnss_nis*")
+        #print "File list: ", self.files
         self.swirlfile = "tests/test.swirl"
         self.availablePlugin = 2
 
