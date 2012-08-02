@@ -40,7 +40,7 @@ class Sergeant:
         self.swirl = swirl
         #TODO implement extrapath
         self.extraPath = extraPath
-        self.error = ""
+        self.error = []
 
 
     def check(self):
@@ -48,12 +48,12 @@ class Sergeant:
         the dependencies can be satisfied on the current system
         """
         depList = self.swirl.getDependencies()
+        returnValue = True
         for dep in depList:
             if not PluginManager.isDepsatisfied(dep):
-                self.error = dep.depname
-                return False
-        #all deps can be satified!
-        return True
+                self.error.append(dep.depname)
+                returnValue = False
+        return returnValue
 
     def getError(self):
         """TODO return a string descripting what failed the check"""

@@ -60,16 +60,17 @@ def main():
     #
     if (options.verify + options.create + options.display) != 1:
         #too many flags
-        parser.error("Only one of the flag -y -c -d can be used at a time" )
+        parser.error("Only one of the flag -y -c -d must be used at a time" )
 
     if options.verify :
         #verify the current swirl
         serg = FingerPrint.sergeant.readFromPickle(options.filename)
         if not serg.check():
             #error let print some stuff
-            print "On the current system the swirl %s can not be " % options.filename + \
-                "completely verified.\n" 
-            print "Dependency ", serg.getError(), " can not be found"
+            print "The file %s failed.\n" % options.filename 
+            print "Missing dependecies:"
+            for i in serg.getError():
+                print "    ", i
             return -1
         else:
             print "Swirl %s pass the test" % options.filename
