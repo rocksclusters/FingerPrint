@@ -120,8 +120,8 @@ def main():
             serg = FingerPrint.sergeant.readFromPickle(options.filename)
             print "File name: ", options.filename
             print "Swirl Structure:\n", serg.getSwirl()
-            print "Global Dependencies:\n " , serg.getSwirl().getDependencies()
-            print "Global Provide:\n", serg.getSwirl().getProvides()
+            print "Global Dependencies:  " , serg.getSwirl().getDependencies()
+            print "Global Provide:  ", serg.getSwirl().getProvides()
         return 0
     else:
         parser.print_help()
