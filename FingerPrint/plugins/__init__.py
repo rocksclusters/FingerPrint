@@ -90,7 +90,7 @@ class PluginManager(object):
 
 import pkgutil
 
-for importer, package_name, _ in pkgutil.iter_modules(['FingerPrint/plugins']):
+for importer, package_name, _ in pkgutil.iter_modules(globals()["__path__"]):
     full_package_name = 'FingerPrint.plugins.%s' % package_name
     module = importer.find_module(package_name).load_module(full_package_name)
 
