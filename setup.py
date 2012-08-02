@@ -50,6 +50,7 @@ setup(
     author_email =  'philip.papadopoulos@gmail.com',
     maintainer = 'Luca Clementi',
     maintainer_email =  'luca.clementi@gmail.com',
+    url = 'https://github.com/lclementi/FingerPrint',
     #main package, most of the code is inside here
     packages = ['FingerPrint', 'FingerPrint.plugins'],
     #package_dir = {'FingerPrint': 'FingerPrint'},
