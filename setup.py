@@ -23,11 +23,12 @@ class TestCommand(Command):
 
     def run(self):
         '''
-        Finds all the tests modules in tests/, and runs them.
+        Finds all the tests modules named with the pattern tests/*_tests.py 
+        Simply rename a bravo_tests.py to bravo_tosts.py to disable the file
         '''
         testfiles = [ ]
         for t in glob(pjoin(self._dir, 'tests', '*.py')):
-            if not t.endswith('__init__.py'):
+            if not t.endswith('__init__.py') and t.endswith("tests.py"):
                 testfiles.append('.'.join(
                     ['tests', splitext(basename(t))[0]])
                 )
