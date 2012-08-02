@@ -1,0 +1,7 @@
+extracted from CentOS 6.2 (rocks 6.0)
+
+gnome-pilot-2.0.17-9.el6.x86_64      /usr/lib64/libgpilotd.so.2.2.0
+libsmbclient-3.5.10-116.el6_2.x86_64 /usr/lib64/libsmbclient.so.0
+dbus-1.2.24-5.el6_1.x86_64           /bin/dbus-daemon
+
+

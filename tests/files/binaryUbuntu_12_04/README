@@ -1,0 +1,8 @@
+files extracted from ubuntu 12.04 x86_64
+
+
+dbus            1.4.18-1ubuntu1         /bin/dbus-daemon
+libsmbclient    2:3.6.3-2ubuntu2.3      /usr/lib/x86_64-linux-gnu/libsmbclient.so.0
+
+
+
