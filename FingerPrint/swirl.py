@@ -96,8 +96,10 @@ class Swirl(object):
 
     def __eq__(self, other):
         #I need this to get the 
-        # depA in depList working
-        #TODO is it still needed?
+        #depA in depList working
+        #see function getProvides and getDependecies
+        if other is None:
+            return False
         return self.__dict__ == other.__dict__
 
     def __str__( self ):
