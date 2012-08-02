@@ -81,7 +81,11 @@ class TestSequenceFunctions(unittest.TestCase):
             msg="fingerprint-create: failed to analize the files: " + str(self.files))
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
+        #let's verify that swirl, the test must pass!!
+        self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-y'] ), 0,
+            msg="fingerprint-verify: failed to verify swirl created on this system %s" % outputfilename)
         os.remove(outputfilename)
+        #let's create a swirl with input file list taken from a file
         filelist='filelist'
         fd=open(filelist,'w')
         for i in self.files:
