@@ -67,8 +67,8 @@ def main():
         serg = FingerPrint.sergeant.readFromPickle(options.filename)
         if not serg.check():
             #error let print some stuff
-            print "On the current system the swirl %s can not be completely " +\
-                    "verified.\n\n" % options.filename
+            print "On the current system the swirl %s can not be " % options.filename + \
+                "completely verified.\n" 
             print "Dependency ", serg.getError(), " can not be found"
             return -1
         else:

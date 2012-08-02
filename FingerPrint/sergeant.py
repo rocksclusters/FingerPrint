@@ -57,7 +57,7 @@ class Sergeant:
 
     def getError(self):
         """TODO return a string descripting what failed the check"""
-        return ""
+        return self.error
 
 
     def isDepsatified(self, dependency):
