@@ -34,7 +34,7 @@ def main():
     group.add_option("-d", "--display", action="store_true", dest="display",
                     default=False,
                     help="Display the content of the given swirl file")
-    #varioius option
+    #various option
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE", metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
@@ -62,7 +62,7 @@ def main():
             #error let print some stuff
             print "On the current system the swirl %s can not be completely " +\
                     "verified.\n\n" % options.filename
-            print "Error:\n", serg.getError()
+            print "Dependency ", serg.getError(), " can not be found"
             return -1
         else:
             print "Swirl %s pass the test" % options.filename

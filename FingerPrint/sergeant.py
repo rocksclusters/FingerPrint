@@ -40,6 +40,7 @@ class Sergeant:
         self.swirl = swirl
         #TODO implement extrapath
         self.extraPath = extraPath
+        self.error = ""
 
 
     def check(self):
@@ -49,6 +50,7 @@ class Sergeant:
         depList = self.swirl.getDependencies()
         for dep in depList:
             if not PluginManager.isDepsatisfied(dep):
+                self.error = dep.depname
                 return False
         #all deps can be satified!
         return True
