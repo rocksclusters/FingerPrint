@@ -8,7 +8,14 @@ import os
 import StringIO
 from optparse import OptionParser, OptionGroup
 
-import FingerPrint, FingerPrint.sergeant
+try:
+	import FingerPrint, FingerPrint.sergeant
+except ImportError:
+	#we need this when we run unittest
+        import sys
+        sys.path.append("./")
+	import FingerPrint, FingerPrint.sergeant
+
 from FingerPrint.swirl import Swirl
 from FingerPrint.blotter import Blotter
 from FingerPrint.serializer import PickleSerializer
