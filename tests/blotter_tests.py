@@ -30,7 +30,6 @@ class TestSequenceFunctions(unittest.TestCase):
         self.files += glob.glob("/lib*/libdmraid.so.*")
         self.files += glob.glob("/lib*/libnss_nis*")
         #print "File list: ", self.files
-        self.swirlfile = "tests/test.swirl"
         self.availablePlugin = 2
 
 
@@ -46,27 +45,6 @@ class TestSequenceFunctions(unittest.TestCase):
             msg="Plugin manager did not load all the available plugins (available %d, detected %d) " 
             % (len(p) , self.availablePlugin) )
             
-
-
-    def test_sergeant(self):
-        print "     -----------------------     Verifying sergeant via API     -------------------------"
-        # test loading file in blotter
-        print "file %s loaded" % self.swirlfile
-        serg = FingerPrint.sergeant.readFromPickle(self.swirlfile)
-        self.assertTrue( serg.check(), msg="API: creating sergeant from %s failed." 
-                % self.swirlfile)
-
-    def test_blotter(self):
-        # test loading file in blotter
-        print "     -----------------------     Creating a blotter via API     -------------------------"
-        b=Blotter("Test", self.files)
-        self.assertNotEqual(b.getSwirl(), None, 
-                msg="API: blotter could not instantiate Swirl with file %s" % self.files)
-        self.assertTrue( len(b.getSwirl().getDependencies()) > 0, 
-                msg="API: blotter could not find any dependency in file %s" % self.files)
-        self.assertTrue( len(b.getSwirl().getProvides()) > 0, 
-                msg="API: blotter could not find any provides %s" % self.files)
-
 
     def test_commandline(self):
         """ """
@@ -97,6 +75,48 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
         os.remove(outputfilename)
+
+
+    def test_predefinedBinaries(self):
+        #that how we get the platform name
+        print "     -----------------------     Running fingerprint on predefined set of files   -------------------------"
+        import platform
+        dist = platform.dist()
+        arch = platform.machine()
+        platformname = dist[0] + "_" + dist[1] + "_" + arch
+        print "System path is: ", platformname
+        basedir = os.path.dirname( globals()["__file__"] )
+        basedir += '/files/'
+        testPlatforms = os.listdir(basedir)
+        for testPlat in testPlatforms:
+            testPlatPath = basedir + testPlat
+            fileList = [os.path.join(testPlatPath, f) for f in os.listdir(testPlatPath)]
+            self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-c', 
+                '-f', testPlat + '.swirl'] + fileList), 0, 
+                msg="fingerprint-create: failed to create swirl for platform %s\n Input file %s"
+                % (testPlatPath, fileList))
+            if testPlat == platformname:
+                #verification should succeed
+                result = 0
+                error = "pass"
+            else:
+                result = 1
+                error = "fail"
+            returncode = subprocess.call(['python', './scripts/fingerprint', '-y',
+                '-f', testPlat + '.swirl'])
+            self.assertEqual( returncode, result,
+                msg="fingerprint-verify: failed verification for swirl %s was supposed to %s"
+                % (testPlat + '.swirl', error))
+            os.remove(testPlat + '.swirl')
+
+
+   
+		
+		
+
+
+	
+
 
 
 if __name__ == '__main__':

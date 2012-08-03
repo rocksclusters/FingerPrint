@@ -6,13 +6,13 @@
 from datetime import datetime
 import os
 import StringIO
+import sys
 from optparse import OptionParser, OptionGroup
 
 try:
 	import FingerPrint, FingerPrint.sergeant
 except ImportError:
 	#we need this when we run unittest
-        import sys
         sys.path.append("./")
 	import FingerPrint, FingerPrint.sergeant
 
@@ -71,7 +71,7 @@ def main():
             print "Missing dependecies:"
             for i in serg.getError():
                 print "    ", i
-            return -1
+            sys.exit(1)
         else:
             print "Swirl %s pass the test" % options.filename
             return 0
