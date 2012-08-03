@@ -82,14 +82,6 @@ class Swirl(object):
         self.swirlFiles.append(swirlFile)
 
        
-    def getBinaryFiles(self): 
-        """Return a list of file which should be checked for dependency or provides"""
-        retList=[]
-        for i in self.swirlFiles:
-            if i.isBinary():
-                retList.append(i)
-        return retList
-
 
     def getDateString(self):
         return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")
@@ -136,9 +128,8 @@ class SwirlFile(Swirl):
     def getPluginName(self):
         return self.pluginName
 
-    def isBinary(self):
-        return self.type.startswith( 'ELF' ) 
-
+    #TODO remove this function from here too dependent from the 
+    #file type
     def setShared(self):
         """ """
         self.type = 'ELF_sha'    
