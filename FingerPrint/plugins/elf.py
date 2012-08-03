@@ -6,7 +6,6 @@
 #
 
 import os
-import magic
 from subprocess import PIPE, Popen
 import StringIO
 import re
@@ -137,34 +136,23 @@ class ElfPlugin(PluginManager):
         return None
         ATT: only one plugin should return a SwirlFile for a given file
         """
-        m=magic.Magic()
-        typeStr=m.from_file( fileName )
-        #for now all the files are dynamic
-        if typeStr.startswith( 'ELF ' ):
+        fd=open(fileName)
+        magic = fd.read(4)
+        if magic == '\x7f\x45\x4c\x46':
+            #it's an elf see specs
+            #http://www.sco.com/developers/gabi/1998-04-29/ch4.eheader.html#elfid
             swirlFile = SwirlFile( fileName )
             swirlFile.setPluginName( cls.pluginName )
             swirlFile.dyn = True
         else:
-            #this is not our business
+            #not an elf
             return None
-        #do we really need this?
-        if typeStr.startswith('ELF 64-bit LSB executable'): #and os.access(fileName, os.X_OK):
-            #ELF 64 bit
-            swirlFile.set64bits()
-            swirlFile.setExecutable()
-        elif typeStr.startswith('ELF 32-bit LSB executable'):
-            #ELF 32 bit
+        bitness = fd.read(1)
+        if bitness == '\x01':
             swirlFile.set32bits()
-            swirlFile.setExecutable()
-        elif typeStr.startswith('ELF 64-bit LSB shared object'):
-            #shared library 64
+        elif bitness == '\x02':
             swirlFile.set64bits()
-            swirlFile.setShared()
-        elif typeStr.startswith('ELF 32-bit LSB shared object'):
-            #shared library 32
-            swirlFile.set32bits()
-            swirlFile.setShared()
-        #add deps and provs
+        swirlFile.type = 'ELF'
         cls._setDepsRequs(swirlFile)
         return swirlFile
 

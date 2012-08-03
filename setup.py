@@ -55,7 +55,7 @@ setup(
     packages = ['FingerPrint', 'FingerPrint.plugins'],
     #package_dir = {'FingerPrint': 'FingerPrint'},
     #needs this for detecting file type
-    py_modules=['magic'],
+    #py_modules=['magic'],
     #the command line called by users    
     scripts=['scripts/fingerprint'],
     #additional command to build this distribution
