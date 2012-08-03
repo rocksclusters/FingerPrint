@@ -34,15 +34,19 @@ class PluginMount(type):
 
 class PluginManager(object):
     """
-    Super class of the various plugins. All the plugins should inherit from this class
+    Super class of the various plugins. All the plugins should inherit from 
+    this class
 
-    Plugins implementing this reference should provide the following attributes:
+    Plugins implementing this reference should provide the following 
+    attributes/methods:
 
     pluginName: this must be a unique string representing the plugin name
+    isDepsatisfied: a classmethod which return True if the dependency can be 
+                satisfied or False if it can not
+    getSwirl: a classmethod that given a path to a file it return None if the 
+                file can not be handled by the given plugin or a SwirlFile 
+                with the dependency set if the plugin can handle the file
     
-
-    TODO write this 
-
     """
 
     __metaclass__ = PluginMount
@@ -66,11 +70,12 @@ class PluginManager(object):
 
     @classmethod
     def getSwirl(self, fileName):
-        """helper function given a filename it return a Swirl 
+        """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
         ATT: only one plugin should return a SwirlFile for a given file
         """
+        #we call all the getSwirl method of all the plugin
         for key, plugin in self.plugins.iteritems():
             temp = plugin.getSwirl(fileName)
             if temp != None:

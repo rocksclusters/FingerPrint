@@ -130,7 +130,7 @@ class ElfPlugin(PluginManager):
 
     @classmethod
     def getSwirl(cls, fileName):
-        """helper function given a filename it return a Swirl 
+        """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
         ATT: only one plugin should return a SwirlFile for a given file
