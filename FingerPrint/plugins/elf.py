@@ -61,10 +61,27 @@ class ElfPlugin(PluginManager):
                 temp = line.split('=>')
                 if len(temp) == 2:
                     provider=temp[1].strip()
-                    realProvider = cls._readlinkabs(provider)
-                    for line in cls._getOutputAsList([cls._RPM_FIND_PROV], realProvider):
-                        if len(line) > 0 and dependency.depname in line:
-                            return True
+                    if cls._checkMinor(provider, dependency.depname):
+                        return True
+        pathToScan = cls.systemPath
+        if "LD_LIBRARY_PATH" in os.environ:
+            #we need to scan the LD_LIBRARY_PATH too
+            pathToScan += os.environ["LD_LIBRARY_PATH"].split()
+        for path in pathToScan:
+            if os.path.isfile(path + '/' + soname) and \
+                cls._checkMinor(path + '/' + soname, dependency.depname):
+                #we found the soname and minor are there return true
+                return True
+        return False
+
+
+    @classmethod
+    def _checkMinor(cls, libPath, depName):
+        """ check if libPath provides the depName (major and minor) """
+        realProvider = os.path.realpath(libPath)
+        for line in cls._getOutputAsList([cls._RPM_FIND_PROV], realProvider):
+            if len(line) > 0 and depName in line:
+                return True
         return False
 
 
@@ -77,22 +94,7 @@ class ElfPlugin(PluginManager):
         grep_stdout = p.communicate(input=inputString)[0]
         return grep_stdout.split('\n')
 
-                
 
-    @classmethod
-    def _readlinkabs(cls, l):
-        """
-        If l is a symlink it returns an absolute path for the destination 
-        if not simply return l
-        Used to find the real library path not the symbolic lynk
-        """
-        if not os.path.islink(l) :
-            return l
-        p = os.readlink(l)
-        if os.path.isabs(p):
-            return p
-        return os.path.join(os.path.dirname(l), p)
-        
 
     @classmethod
     def _setDepsRequs(cls, swirlFile):

@@ -56,7 +56,8 @@ class PluginManager(object):
     @classmethod
     def addSystemPaths(self, paths):
         """add additional path to the search for dependency """
-        self.systemPath += paths
+        if paths :
+            self.systemPath += paths
 
     @classmethod
     def isDepsatisfied(self, dependency):
