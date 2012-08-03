@@ -119,7 +119,7 @@ def main():
             pickle = PickleSerializer( outputfd )
             pickle.save(blotter.getSwirl() )
             outputfd.close()
-            print "file %s saved" % options.filename
+            print "File %s saved" % options.filename
         #success
         return 0
     elif options.display :
