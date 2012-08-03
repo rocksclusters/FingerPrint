@@ -11,8 +11,8 @@ import StringIO
 
 
 """Swirl hold in memory the representation of a swirl.
-The two main components are SwirlFile aka file tracked by this swirl
-and Dependency aka dependency which one of the swirl file needs to run
+The two main components are SwirlFile aka files tracked by this swirl
+Dependency aka dependencies needed by SwirlFile to run
 """
 
 class Swirl(object):
@@ -128,16 +128,6 @@ class SwirlFile(Swirl):
     def getPluginName(self):
         return self.pluginName
 
-    #TODO remove this function from here too dependent from the 
-    #file type
-    def setShared(self):
-        """ """
-        self.type = 'ELF_sha'    
-
-    def setExecutable(self):
-        """ """
-        self.type = 'ELF_exe'
-
     def addDependency(self, dep):
         """ dep must be a Dependency object"""
         self.dependencies.append(dep)
@@ -157,25 +147,6 @@ class SwirlFile(Swirl):
             string += "  Deps: " + str(self.dependencies) + "\n"
         if len(self.provides) > 0:
             string += "  Prov: " + str(self.provides) + "\n"
-        return string
-
-        
-class DependencySet(Swirl):
-    """does it make sense to have recursive dependency set?
-    or should they just be a flat list?
-    TODO not used at the moment
-    """ 
-
-    def __init__(self):
-        self.depSet = []
-
-    def addDependency(self, dependency):
-        self.depSet.append(Dependency(dependency))
-    
-    def __str__( self ):
-        string=""
-        for i in self.depSet:
-            string += str(i) + "\n"  
         return string
 
 
