@@ -103,7 +103,7 @@ class TestSequenceFunctions(unittest.TestCase):
             else:
                 result = 1
                 error = "fail"
-            returncode = subprocess.call(['python', './scripts/fingerprint', '-y',
+            returncode = subprocess.call(['python', './scripts/fingerprint', '-y', '-v',
                 '-f', testPlat + '.swirl'])
             self.assertEqual( returncode, result,
                 msg="fingerprint-verify: failed verification for swirl %s was supposed to %s"

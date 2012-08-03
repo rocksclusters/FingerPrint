@@ -68,9 +68,10 @@ def main():
         if not serg.check():
             #error let print some stuff
             print "The file %s failed.\n" % options.filename 
-            print "Missing dependecies:"
-            for i in serg.getError():
-                print "    ", i
+            if options.verbose :
+                print "Missing dependecies:"
+                for i in serg.getError():
+                    print "    ", i
             sys.exit(1)
         else:
             print "Swirl %s pass the test" % options.filename
@@ -120,9 +121,10 @@ def main():
         if options.filename :
             serg = FingerPrint.sergeant.readFromPickle(options.filename)
             print "File name: ", options.filename
-            print "Swirl Structure:\n", serg.getSwirl()
+            if options.verbose :
+                print serg.getSwirl()
             print "Global Dependencies:  " , serg.getSwirl().getDependencies()
-            print "Global Provide:  ", serg.getSwirl().getProvides()
+            print "Global Provides:  ", serg.getSwirl().getProvides()
         return 0
     else:
         parser.print_help()
