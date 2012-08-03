@@ -38,9 +38,13 @@ class Sergeant:
         extraPath is a list of string containing system path which should 
         be included in the search of dependencies"""
         self.swirl = swirl
-        #TODO implement extrapath
         self.extraPath = extraPath
         self.error = []
+
+    def setExtraPath(self, path):
+        """
+        """
+        self.extraPath = path.split(':')
 
 
     def check(self):
@@ -49,6 +53,7 @@ class Sergeant:
         """
         depList = self.swirl.getDependencies()
         returnValue = True
+        PluginManager.addSystemPaths(self.extraPath)
         for dep in depList:
             if not PluginManager.isDepsatisfied(dep):
                 self.error.append(dep.depname)
@@ -56,22 +61,9 @@ class Sergeant:
         return returnValue
 
     def getError(self):
-        """TODO return a string descripting what failed the check"""
+        """return a string descripting what failed the check"""
         return self.error
 
-
-    def isDepsatified(self, dependency):
-        """verify that the dependency passed can be satified on this system
-        and return True if so
-        TODO make this a little more extensible
-        """
-        soname = dependency.depname.split('(')[0]
-        try:
-            #TODO this verify only the soname we need to check for version too!
-            ctypes.cdll.LoadLibrary(soname) 
-            return True
-        except OSError:
-            return False
        
     def getSwirl(self):
         """return the current swirl """

@@ -27,7 +27,7 @@ def main():
     # 
     usage = "usage: %prog [-c|-y|-d] [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
-    #what are we going to do
+    #what are we going to do required options
     group = OptionGroup(parser, "Required Options",
                     "You must select one of these options")
     parser.add_option_group(group)
@@ -45,7 +45,11 @@ def main():
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE", metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
-                    help="the name of the swirl, default to Swirl")
+                    help="the name of the swirl that will be created, this is " + \
+                    "an internal value used at creation time (default to Swirl)")
+    parser.add_option("-p", "--paths", dest="paths", 
+                    help="add extra paths (colon separated) to search for " +\
+                    " dependencies (valid with verify only)")
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
                     help="a file containing a list of file which will be " + \
                     "included to this swirl")
@@ -59,12 +63,14 @@ def main():
     # switch based on user input
     #
     if (options.verify + options.create + options.display) != 1:
-        #too many flags
+        #too many or too few flags
         parser.error("Only one of the flag -y -c -d must be used at a time" )
 
     if options.verify :
         #verify the current swirl
         serg = FingerPrint.sergeant.readFromPickle(options.filename)
+        if options.paths :
+            serg.setExtraPath(options.paths)
         if not serg.check():
             #error let print some stuff
             print "The file %s failed.\n" % options.filename 
