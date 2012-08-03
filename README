@@ -16,7 +16,7 @@ To install from source run
  # python setup.py install
 
 This will install FingerPrint in your python. FingerPrint consist of:
- - a bunch of python module inside the FingerPrint module
+ - a bunch of python module and submodule inside the FingerPrint module
  - magic.py
  - a command line called fingerprint
 
@@ -24,6 +24,29 @@ To run some unittest run
 
  # python setup.py test
 
+
+
+ --  USE   --
+
+To get some help on the commnad line you can simply type:
+
+ # fingerprint -h 
+
+Basically there are tree actions fingerprint can do:
+
+ 1. Create a swirl from a set of input file (flag -c). In this mode
+    fingerprint will scan the list of files passed on the command line
+    and it will output a swirl file containing all the dependency detected 
+    in files.
+
+ 2. Display the content of a swirl file (flag -d). In this mode fingerprint 
+    will print to stdout a detailed description of the input swirl. The input
+    swirl can be specified with -f, or it will be the default output.swirl.
+
+ 3. Verify a swirl (flag -y). In this mode fingerprint scan the current system 
+    for dependency listed in the input swirl and return 0 upon success or 1 upon
+    failure. If verbose flag is given it will print also a list of unmet 
+    depenencies.
 
 
 
