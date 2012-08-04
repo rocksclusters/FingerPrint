@@ -49,7 +49,7 @@ class ElfPlugin(PluginManager):
         """
         soname = dependency.depname.split('(')[0]
         #for each library we have in the system
-        for line in cls._getOutputAsList(["ldconfig","-p"]):
+        for line in cls._getOutputAsList(["/sbin/ldconfig","-p"]):
             #if dependency is 64 and library is 64 of
             # dependency is 32 and library is 32:
             if len(line) > 0 and soname in line and \
