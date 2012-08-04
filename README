@@ -16,8 +16,7 @@ To install from source run
  # python setup.py install
 
 This will install FingerPrint in your python. FingerPrint consist of:
- - a bunch of python module and submodule inside the FingerPrint module
- - magic.py
+ - a bunch of python modules and submodules inside the FingerPrint module
  - a command line called fingerprint
 
 To run some unittest run
