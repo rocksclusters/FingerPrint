@@ -1,0 +1,15 @@
+
+run_type = build
+project = FingerPrint
+project_version = 0.1
+description = FingerPrint build and test
+
+inputs = git-clone.url
+remote_task = FingerPrint/batlab/test.sh
+# remote_task_args = default remote_task args
+# remote_task_timeout = 5m
+
+# platforms = x86_64_ubuntu_12.04, x86_rhap_6.3
+platforms = x86_rhap_6.3
+notify = clem@sdsc.edu
+
