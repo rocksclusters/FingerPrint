@@ -6,7 +6,6 @@
 #
 
 import os
-import ctypes
 
 from swirl import Swirl
 from FingerPrint.plugins import PluginManager
