@@ -106,8 +106,8 @@ else:
     for pth in globals()["__path__"]:
         for mod_path in os.listdir(pth):
             init_py = os.path.join(pth, mod_path)
-            if mod_path.endswith('.py') and os.path.isfile(init_py): 
-                print "modpath"	, mod_path
+            if mod_path.endswith('.py') and mod_path != '__init__.py' \
+                and os.path.isfile(init_py): 
                 nm = "FingerPrint.plugins.%s" % mod_path.rstrip('.py')
                 try:
                     __import__(nm)
