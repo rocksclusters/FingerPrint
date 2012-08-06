@@ -53,6 +53,8 @@ setup(
     url = 'https://github.com/lclementi/FingerPrint',
     #main package, most of the code is inside here
     packages = ['FingerPrint', 'FingerPrint.plugins'],
+    
+    package_data={'FingerPrint.plugins': ['find-requires', 'find-provides']},
     #package_dir = {'FingerPrint': 'FingerPrint'},
     #needs this for detecting file type
     #py_modules=['magic'],

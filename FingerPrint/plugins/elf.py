@@ -27,7 +27,6 @@ TODO:
 """
 
 
-
 class ElfPlugin(PluginManager):
     """this plugin manages all ELF file format"""
 
@@ -38,8 +37,8 @@ class ElfPlugin(PluginManager):
  
     #may in the future we could also use 
     #objdump -p
-    _RPM_FIND_DEPS="/usr/lib/rpm/find-requires"
-    _RPM_FIND_PROV="/usr/lib/rpm/find-provides"
+    _RPM_FIND_DEPS=os.path.dirname( globals()["__file__"] ) + "/find-requires"
+    _RPM_FIND_PROV=os.path.dirname( globals()["__file__"] ) + "/find-provides"
 
 
     @classmethod
@@ -78,7 +77,7 @@ class ElfPlugin(PluginManager):
     def _checkMinor(cls, libPath, depName):
         """ check if libPath provides the depName (major and minor) """
         realProvider = os.path.realpath(libPath)
-        for line in cls._getOutputAsList([cls._RPM_FIND_PROV], realProvider):
+        for line in cls._getOutputAsList(['bash', cls._RPM_FIND_PROV], realProvider):
             if len(line) > 0 and depName in line:
                 return True
         return False
@@ -101,7 +100,7 @@ class ElfPlugin(PluginManager):
         the provides to it """
 
         #find deps
-        for line in cls._getOutputAsList([cls._RPM_FIND_DEPS], swirlFile.path):
+        for line in cls._getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path):
             if len(line) > 0:
                 newDep = Dependency( line )
                 newDep.setPluginName( cls.pluginName )
@@ -121,7 +120,7 @@ class ElfPlugin(PluginManager):
                     newDep.set32bits()
         #find provides
         
-        for line in cls._getOutputAsList([cls._RPM_FIND_PROV], swirlFile.path):
+        for line in cls._getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path):
             if len(line) > 0 :
                 newProv = Provide(line)
                 newProv.setPluginName( cls.pluginName )
