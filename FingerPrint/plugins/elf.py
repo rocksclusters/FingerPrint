@@ -9,7 +9,6 @@ import os
 from subprocess import PIPE, Popen
 import StringIO
 import re
-import ctypes
 
 
 from FingerPrint.swirl import SwirlFile, Dependency, Provide

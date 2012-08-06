@@ -95,10 +95,24 @@ class PluginManager(object):
 #
 
 import pkgutil
+import os
+import sys
 
-for importer, package_name, _ in pkgutil.iter_modules(globals()["__path__"]):
-    full_package_name = 'FingerPrint.plugins.%s' % package_name
-    module = importer.find_module(package_name).load_module(full_package_name)
-
+if hasattr(pkgutil,'iter_modules'):              #line added
+    for importer, package_name, _ in pkgutil.iter_modules(globals()["__path__"]):
+        full_package_name = 'FingerPrint.plugins.%s' % package_name
+        module = importer.find_module(package_name).load_module(full_package_name)
+else:
+    for pth in globals()["__path__"]:
+        for mod_path in os.listdir(pth):
+            init_py = os.path.join(pth, mod_path)
+            if mod_path.endswith('.py') and os.path.isfile(init_py): 
+                print "modpath"	, mod_path
+                nm = "FingerPrint.plugins.%s" % mod_path.rstrip('.py')
+                try:
+                    __import__(nm)
+                except:
+                    print >> sys.stderr, "Failed to import module %s" % nm
+                    pass
 
 
