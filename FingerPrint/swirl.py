@@ -56,7 +56,7 @@ class Swirl(object):
         provides = map( lambda x: x.provname, self.getProvides())
         #this removes from tempDep provides element :-o
         tempDep[:] = [i for i in tempDep if not i.depname in provides]
-        return tempDep
+        return sorted(tempDep, key=str)
 
 
     def getProvides(self):
@@ -67,7 +67,7 @@ class Swirl(object):
             for prov in file.provides:
                 if prov not in tempPro:
                     tempPro.append(prov)
-        return tempPro
+        return sorted(tempPro, key=str)
 
 
     def save(self, saver):

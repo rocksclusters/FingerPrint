@@ -61,7 +61,7 @@ class Sergeant:
 
     def getError(self):
         """return a string descripting what failed the check"""
-        return self.error
+        return sorted(self.error)
 
        
     def getSwirl(self):
