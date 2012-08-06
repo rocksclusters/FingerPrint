@@ -92,7 +92,7 @@ def main():
                 filelistfd = open(options.filelist)
                 for i in filelistfd:
                     filenameList.append(i.strip())
-            except IOError as e:
+            except IOError:
                 parser.print_help()
                 parser.error("The file %s does not exist on this system." % options.filelist)
         if filenameList == []:
