@@ -11,6 +11,6 @@ remote_task = FingerPrint/batlab/test.sh
 
 # platforms = x86_64_ubuntu_12.04, x86_rhap_6.3
 platforms = x86_64_ubuntu_12.04, x86_rhap_6.3, x86_rhap_5.8, x86_64_rhap_6.3, x86_64_rhap_5.8, x86_64_deb_5.0
-platforms = x86_rhap_6.3
+#platforms = x86_rhap_6.3
 notify = clem@sdsc.edu
 
