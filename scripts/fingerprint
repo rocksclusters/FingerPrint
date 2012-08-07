@@ -94,18 +94,18 @@ def main():
                     filenameList.append(i.strip())
             except IOError:
                 parser.print_help()
-                parser.error("The file %s does not exist on this system." % options.filelist)
+                parser.error("The file %s does not exist on this system.\n" % options.filelist)
         if filenameList == []:
             #get the filelist from command line
             filenameList = args
         if len(filenameList) < 1:
             parser.print_help()
-            parser.error("you need to specify at least one inputfile or the FILELIST parameter")
+            parser.error("You need to specify at least one inputfile or the FILELIST parameter.\n")
         for fileName in filenameList:
             #TODO move this in blotter
             if not os.path.exists(fileName):
                 parser.print_help()
-                parser.error("The file %s does not exist on this system." % fileName)
+                parser.error("The file %s does not exist on this system.\n" % fileName)
         #creating blotter
         blotter = Blotter(options.name, filenameList)
         if options.verbose:
@@ -134,7 +134,7 @@ def main():
         return 0
     else:
         parser.print_help()
-        parser.error( "You must select at least one option between -d -c -y" )
+        parser.error( "You must select one option between -d, -c and -y.\n" )
     
 
 if __name__ == "__main__":

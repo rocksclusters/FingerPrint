@@ -25,7 +25,8 @@ class TestSequenceFunctions(unittest.TestCase):
             self.files.append("/usr/bin/find")
         elif os.path.isfile("/bin/find") :
             self.files.append("/bin/find")
-        self.files.append("/bin/dbus-daemon")
+        if os.path.isfile("/bin/dbus-daemon")
+            self.files.append("/bin/dbus-daemon")
         self.files += glob.glob("/lib*/libcryptsetup.so.*")
         self.files += glob.glob("/lib*/libdmraid.so.*")
         self.files += glob.glob("/lib*/libnss_nis*")
