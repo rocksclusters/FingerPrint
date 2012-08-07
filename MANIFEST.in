@@ -1,0 +1,2 @@
+include FingerPrint/plugins/find-provides
+include FingerPrint/plugins/find-requires
