@@ -74,7 +74,6 @@ class PythonPlugin(PluginManager):
             swirlFile = SwirlFile( fileName )
             swirlFile.setPluginName( cls.pluginName )
             swirlFile.type = cls.pluginName
-            print "Plugin name ", cls.pluginName
             swirlFile.dyn = True
             for item in cls._match(lis) :
                 #it is a python file
