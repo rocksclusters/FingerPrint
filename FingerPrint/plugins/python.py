@@ -16,6 +16,10 @@ from FingerPrint.plugins import PluginManager
 """This is a plugin to check python files for their dependencies and provides
 """
 
+# Preliminary hack to python 2.4 compatibility
+def _pro( x ):
+    return x[1]
+
 
 class PythonPlugin(PluginManager):
     """this plugin manages only python source code file for now"""
@@ -31,15 +35,8 @@ class PythonPlugin(PluginManager):
         and return True if so
         """
         #TODO implement this
-        
         return True
 
-
-
-    # Preliminary hack to python 2.4 compatibility
-    @classmethod
-    def _pro(cls, x) :
-        return x[1]
                 
     @classmethod
     def _match(cls, tree) :
@@ -55,7 +52,7 @@ class PythonPlugin(PluginManager):
                     elif node[1][1] == 'from' :
                         yield ".".join( [ i for t,i in  node[2][1:] if t==1 ])
     
-                for item in match(node) :
+                for item in cls._match(node) :
                     yield item
 
 
@@ -72,13 +69,15 @@ class PythonPlugin(PluginManager):
             return None
         else :
             swirlFile = SwirlFile( fileName )
-            swirlFile.setPluginName( self.pluginName )
+            swirlFile.setPluginName( cls.pluginName )
+            swirlFile.type = cls.pluginName
+            print "Plugin name ", cls.pluginName
             swirlFile.dyn = True
             for item in cls._match(lis) :
                 #it is a python file
-                if item not in _buildin_modules :
-                    newDep = Dependency( "%s(%s)" % (_prefix,item) )
-                    newDep.setPluginName( self.pluginName )
+                if item not in cls._buildin_modules :
+                    newDep = Dependency( "%s(%s)" % (cls._prefix,item) )
+                    newDep.setPluginName( cls.pluginName )
                     swirlFile.addDependency( newDep )
         return swirlFile
     
