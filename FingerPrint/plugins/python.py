@@ -61,7 +61,10 @@ class PythonPlugin(PluginManager):
         """Given a path to a python file it return a list of dependecy"""
         returnList = []
         try :
-            lis = parser.suite(file(fileName).read().rstrip().replace("\r\n","\n")).tolist()
+            f = file(fileName)
+            data = f.read().rstrip().replace("\r\n","\n")
+            lis = parser.suite(data).tolist()
+            f.close()
         except SyntaxError,msg :
             #print "Not a python file"
             return None
