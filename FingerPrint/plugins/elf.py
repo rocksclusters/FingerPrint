@@ -9,6 +9,11 @@ import os
 from subprocess import PIPE, Popen
 import StringIO
 import re
+#compatibility with python2.4
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5
 
 
 from FingerPrint.swirl import SwirlFile, Dependency, Provide
@@ -45,7 +50,17 @@ class ElfPlugin(PluginManager):
         """verify that the dependency passed can be satified on this system
         and return True if so
         """
-        soname = dependency.depname.split('(')[0]
+        if cls._getPathToLibrary(dependency):
+            return True
+        else:
+            return False
+
+
+    @classmethod
+    def _getPathToLibrary(cls, dependency):
+        """ given a dependency it find the path of the library which provides 
+        that dependency """
+        soname = dependency.getBaseName()
         #for each library we have in the system
         for line in cls._getOutputAsList(["/sbin/ldconfig","-p"]):
             #if dependency is 64 and library is 64 of
@@ -53,23 +68,24 @@ class ElfPlugin(PluginManager):
             if len(line) > 0 and soname in line and \
                 ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
                 (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
-                #line is a library with the proper soname let's check for 
-                #the minor version
                 temp = line.split('=>')
                 if len(temp) == 2:
                     provider=temp[1].strip()
                     if cls._checkMinor(provider, dependency.depname):
-                        return True
+                        return provider
         pathToScan = cls.systemPath
         if "LD_LIBRARY_PATH" in os.environ:
             #we need to scan the LD_LIBRARY_PATH too
             pathToScan += os.environ["LD_LIBRARY_PATH"].split()
         for path in pathToScan:
-            if os.path.isfile(path + '/' + soname) and \
-                cls._checkMinor(path + '/' + soname, dependency.depname):
+            provider = path + '/' + soname
+            if os.path.isfile(provider) and \
+                cls._checkMinor(provider, dependency.depname):
                 #we found the soname and minor are there return true
-                return True
-        return False
+                return provider
+        #the dependency could not be located
+        return None
+
 
 
     @classmethod
@@ -117,8 +133,28 @@ class ElfPlugin(PluginManager):
                 else:
                     #no parenthesis aka 32 bit 
                     newDep.set32bits()
-        #find provides
+                # findfiles which provide the deps
+                p = cls._getPathToLibrary( newDep )
+                if p:
+                    newDep.pathList.append( p )
+                    #add all the simbolik links till we hit the real file
+                    while os.path.islink(newDep.pathList[-1]) :
+                        p = os.readlink(newDep.pathList[-1])
+                        if not os.path.isabs(p):
+                            p = os.path.join(os.path.dirname(newDep.pathList[-1]), p)
+                        newDep.filehashes.append( None )
+                        newDep.pathList.append( p )
+                    #md5
+                    fileToHash = newDep.pathList[-1]
+                    fd=open(fileToHash)
+                    md=md5()
+                    md.update(fd.read())
+                    fd.close()
+                    newDep.filehashes.append( md.hexdigest() )
+ 
+            
         
+        #find provides
         for line in cls._getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path):
             if len(line) > 0 :
                 newProv = Provide(line)

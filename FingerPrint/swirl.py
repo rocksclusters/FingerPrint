@@ -119,6 +119,8 @@ class SwirlFile(Swirl):
         self.dependencies=[]
         self.provides=[]
         self.pluginName=None
+        #do we need this?
+        self.md5sum = None
 
     def setPluginName(self, name):
         """this hold the name of the plugin who handled this
@@ -156,15 +158,26 @@ class Dependency(SwirlFile):
 
     def __init__(self, name):
         self.depname = name
-        self.filehash = None
+        self.filehashes = []
         self.arch = None
         self.pluginName = None
+        self.pathList = []
         #http://www.trevorpounds.com/blog/?p=33
         #http://www.akkadia.org/drepper/symbol-versioning
-        self.symbolVersion = None
+        #self.symbolVersion = None
+
+    def getBaseName(self):
+        """ depname are generally in the form of 'python2.7(sys)' or 
+        'libc.so.6(LIBC_2_4)' this function return only the first part of the 
+        dependency name"""
+        return self.depname.split('(')[0]
 
     def __str__( self ):
         string = self.depname
+        for path, hash in zip(self.pathList, self.filehashes):
+            string += "\n        " + path
+            if hash:
+                string += " - " + hash
         return string
 
     def __repr__(self):
