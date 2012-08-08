@@ -76,7 +76,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
         os.remove(outputfilename)
-	os.remove(filelist)
+        os.remove(filelist)
 
 
     def test_predefinedBinaries(self):
