@@ -174,10 +174,11 @@ class Dependency(SwirlFile):
 
     def __str__( self ):
         string = self.depname
-        for path, hash in zip(self.pathList, self.filehashes):
-            string += "\n        " + path
-            if hash:
-                string += " - " + hash
+        if hasattr(self, 'pathList'):
+            for path, hash in zip(self.pathList, self.filehashes):
+                string += "\n        " + path
+                if hash:
+                    string += " - " + hash
         return string
 
     def __repr__(self):
