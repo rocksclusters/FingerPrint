@@ -102,13 +102,11 @@ def main():
         if len(filenameList) < 1:
             parser.print_help()
             parser.error("You need to specify at least one inputfile or the FILELIST parameter.\n")
-        for fileName in filenameList:
-            #TODO move this in blotter
-            if not os.path.exists(fileName):
-                parser.print_help()
-                parser.error("The file %s does not exist on this system.\n" % fileName)
         #creating blotter
-        blotter = Blotter(options.name, filenameList)
+        try:
+            blotter = Blotter(options.name, filenameList)
+        except IOError, e:
+            parser.error("" + str(e))
         if options.verbose:
             print "swirl structure:\n", blotter.getSwirl()
             #self.assertEqual(self.seq, range(10))
