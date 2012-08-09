@@ -139,8 +139,8 @@ class ElfPlugin(PluginManager):
                 # findfiles which provide the deps
                 if newDep.getBaseName() in cls._pathCache :
                     #TODO do we really need to copy the list?
-                    newDep.pathList += list(cls._pathCache[newDep.getBaseName()])
-                    newDep.filehashes += list(cls._md5Cache[newDep.getBaseName()])
+                    newDep.pathList += cls._pathCache[newDep.getBaseName()]
+                    newDep.hashList += cls._md5Cache[newDep.getBaseName()]
                 else:
                     p = cls._getPathToLibrary( newDep )
                     if p:
@@ -150,7 +150,7 @@ class ElfPlugin(PluginManager):
                             p = os.readlink(newDep.pathList[-1])
                             if not os.path.isabs(p):
                                 p = os.path.join(os.path.dirname(newDep.pathList[-1]), p)
-                            newDep.filehashes.append( None )
+                            newDep.hashList.append( None )
                             newDep.pathList.append( p )
                         #md5
                         fileToHash = newDep.pathList[-1]
@@ -158,9 +158,9 @@ class ElfPlugin(PluginManager):
                         md=md5()
                         md.update(fd.read())
                         fd.close()
-                        newDep.filehashes.append( md.hexdigest() )
+                        newDep.hashList.append( md.hexdigest() )
                         #update the cache
-                        cls._md5Cache[newDep.getBaseName()] = newDep.filehashes
+                        cls._md5Cache[newDep.getBaseName()] = newDep.hashList
                         cls._pathCache[newDep.getBaseName()] = newDep.pathList
             
         

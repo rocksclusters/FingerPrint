@@ -10,6 +10,11 @@ import os
 from swirl import Swirl
 from FingerPrint.plugins import PluginManager
 from FingerPrint.serializer import PickleSerializer
+#compatibility with python2.4
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5
 
 
 
@@ -50,6 +55,7 @@ class Sergeant:
         """actually perform the check on the system and return True if all 
         the dependencies can be satisfied on the current system
         """
+        self.error = []
         depList = self.swirl.getDependencies()
         returnValue = True
         PluginManager.addSystemPaths(self.extraPath)
@@ -58,6 +64,26 @@ class Sergeant:
                 self.error.append(dep.depname)
                 returnValue = False
         return returnValue
+
+    def checkHash(self):
+        """check all the dep for md5sum changes
+        """
+        self.error = []
+        depList = self.swirl.getDependencies()
+        returnValue = True
+        for dep in depList:
+            for file, hash in zip(dep.fileList, dep.hashList):
+                #pass
+                if hash :
+                    fd=open(file)
+                    md=md5()
+                    md.update(fd.read())
+                    fd.close()
+                    if hash != md.hexdigest():
+                        self.error.append(file)
+                        returnValue = False
+        return returnValue
+
 
     def getError(self):
         """return a string descripting what failed the check"""

@@ -158,7 +158,7 @@ class Dependency(SwirlFile):
 
     def __init__(self, name):
         self.depname = name
-        self.filehashes = []
+        self.hashList = []
         self.arch = None
         self.pluginName = None
         self.pathList = []
@@ -175,7 +175,7 @@ class Dependency(SwirlFile):
     def __str__( self ):
         string = self.depname
         if hasattr(self, 'pathList'):
-            for path, hash in zip(self.pathList, self.filehashes):
+            for path, hash in zip(self.pathList, self.hashList):
                 string += "\n        " + path
                 if hash:
                     string += " - " + hash
