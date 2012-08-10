@@ -41,6 +41,10 @@ def main():
     group.add_option("-d", "--display", action="store_true", dest="display",
                     default=False,
                     help="Display the content of the given swirl file")
+    group.add_option("-i", "--integrity", action="store_true", dest="integrity",
+                    default=False,
+                    help="Verify the integrity of all the dependencies of the " + \
+                    "given swirl (using md5sum)")
     #various option
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE (default to output.swirl)", 
@@ -63,26 +67,42 @@ def main():
     #
     # switch based on user input
     #
-    if (options.verify + options.create + options.display) != 1:
+    if (options.verify + options.create + options.display + options.integrity) != 1:
         #too many or too few flags
-        parser.error("Only one of the flag -y -c -d must be used at a time" )
+        parser.error("Only one of the flag -y -c -d -i must be used at a time" )
 
-    if options.verify :
+    if options.verify or options.integrity :
         #verify the current swirl
-        serg = FingerPrint.sergeant.readFromPickle(options.filename)
+        try:
+            serg = FingerPrint.sergeant.readFromPickle(options.filename)
+        except IOError, e:
+            print "The input file %s can not be read." % options.filename
+            sys.exit(1)
         if options.paths :
             serg.setExtraPath(options.paths)
-        if not serg.check():
-            #error let print some stuff
-            print "The file %s failed.\n" % options.filename 
-            if options.verbose :
-                print "Missing dependecies:"
-                for i in serg.getError():
-                    print "    ", i
-            sys.exit(1)
+        if options.verify :
+            #verify swirl
+            if not serg.check():
+                #error let print some stuff
+                print "The file %s failed.\n" % options.filename 
+                if options.verbose :
+                    print "Missing Dependecies:"
+                    for i in serg.getError():
+                        print "    ", i
+                sys.exit(1)
+        elif options.integrity :
+            if not serg.checkHash():
+                #error let print some stuff
+                print "The file %s failed.\n" % options.filename
+                if options.verbose :
+                    print "Modified Dependecies:"
+                    for i in serg.getError():
+                        print "     ", i
+                sys.exit(1)
         else:
             print "Swirl %s pass the test" % options.filename
             return 0
+
 
     elif options.create :
         #create a swirl 

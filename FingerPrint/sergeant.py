@@ -72,7 +72,7 @@ class Sergeant:
         depList = self.swirl.getDependencies()
         returnValue = True
         for dep in depList:
-            for file, hash in zip(dep.fileList, dep.hashList):
+            for file, hash in zip(dep.pathList, dep.hashList):
                 #pass
                 if hash :
                     fd=open(file)

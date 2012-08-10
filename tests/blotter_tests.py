@@ -63,6 +63,9 @@ class TestSequenceFunctions(unittest.TestCase):
         #let's verify that swirl, the test must pass!!
         self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-y'] ), 0,
             msg="fingerprint-verify: failed to verify swirl created on this system %s" % outputfilename)
+        #let's test the integrity of the dependency
+        self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-i'] ), 0,
+            msg="fingerprint-verify: failed to verify the integrity of the swirl created on this system %s" % outputfilename)
         os.remove(outputfilename)
         #let's create a swirl with input file list taken from a file
         filelist='filelist'
