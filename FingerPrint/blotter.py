@@ -28,7 +28,6 @@ class Blotter:
     def __init__(self, name, fileList):
         """give a file list and a name construct a swirl into memory """
         self._pathCache = {}
-        self._md5Cache = {}
         self.swirl = Swirl(name, datetime.now())
         for i in fileList:
             if os.path.isfile(i):
@@ -53,8 +52,7 @@ class Blotter:
         for newDep in swirlFile.dependencies:
             # let's check in the cache
             if newDep.depname in self._pathCache :
-                newDep.pathList += self._pathCache[newDep.depname]
-                newDep.hashList += self._md5Cache[newDep.depname]
+                newDep.pathList, newDep.hashList = self._pathCache[newDep.depname]
             else:
                 #new file we have to do it
                 if len(newDep.pathList) > 0:
@@ -74,8 +72,7 @@ class Blotter:
                     fd.close()
                     newDep.hashList.append( md.hexdigest() )
                     #update the cache
-                    self._md5Cache[newDep.depname] = newDep.hashList
-                    self._pathCache[newDep.depname] = newDep.pathList
+                    self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList)
 
 
 
