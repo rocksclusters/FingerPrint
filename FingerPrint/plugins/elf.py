@@ -9,12 +9,6 @@ import os
 from subprocess import PIPE, Popen
 import StringIO
 import re
-#compatibility with python2.4
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import md5
-
 
 from FingerPrint.swirl import SwirlFile, Dependency, Provide
 from FingerPrint.plugins import PluginManager
@@ -39,9 +33,6 @@ class ElfPlugin(PluginManager):
     #internal
     _ldconfig_64bits = "x86-64"
 
-    _pathCache = {}
-    _md5Cache = {}
- 
     #may in the future we could also use 
     #objdump -p
     _RPM_FIND_DEPS=os.path.dirname( globals()["__file__"] ) + "/find-requires"
@@ -136,33 +127,9 @@ class ElfPlugin(PluginManager):
                 else:
                     #no parenthesis aka 32 bit 
                     newDep.set32bits()
-                # findfiles which provide the deps
-                if newDep.getBaseName() in cls._pathCache :
-                    #TODO do we really need to copy the list?
-                    newDep.pathList += cls._pathCache[newDep.getBaseName()]
-                    newDep.hashList += cls._md5Cache[newDep.getBaseName()]
-                else:
-                    p = cls._getPathToLibrary( newDep )
-                    if p:
-                        newDep.pathList.append( p )
-                        #add all the simbolik links till we hit the real file
-                        while os.path.islink(newDep.pathList[-1]) :
-                            p = os.readlink(newDep.pathList[-1])
-                            if not os.path.isabs(p):
-                                p = os.path.join(os.path.dirname(newDep.pathList[-1]), p)
-                            newDep.hashList.append( None )
-                            newDep.pathList.append( p )
-                        #md5
-                        fileToHash = newDep.pathList[-1]
-                        fd=open(fileToHash)
-                        md=md5()
-                        md.update(fd.read())
-                        fd.close()
-                        newDep.hashList.append( md.hexdigest() )
-                        #update the cache
-                        cls._md5Cache[newDep.getBaseName()] = newDep.hashList
-                        cls._pathCache[newDep.getBaseName()] = newDep.pathList
-            
+                p = cls._getPathToLibrary( newDep )
+                if p:
+                    newDep.pathList.append( p )
         
         #find provides
         for line in cls._getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path):
