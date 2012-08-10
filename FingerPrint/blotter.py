@@ -53,7 +53,6 @@ class Blotter:
         for newDep in swirlFile.dependencies:
             # let's check in the cache
             if newDep.getBaseName() in self._pathCache :
-                print "using cache for, ", newDep
                 newDep.pathList += self._pathCache[newDep.getBaseName()]
                 newDep.hashList += self._md5Cache[newDep.getBaseName()]
             else:

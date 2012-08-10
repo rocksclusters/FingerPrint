@@ -32,6 +32,7 @@ class ElfPlugin(PluginManager):
 
     #internal
     _ldconfig_64bits = "x86-64"
+    _pathCache = {}
 
     #may in the future we could also use 
     #objdump -p
@@ -55,6 +56,8 @@ class ElfPlugin(PluginManager):
         """ given a dependency it find the path of the library which provides 
         that dependency """
         soname = dependency.getBaseName()
+        if dependency.depname in cls._pathCache :
+            return cls._pathCache[dependency.depname]
         #for each library we have in the system
         for line in cls._getOutputAsList(["/sbin/ldconfig","-p"]):
             #if dependency is 64 and library is 64 of
@@ -66,6 +69,7 @@ class ElfPlugin(PluginManager):
                 if len(temp) == 2:
                     provider=temp[1].strip()
                     if cls._checkMinor(provider, dependency.depname):
+                        cls._pathCache[dependency.depname] = provider
                         return provider
         pathToScan = cls.systemPath
         if "LD_LIBRARY_PATH" in os.environ:
@@ -76,6 +80,7 @@ class ElfPlugin(PluginManager):
             if os.path.isfile(provider) and \
                 cls._checkMinor(provider, dependency.depname):
                 #we found the soname and minor are there return true
+                cls._pathCache[dependency.depname] = provider
                 return provider
         #the dependency could not be located
         return None
