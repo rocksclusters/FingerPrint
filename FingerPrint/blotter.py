@@ -52,9 +52,9 @@ class Blotter:
         """
         for newDep in swirlFile.dependencies:
             # let's check in the cache
-            if newDep.getBaseName() in self._pathCache :
-                newDep.pathList += self._pathCache[newDep.getBaseName()]
-                newDep.hashList += self._md5Cache[newDep.getBaseName()]
+            if newDep.depname in self._pathCache :
+                newDep.pathList += self._pathCache[newDep.depname]
+                newDep.hashList += self._md5Cache[newDep.depname]
             else:
                 #new file we have to do it
                 if len(newDep.pathList) > 0:
@@ -74,8 +74,8 @@ class Blotter:
                     fd.close()
                     newDep.hashList.append( md.hexdigest() )
                     #update the cache
-                    self._md5Cache[newDep.getBaseName()] = newDep.hashList
-                    self._pathCache[newDep.getBaseName()] = newDep.pathList
+                    self._md5Cache[newDep.depname] = newDep.hashList
+                    self._pathCache[newDep.depname] = newDep.pathList
 
 
 
