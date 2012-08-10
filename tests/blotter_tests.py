@@ -20,7 +20,6 @@ class TestSequenceFunctions(unittest.TestCase):
         import sys
         sys.path.append("../")
         self.files = ["/bin/ls", "/etc/passwd", "/etc/hosts"]
-        #TODO find executable on path
         if os.path.isfile("/usr/bin/find") :
             self.files.append("/usr/bin/find")
         elif os.path.isfile("/bin/find") :
@@ -30,6 +29,11 @@ class TestSequenceFunctions(unittest.TestCase):
         self.files += glob.glob("/lib*/libcryptsetup.so.*")
         self.files += glob.glob("/lib*/libdmraid.so.*")
         self.files += glob.glob("/lib*/libnss_nis*")
+        #a python file
+        cmdFile = subprocess.check_output(["python", "-c", "import urllib;print urllib.__file__"]).strip()
+        if cmdFile.endswith(".pyc") or cmdFile.endswith(".pyo"):
+            cmdFile = cmdFile[0:-1]
+        self.files.append( cmdFile )
         #print "File list: ", self.files
         self.availablePlugin = 2
 
@@ -78,7 +82,7 @@ class TestSequenceFunctions(unittest.TestCase):
             msg="fingerprint-create: failed to load filelist: " + filelist)
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
-        os.remove(outputfilename)
+        #os.remove(outputfilename)
         os.remove(filelist)
 
 

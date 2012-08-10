@@ -77,8 +77,10 @@ class PythonPlugin(PluginManager):
             swirlFile.dyn = True
             for item in cls._match(lis) :
                 #it is a python file
-                if item not in cls._buildin_modules :
-                    newDep = Dependency( "%s(%s)" % (cls._prefix,item) )
+                newdepName = cls._prefix + "(" + item + ")"
+                if item not in cls._buildin_modules and \
+                    newdepName not in [ i.depname for i in swirlFile.dependencies ]:
+                    newDep = Dependency( newdepName )
                     newDep.setPluginName( cls.pluginName )
                     swirlFile.addDependency( newDep )
         return swirlFile

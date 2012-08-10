@@ -32,7 +32,7 @@ class Blotter:
         for i in fileList:
             if os.path.isfile(i):
                 swirlFile = PluginManager.getSwirl(i)
-                self.hashDependencies(swirlFile)
+                self._hashDependencies(swirlFile)
                 self.swirl.addFile(swirlFile)
             elif os.path.isdir(i):
                 pass
@@ -46,16 +46,15 @@ class Blotter:
 
 
 
-    def hashDependencies(self, swirlFile):
-        """after the swirl is created it add md5sum dependency
-        """
+    def _hashDependencies(self, swirlFile):
+        """after the swirlFile is created it add md5sum for each dependency """
         for newDep in swirlFile.dependencies:
             # let's check in the cache
             if newDep.depname in self._pathCache :
                 newDep.pathList, newDep.hashList = self._pathCache[newDep.depname]
             else:
-                #new file we have to do it
                 if len(newDep.pathList) > 0:
+                    #new file we have to do it
                     p = newDep.pathList[0]
                     #add all the simbolik links till we hit the real file
                     while os.path.islink(newDep.pathList[-1]) :
@@ -73,6 +72,10 @@ class Blotter:
                     newDep.hashList.append( md.hexdigest() )
                     #update the cache
                     self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList)
+
+
+    def addPackage():
+        """ """
 
 
 

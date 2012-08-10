@@ -25,7 +25,7 @@ def main():
     #
     # set up the option parser
     # 
-    usage = "usage: %prog [-c|-y|-d] [options] inputfile1 ... inputfileN"
+    usage = "usage: %prog [-c|-y|-d|-i] [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
     #what are we going to do required options
     group = OptionGroup(parser, "Required Options",
@@ -35,12 +35,12 @@ def main():
     group.add_option("-c", "--create", action="store_true", dest="create",
                     default=False,
                     help="Create a swirl from the given input file names")
-    group.add_option("-y", "--verify", action="store_true", dest="verify",
-                    default=False,
-                    help="Scan the current system to verify compatibility with given swirl")
     group.add_option("-d", "--display", action="store_true", dest="display",
                     default=False,
                     help="Display the content of the given swirl file")
+    group.add_option("-y", "--verify", action="store_true", dest="verify",
+                    default=False,
+                    help="Scan the current system to verify compatibility with given swirl")
     group.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the " + \
