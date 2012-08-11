@@ -60,7 +60,8 @@ class Blotter:
                     while os.path.islink(newDep.pathList[-1]) :
                         p = os.readlink(newDep.pathList[-1])
                         if not os.path.isabs(p):
-                            p = os.path.join(os.path.dirname(newDep.pathList[-1]), p)
+                            p = os.path.join(
+                                    os.path.dirname(newDep.pathList[-1]), p)
                         newDep.hashList.append( None )
                         newDep.pathList.append( p )
                     #md5
@@ -74,8 +75,31 @@ class Blotter:
                     self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList)
 
 
-    def addPackage():
-        """ """
+    def addPackage(self, swirlFile):
+        """ given a swirl file with filename it tries to detect the package 
+        name which provides it """
+        for dep in swirlFile.dependencies:
+            for path in dep.pathList:
+                dep.package = self._getPackage(path)
+        
+
+    def _getPackage(self, path):
+        """given a path it return the package which provide that 
+        path if if finds one"""
+        #TODO this is a crap
+        cmd = ['dpkg', '-S']
+        try:
+            package = subprocess.check_output(cmd + [path]).strip()
+        except subprocess.CalledProcessError:
+            #package not found
+            return None
+        except OSError:
+            #cmd not found
+            return None
+        return package.strip(':')[0]
+        
+        
+
 
 
 
