@@ -6,6 +6,7 @@
 #
 
 from datetime import datetime
+import subprocess
 import os
 #compatibility with python2.4
 try:
@@ -33,6 +34,7 @@ class Blotter:
             if os.path.isfile(i):
                 swirlFile = PluginManager.getSwirl(i)
                 self._hashDependencies(swirlFile)
+                self._addPackages(swirlFile)
                 self.swirl.addFile(swirlFile)
             elif os.path.isdir(i):
                 pass
@@ -75,31 +77,40 @@ class Blotter:
                     self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList)
 
 
-    def addPackage(self, swirlFile):
+
+    def _addPackages(self, swirlFile):
         """ given a swirl file with filename it tries to detect the package 
         name which provides it """
         for dep in swirlFile.dependencies:
             for path in dep.pathList:
-                dep.package = self._getPackage(path)
+                dep.packageList.append( self._getPackage(path) )
         
 
     def _getPackage(self, path):
         """given a path it return the package which provide that 
         path if if finds one"""
         #TODO this is a crap
-        cmd = ['dpkg', '-S']
+        cmd1 = ['dpkg', '-S']
+        cmd2 = ['dpkg-query', '--show', "-f='${Package} ${Version} ${Architecture}'", ]
         try:
-            package = subprocess.check_output(cmd + [path]).strip()
+            package = subprocess.check_output(cmd1 + [path]).strip()
         except subprocess.CalledProcessError:
             #package not found
             return None
         except OSError:
             #cmd not found
             return None
-        return package.strip(':')[0]
+        packageName = package.split(':')[0]
+        try:
+            package = subprocess.check_output(cmd2 + [packageName]).strip()
+            return package
+        except subprocess.CalledProcessError:
+            #package not found
+            return None
+        except OSError:
+            #cmd not found
+            return None
         
-        
-
 
 
 

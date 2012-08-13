@@ -1,0 +1,9 @@
+
+execution time of ./setup.py test on my laptop
+thinkpad t420s
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz
+Linux 3.4.* stable - Ubuntu 12.04
+
+b1c2484d48f208315325cafc3081902452baa4dd 57 sec
+d03cabb06eb0e76e14c652efb63df395e220426e 20 sec
+82547bb6e0d246d4c7f855c340184b5c7a27c549 32 sec

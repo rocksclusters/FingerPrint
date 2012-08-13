@@ -162,6 +162,7 @@ class Dependency(SwirlFile):
         self.arch = None
         self.pluginName = None
         self.pathList = []
+        self.packageList = []
         #http://www.trevorpounds.com/blog/?p=33
         #http://www.akkadia.org/drepper/symbol-versioning
         #self.symbolVersion = None
@@ -175,10 +176,12 @@ class Dependency(SwirlFile):
     def __str__( self ):
         string = self.depname
         if hasattr(self, 'pathList'):
-            for path, hash in zip(self.pathList, self.hashList):
+            for path, hash, package in zip(self.pathList, self.hashList, self.packageList):
                 string += "\n        " + path
                 if hash:
                     string += " - " + hash
+                if package:
+                    string += " (" + package + ")"
         return string
 
     def __repr__(self):
