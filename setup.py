@@ -11,6 +11,7 @@ from unittest import TextTestRunner, TestLoader
 from glob import glob
 from os.path import splitext, basename, join as pjoin, walk
 import os
+import sys
 
 class TestCommand(Command):
     user_options = [ ]
@@ -34,8 +35,10 @@ class TestCommand(Command):
                 )
 
         tests = TestLoader().loadTestsFromNames(testfiles)
-        t = TextTestRunner(verbosity = 1)
-        t.run(tests)
+        t = TextTestRunner(verbosity = 2)
+        result = t.run(tests)
+        if not result.wasSuccessful():
+            sys.exit(-1)
 
 
 # 
