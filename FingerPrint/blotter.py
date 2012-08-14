@@ -26,9 +26,13 @@ which are the dependencies of the file
 
 class Blotter:
 
+    rpmOSs = ["red hat", "fedora", "suse"]
+    dpkgOSs = ["debian",  "ubuntu"]
+
     def __init__(self, name, fileList):
         """give a file list and a name construct a swirl into memory """
         self._pathCache = {}
+        self._isOSdetected = False
         self.swirl = Swirl(name, datetime.now())
         for i in fileList:
             if os.path.isfile(i):
@@ -81,6 +85,23 @@ class Blotter:
 
 
     def _getPackage(self, path):
+        """ """
+        if not self._isOSdetected:
+            f=open('/etc/issue')
+            issues=f.read()
+            f.close()
+            if any(os in issues.lower() for os in self.rpmOSs):
+                self._rpm = True
+            if any(os in issues.lower() for os in self.dpkgOSs):
+                self._dpkg = True
+            self._isOSdetected = True
+        if self._dpkg :
+            return self._getPackageDpkg(path)
+        if self._rpm :
+            return self._getPackageRpm(path)
+
+
+    def _getPackageDpkg(self, path):
         """given a path it return the package which provide that 
         path if if finds one"""
         #TODO this is a crap
@@ -106,6 +127,4 @@ class Blotter:
             return None
         
 
-
-systemString = ["Debian", "Red Hat", "Ubuntu", "Fedora", "SuSE"]
 
