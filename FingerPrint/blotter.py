@@ -34,7 +34,6 @@ class Blotter:
             if os.path.isfile(i):
                 swirlFile = PluginManager.getSwirl(i)
                 self._hashDependencies(swirlFile)
-                self._addPackages(swirlFile)
                 self.swirl.addFile(swirlFile)
             elif os.path.isdir(i):
                 pass
@@ -53,7 +52,7 @@ class Blotter:
         for newDep in swirlFile.dependencies:
             # let's check in the cache
             if newDep.depname in self._pathCache :
-                newDep.pathList, newDep.hashList = self._pathCache[newDep.depname]
+                newDep.pathList, newDep.hashList, newDep.packageList = self._pathCache[newDep.depname]
             else:
                 if len(newDep.pathList) > 0:
                     #new file we have to do it
@@ -64,6 +63,7 @@ class Blotter:
                         if not os.path.isabs(p):
                             p = os.path.join(
                                     os.path.dirname(newDep.pathList[-1]), p)
+                        newDep.packageList.append( None )
                         newDep.hashList.append( None )
                         newDep.pathList.append( p )
                     #md5
@@ -73,18 +73,12 @@ class Blotter:
                     md.update(fd.read())
                     fd.close()
                     newDep.hashList.append( md.hexdigest() )
+                    #package Name
+                    package = self._getPackage( fileToHash )
+                    newDep.packageList.append( package )
                     #update the cache
-                    self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList)
+                    self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList, newDep.packageList)
 
-
-
-    def _addPackages(self, swirlFile):
-        """ given a swirl file with filename it tries to detect the package 
-        name which provides it """
-        for dep in swirlFile.dependencies:
-            for path in dep.pathList:
-                dep.packageList.append( self._getPackage(path) )
-        
 
     def _getPackage(self, path):
         """given a path it return the package which provide that 

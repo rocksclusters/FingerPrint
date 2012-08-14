@@ -82,7 +82,7 @@ class TestSequenceFunctions(unittest.TestCase):
             msg="fingerprint-create: failed to load filelist: " + filelist)
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
-        #os.remove(outputfilename)
+        os.remove(outputfilename)
         os.remove(filelist)
 
 
