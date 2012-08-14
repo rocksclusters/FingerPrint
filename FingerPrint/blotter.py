@@ -127,8 +127,16 @@ class Blotter:
     def _getPackageRpm(self, path):
         """TODO
         """
-        return None
-
+        cmd = ['rpm', '-qf']
+        try:
+            package = subprocess.check_output(cmd + [path]).strip()
+            return package
+        except subprocess.CalledProcessError:
+            #package not found
+            return None
+        except OSError:
+            #cmd not found
+            return None
         
 
 
