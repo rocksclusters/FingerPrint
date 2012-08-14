@@ -12,6 +12,7 @@ import re
 
 from FingerPrint.swirl import SwirlFile, Dependency, Provide
 from FingerPrint.plugins import PluginManager
+from FingerPrint.utils import getOutputAsList
 
 """This is the implementation for ELF files
 Requirements:
@@ -59,7 +60,7 @@ class ElfPlugin(PluginManager):
         if dependency.depname in cls._pathCache :
             return cls._pathCache[dependency.depname]
         #for each library we have in the system
-        for line in cls._getOutputAsList(["/sbin/ldconfig","-p"]):
+        for line in getOutputAsList(["/sbin/ldconfig","-p"]):
             #if dependency is 64 and library is 64 of
             # dependency is 32 and library is 32:
             if len(line) > 0 and soname in line and \
@@ -91,21 +92,10 @@ class ElfPlugin(PluginManager):
     def _checkMinor(cls, libPath, depName):
         """ check if libPath provides the depName (major and minor) """
         realProvider = os.path.realpath(libPath)
-        for line in cls._getOutputAsList(['bash', cls._RPM_FIND_PROV], realProvider):
+        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], realProvider):
             if len(line) > 0 and depName in line:
                 return True
         return False
-
-
-    @classmethod
-    def _getOutputAsList(cls, binary, inputString=None):
-        """ run popen pipe inputString and return the output 
-        as a list of string one for each line
-        """
-        p = Popen(binary, stdin=PIPE, stdout=PIPE)
-        grep_stdout = p.communicate(input=inputString)[0]
-        return grep_stdout.split('\n')
-
 
 
     @classmethod
@@ -114,7 +104,7 @@ class ElfPlugin(PluginManager):
         the provides to it """
 
         #find deps
-        for line in cls._getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path):
+        for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path):
             if len(line) > 0:
                 newDep = Dependency( line )
                 newDep.setPluginName( cls.pluginName )
@@ -137,7 +127,7 @@ class ElfPlugin(PluginManager):
                     newDep.pathList.append( p )
         
         #find provides
-        for line in cls._getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path):
+        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path):
             if len(line) > 0 :
                 newProv = Provide(line)
                 newProv.setPluginName( cls.pluginName )

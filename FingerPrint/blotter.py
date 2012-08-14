@@ -18,6 +18,7 @@ except ImportError:
 
 from swirl import Swirl
 from FingerPrint.plugins import PluginManager
+from FingerPrint.utils import getOutputAsList
 
 
 """The getDependencies functions given a swirl file the have to figure out 
@@ -84,7 +85,7 @@ class Blotter:
         """ set the proper _getPackage(self, path)
         function to handle rpm or dpkg based on /etc/issue content"""
         #rpm based OSes
-        rpmOSs = ["red hat", "fedora", "suse"]
+        rpmOSs = ["red hat", "fedora", "suse", "centos"]
         #dpkg based OSes
         dpkgOSs = ["debian",  "ubuntu"]
 
@@ -97,7 +98,7 @@ class Blotter:
             self._getPackage = self._getPackageDpkg
         if not '_getPackage' in dir(self):
             #we could not detect the pakcage manager
-            self.getPackage = lambda s, p : None
+            self._getPackage = lambda  p : None
 
 
     def _getPackageDpkg(self, path):
@@ -106,7 +107,7 @@ class Blotter:
         cmd1 = ['dpkg', '-S']
         cmd2 = ['dpkg-query', '--show', "-f='${Package} ${Version} ${Architecture}'", ]
         try:
-            package = subprocess.check_output(cmd1 + [path]).strip()
+            package = getOutputAsList(cmd1 + [path])[0]
         except subprocess.CalledProcessError:
             #package not found
             return None
@@ -115,7 +116,7 @@ class Blotter:
             return None
         packageName = package.split(':')[0]
         try:
-            package = subprocess.check_output(cmd2 + [packageName]).strip()
+            package = getOutputAsList(cmd2 + [packageName])[0]
             return package
         except subprocess.CalledProcessError:
             #package not found
@@ -129,7 +130,7 @@ class Blotter:
         """
         cmd = ['rpm', '-qf']
         try:
-            package = subprocess.check_output(cmd + [path]).strip()
+            package = getOutputAsList(cmd + [path])[0]
             return package
         except subprocess.CalledProcessError:
             #package not found

@@ -10,6 +10,7 @@ from datetime import datetime
 from FingerPrint.plugins import PluginManager
 from FingerPrint.blotter import Blotter
 from FingerPrint.swirl import Swirl
+from FingerPrint.utils import getOutputAsList
 import FingerPrint.sergeant
 
 
@@ -30,7 +31,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.files += glob.glob("/lib*/libdmraid.so.*")
         self.files += glob.glob("/lib*/libnss_nis*")
         #a python file
-        cmdFile = subprocess.check_output(["python", "-c", "import urllib;print urllib.__file__"]).strip()
+        cmdFile = getOutputAsList(["python", "-c", "import urllib;print urllib.__file__"])[0]
         if cmdFile.endswith(".pyc") or cmdFile.endswith(".pyo"):
             cmdFile = cmdFile[0:-1]
         self.files.append( cmdFile )
