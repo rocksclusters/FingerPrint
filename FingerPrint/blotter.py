@@ -50,11 +50,11 @@ class Blotter:
     def _hashDependencies(self, swirlFile):
         """after the swirlFile is created it add md5sum for each dependency """
         for newDep in swirlFile.dependencies:
-            # let's check in the cache
-            if newDep.depname in self._pathCache :
-                newDep.pathList, newDep.hashList, newDep.packageList = self._pathCache[newDep.depname]
-            else:
-                if len(newDep.pathList) > 0:
+            if len(newDep.pathList) > 0:
+                # let's check in the cache
+                if newDep.pathList[0] in self._pathCache :
+                    newDep.pathList, newDep.hashList, newDep.packageList = self._pathCache[newDep.pathList[0]]
+                else:
                     #new file we have to do it
                     p = newDep.pathList[0]
                     #add all the simbolik links till we hit the real file
@@ -77,7 +77,7 @@ class Blotter:
                     package = self._getPackage( fileToHash )
                     newDep.packageList.append( package )
                     #update the cache
-                    self._pathCache[newDep.depname] = (newDep.pathList, newDep.hashList, newDep.packageList)
+                    self._pathCache[newDep.pathList[0]] = (newDep.pathList, newDep.hashList, newDep.packageList)
 
 
     def _getPackage(self, path):
@@ -107,4 +107,5 @@ class Blotter:
         
 
 
+systemString = ["Debian", "Red Hat", "Ubuntu", "Fedora", "SuSE"]
 
