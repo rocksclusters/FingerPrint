@@ -123,6 +123,12 @@ class Blotter:
         except OSError:
             #cmd not found
             return None
+
+    def _getPackageRpm(self, path):
+        """TODO
+        """
+        return None
+
         
 
 
