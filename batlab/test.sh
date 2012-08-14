@@ -1,6 +1,9 @@
 #!/bin/bash -x
 #
 
+#TODO testing remove this
+cat /etc/issue
+
 cd FingerPrint/
 python setup.py test 2>&1
 if [ "$?" -ne "0" ]; then
