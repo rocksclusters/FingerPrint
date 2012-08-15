@@ -8,12 +8,24 @@
 from datetime import datetime
 import subprocess
 import os
-#compatibility with python2.4
+
+#
+# compatibility with python2.4
+#
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
 
+#
+# compatibility with python2.4
+#
+if "any" not in dir(__builtins__):
+    def any(iterable):
+        for element in iterable:
+            if element:
+                return True
+        return False
 
 
 from swirl import Swirl
