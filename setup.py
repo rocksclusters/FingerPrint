@@ -62,7 +62,7 @@ setup(
     #needs this for detecting file type
     #py_modules=['magic'],
     #the command line called by users    
-    scripts=['scripts/fingerprint'],
+    scripts=['bin/fingerprint'],
     #additional command to build this distribution
     cmdclass = { 'test': TestCommand,  }
 )

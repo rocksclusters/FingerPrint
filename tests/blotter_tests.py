@@ -56,20 +56,20 @@ class TestSequenceFunctions(unittest.TestCase):
         """ """
         #test empty command line
         print "     -----------------------     Running fingerprint command line   -------------------------"
-        self.assertNotEqual(subprocess.call(['python', './scripts/fingerprint']), 0,
+        self.assertNotEqual(subprocess.call(['python', './bin/fingerprint']), 0,
             msg="fingerprint: empty command line should fail but it did not")
         #lets create a command wtih input file on the command line with default output filename
         outputfilename='output.swirl'
         self.assertEqual( 
-            subprocess.call(['python', './scripts/fingerprint', '-c'] + self.files), 0,
+            subprocess.call(['python', './bin/fingerprint', '-c'] + self.files), 0,
             msg="fingerprint-create: failed to analize the files: " + str(self.files))
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
         #let's verify that swirl, the test must pass!!
-        self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-y'] ), 0,
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-y'] ), 0,
             msg="fingerprint-verify: failed to verify swirl created on this system %s" % outputfilename)
         #let's test the integrity of the dependency
-        self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-i'] ), 0,
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-i'] ), 0,
             msg="fingerprint-verify: failed to verify the integrity of the swirl created on this system %s" % outputfilename)
         os.remove(outputfilename)
         #let's create a swirl with input file list taken from a file
@@ -79,7 +79,7 @@ class TestSequenceFunctions(unittest.TestCase):
             fd.write(i + '\n')
         fd.close()
         self.assertEqual( 
-            subprocess.call(['python', './scripts/fingerprint', '-c', '-f', outputfilename, '-l', filelist]), 0,
+            subprocess.call(['python', './bin/fingerprint', '-c', '-f', outputfilename, '-l', filelist]), 0,
             msg="fingerprint-create: failed to load filelist: " + filelist)
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
@@ -101,7 +101,7 @@ class TestSequenceFunctions(unittest.TestCase):
         for testPlat in testPlatforms:
             testPlatPath = basedir + testPlat
             fileList = [os.path.join(testPlatPath, f) for f in os.listdir(testPlatPath)]
-            self.assertEqual( subprocess.call(['python', './scripts/fingerprint', '-c', 
+            self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-c', 
                 '-f', testPlat + '.swirl'] + fileList), 0, 
                 msg="fingerprint-create: failed to create swirl for platform %s\n Input file %s"
                 % (testPlatPath, fileList))
@@ -112,7 +112,7 @@ class TestSequenceFunctions(unittest.TestCase):
             else:
                 result = 1
                 error = "fail"
-            returncode = subprocess.call(['python', './scripts/fingerprint', '-y', '-v',
+            returncode = subprocess.call(['python', './bin/fingerprint', '-y', '-v',
                 '-f', testPlat + '.swirl'])
             self.assertEqual( returncode, result,
                 msg="fingerprint-verify: failed verification for swirl %s was supposed to %s"
