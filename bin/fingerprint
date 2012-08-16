@@ -10,11 +10,13 @@ import sys
 from optparse import OptionParser, OptionGroup
 
 try:
-	import FingerPrint, FingerPrint.sergeant
+    import FingerPrint, FingerPrint.sergeant
 except ImportError:
-	#we need this when we run unittest
-        sys.path.append("./")
-	import FingerPrint, FingerPrint.sergeant
+    #we need this to run from sources without installing fingerprint
+    fullPath = os.path.dirname(os.path.realpath(__file__))
+    parDir = os.path.abspath(os.path.join(fullPath, os.path.pardir))
+    sys.path.append(parDir)
+    import FingerPrint, FingerPrint.sergeant
 
 from FingerPrint.swirl import Swirl
 from FingerPrint.blotter import Blotter
