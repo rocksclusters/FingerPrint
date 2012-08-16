@@ -11,13 +11,19 @@ run on another system.
 
  --  INSTALL  --
 
-To install from source run
+To install from source you can run
 
  # python setup.py install
 
 This will install FingerPrint in your python. FingerPrint consist of:
  - a bunch of python modules and submodules inside the FingerPrint module
  - a command line called fingerprint
+
+You will need writing priviledge on some system direcotries.
+
+Otherwise you can simply add to your PATH the ./bin directory of this source code,
+and you will be done (on bash
+export PATH=$PATH:<full_path_to_source>/bin )
 
 To run some unittest run
 
