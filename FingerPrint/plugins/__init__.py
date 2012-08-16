@@ -103,6 +103,7 @@ if hasattr(pkgutil,'iter_modules'):              #line added
         full_package_name = 'FingerPrint.plugins.%s' % package_name
         module = importer.find_module(package_name).load_module(full_package_name)
 else:
+    # in python 2.4 pkgutil does not have a iter_modules function :-(
     for pth in globals()["__path__"]:
         for mod_path in os.listdir(pth):
             init_py = os.path.join(pth, mod_path)
