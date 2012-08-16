@@ -11,7 +11,7 @@ email="clem@sdsc.edu"
 
 . /etc/profile
 cd $HOME
-
+. .bashrc
 
 function failure(){
     echo -n `date` - ERROR >> tmplog
