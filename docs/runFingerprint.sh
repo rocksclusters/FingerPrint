@@ -21,6 +21,7 @@ function failure(){
         echo -n integrity >> tmplog 
     fi
     cat error >> tmplog
+    echo >> tmplog
     cat tmplog | mail -s "error `hostname`" $email
     cat tmplog >> log
     rm tmplog
