@@ -81,7 +81,7 @@ class Blotter:
                         newDep.hashList.append( None )
                         newDep.pathList.append( p )
                     #md5
-                    fileToHash = newDep.pathList[-1]
+                    fileToHash = p
                     fd=open(fileToHash)
                     md=md5()
                     md.update(fd.read())
@@ -125,6 +125,9 @@ class Blotter:
             return None
         except OSError:
             #cmd not found
+            return None
+        if len(package) == 0:
+            #the file is not tracked
             return None
         packageName = package.split(':')[0]
         try:
