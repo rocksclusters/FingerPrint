@@ -49,8 +49,10 @@ class PythonPlugin(PluginManager):
             lis = parser.suite(data).tolist()
         except SyntaxError,msg :
             #print "Not a python file"
+            f.close()
             return None
         except :
+            f.close()
             return None
         else :
             swirlFile = SwirlFile( fileName )
@@ -62,6 +64,7 @@ class PythonPlugin(PluginManager):
             #
             f.seek(0)
             header = f.readline().rstrip()
+            f.close()
             if header[0:2] == '#!':
                 pythonVer = re.split(' |/|!', header)[-1]
             else:
@@ -102,8 +105,6 @@ class PythonPlugin(PluginManager):
                                 paths = [temp[0:-1], temp]
                     newDep.pathList = paths
                     swirlFile.addDependency( newDep )
-        finally:
-            f.close()
         return swirlFile
     
 

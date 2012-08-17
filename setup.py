@@ -46,7 +46,7 @@ class TestCommand(Command):
 # 
 setup(
     name = 'FingerPrint',
-    version = '1.00',
+    version = '0.1',
     description = 'This is my Python module.',
 
     author = 'Phil Papadopoulos',
