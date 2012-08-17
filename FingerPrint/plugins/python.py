@@ -92,6 +92,7 @@ class PythonPlugin(PluginManager):
                                 # first dot) is returned, not the module named by name.
                                 module = __import__(item, globals(),
                                     locals(), item.split('.')[-1])
+                                #TODO fix me
                             else:
                                 module = __import__(item)
                         except:
@@ -99,11 +100,11 @@ class PythonPlugin(PluginManager):
                                 (item)
                             continue
                         else:
-                            paths = [ os.path.abspath(module.__file__) ]
-                            if paths[0].endswith('.pyc'):
-                                temp = paths[0]
-                                paths = [temp[0:-1], temp]
-                    newDep.pathList = paths
+                            paths = os.path.abspath(module.__file__)
+                            if paths.endswith('.pyc') or paths.endswith('.pyo'):
+                                if os.path.isfile( paths[0:-1] ):
+                                    paths = paths[0:-1]
+                    newDep.pathList.append( paths )
                     swirlFile.addDependency( newDep )
         return swirlFile
     
