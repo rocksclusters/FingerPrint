@@ -1,10 +1,13 @@
 
  -- -- -- --    FingerPrint    -- -- -- -- 
 
-This application is able to fingherprint both statically and dynamically an 
-application.
-This fingerprint can then be used to understand if the given application can 
-run on another system.
+Fingherprint is an software tool able to analyze an application and to 
+automatically save all its dependencies in a file (called Swirl) along with 
+several other information
+
+A Swirl can then be used to understand if the given application can run on 
+another system or if some of the dependencies got modified since the 
+Swirl creation.
 
 
 
