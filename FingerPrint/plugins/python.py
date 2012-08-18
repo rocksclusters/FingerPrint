@@ -90,9 +90,9 @@ class PythonPlugin(PluginManager):
                                 # When the name variable is of the form package.module,
                                 # normally, the top-level package (the name up till the
                                 # first dot) is returned, not the module named by name.
+                                # so we need __import__('xml.sax.handler', glob, local, 'handler')
                                 module = __import__(item, globals(),
                                     locals(), item.split('.')[-1])
-                                #TODO fix me
                             else:
                                 module = __import__(item)
                         except:

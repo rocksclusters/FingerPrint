@@ -97,7 +97,7 @@ class Blotter:
         """ set the proper _getPackage(self, path)
         function to handle rpm or dpkg based on /etc/issue content"""
         #rpm based OSes
-        rpmOSs = ["red hat", "fedora", "suse", "centos"]
+        rpmOSs = ["red hat", "fedora", "suse", "centos", "scientific linux"]
         #dpkg based OSes
         dpkgOSs = ["debian",  "ubuntu"]
 
