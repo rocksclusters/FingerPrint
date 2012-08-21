@@ -84,7 +84,7 @@ class Swirl(object):
        
 
     def getDateString(self):
-        return self.creationDate.strftime("%A, %d. %B %Y %I:%M%p")
+        return self.creationDate.strftime("%Y-%m-%d %H:%M")
 
     def __eq__(self, other):
         #I need this to get the 
