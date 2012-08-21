@@ -74,13 +74,18 @@ class Sergeant:
         for dep in depList:
             for file, hash in zip(dep.pathList, dep.hashList):
                 #pass
-                if hash :
-                    fd=open(file)
-                    md=md5()
-                    md.update(fd.read())
-                    fd.close()
-                    if hash != md.hexdigest():
-                        self.error.append(file)
+                if hash:
+                    try:
+                        fd=open(file)
+                        md=md5()
+                        md.update(fd.read())
+                        fd.close()
+                        if hash != md.hexdigest():
+                            self.error.append(dep.depname)
+                            returnValue = False
+                    except IOError:
+                        #file not found
+                        self.error.append(dep.depname)
                         returnValue = False
         return returnValue
 
