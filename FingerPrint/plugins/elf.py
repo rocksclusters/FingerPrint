@@ -19,10 +19,6 @@ Requirements:
  - /usr/lib/rpm/find-requires /usr/lib/rpm/find-provides from rpm
  - lsconfig in the path
 
-TODO:
-- add user path to search for libraries
-- add detection of "Version References" in libraries in isDepsatisfied
-
 """
 
 

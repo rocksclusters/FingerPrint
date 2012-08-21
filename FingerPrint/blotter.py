@@ -94,7 +94,7 @@ class Blotter:
                     self._pathCache[newDep.pathList[0]] = (newDep.pathList, newDep.hashList, newDep.packageList)
 
     def _detectedPackageManager(self):
-        """ set the proper _getPackage(self, path)
+        """ set the proper _getPackage*(self, path)
         function to handle rpm or dpkg based on /etc/issue content"""
         #rpm based OSes
         rpmOSs = ["red hat", "fedora", "suse", "centos", "scientific linux"]
@@ -115,7 +115,8 @@ class Blotter:
 
     def _getPackageDpkg(self, path):
         """given a path it return the package which provide that 
-        path if if finds one using dpkg"""
+        path if if finds one
+        only debian system"""
         cmd1 = ['dpkg', '-S']
         cmd2 = ['dpkg-query', '--show', "-f='${Package} ${Version} ${Architecture}'", ]
         try:
@@ -141,8 +142,9 @@ class Blotter:
             return None
 
     def _getPackageRpm(self, path):
-        """TODO
-        """
+        """given a path it return the package which provide that 
+        path if if finds one
+        only rpm based system"""
         cmd = ['rpm', '-qf']
         try:
             package = getOutputAsList(cmd + [path])[0]
