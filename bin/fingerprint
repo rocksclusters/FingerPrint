@@ -3,7 +3,7 @@
 # LC
 #
 
-from datetime import datetime
+from time import gmtime, strftime
 import os
 import StringIO
 import sys
@@ -29,11 +29,12 @@ def main():
     # 
     usage = "usage: %prog [-c|-y|-d|-i] [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
-    #what are we going to do required options
+
+
+    # required options one of them must be selected
     group = OptionGroup(parser, "Required Options",
                     "You must select one of these options")
     parser.add_option_group(group)
-
     group.add_option("-c", "--create", action="store_true", dest="create",
                     default=False,
                     help="Create a swirl from the given input file names")
@@ -47,6 +48,7 @@ def main():
                     default=False,
                     help="Verify the integrity of all the dependencies of the " + \
                     "given swirl (using md5sum)")
+
     #various option
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE (default to output.swirl)", 
@@ -60,6 +62,13 @@ def main():
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
                     help="a file containing a list of file which will be " + \
                     "included to this swirl")
+    parser.add_option("-s", "--csvfile", dest="csvfile", default=None,
+                    help="The output of a verification or of an integrity check " + \
+                    "will be saved in the FILE in a CSV format, if the file " + \
+                    "already exists the output of the new check will be appended " +\
+                    "to it if not it will be created", metavar="FILE")
+
+
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", 
                     default=False,
                     help="Output a textual representation of the swirl")
@@ -82,7 +91,57 @@ def main():
             sys.exit(1)
         if options.paths :
             serg.setExtraPath(options.paths)
-        if options.verify :
+        if options.csvfile :
+            swirl = serg.getSwirl()
+            if not os.path.isfile(options.csvfile):
+                # new file
+                # need to initialize it
+                csvfilein = open(options.csvfile, 'w')
+                csvfilein.write(swirl.name + ',' + swirl.getDateString())
+                csvfilein.write('\n\nVerification type\nDate\n')
+                for dep in swirl.getDependencies():
+                    csvfilein.write(dep.depname + '\n')
+                csvfilein.close()
+            csvfilein = open(options.csvfile, 'r')
+            csvfileout = open(options.csvfile + '.tmp', 'w')
+            fileline = csvfilein.readline().strip().split(',')
+            #
+            # let's verify that this csv and this swirl file match
+            #
+            if fileline[0] != swirl.name or \
+                fileline[1] != swirl.getDateString():
+                print "The file %s does not cerrespond with the swirl %s" % \
+                    (options.csvfile, options.filename)
+                sys.exit(1)
+            csvfileout.write(fileline[0] + ',' + fileline[1] +'\n')
+            # empty line
+            csvfilein.readline()
+            csvfileout.write('\n')
+            if options.verify :
+                operation = 'Verify'
+                returnValue = serg.check()
+            else :
+                operation = 'Integrity'
+                returnValue = serg.checkHash()
+            error = serg.getError()
+            csvfileout.write(csvfilein.readline().rstrip() + ", " + operation + "\n")
+            datestr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            csvfileout.write(csvfilein.readline().rstrip() + ", " + datestr + "\n")
+            for fileline in csvfilein.readlines():
+                fileline = fileline.strip()
+                if any([i in fileline for i in error]):
+                    # there is an error
+                    csvfileout.write(fileline + ", False\n")
+                else:
+                    csvfileout.write(fileline + ", True\n")
+            csvfileout.close()
+            csvfilein.close()
+            os.rename(options.csvfile + '.tmp', options.csvfile)
+            if returnValue:
+                sys.exit(0)
+            else:
+                sys.exit(1)
+        elif options.verify :
             #verify swirl
             if not serg.check():
                 #error let print some stuff

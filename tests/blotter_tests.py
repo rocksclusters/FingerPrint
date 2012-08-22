@@ -83,6 +83,13 @@ class TestSequenceFunctions(unittest.TestCase):
             msg="fingerprint-create: failed to load filelist: " + filelist)
         self.assertTrue( os.path.isfile(outputfilename), 
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
+        #let's check the csv file creation
+        csvfile = 'test.csv'
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-i', '-s', csvfile]), 0,
+            msg="fingerprint-verify: failed to create csv file %s" % csvfile)
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-y', '-s', csvfile]), 0,
+            msg="fingerprint-verify: failed to create csv file %s" % csvfile)
+        os.remove(csvfile)
         os.remove(outputfilename)
         os.remove(filelist)
 
