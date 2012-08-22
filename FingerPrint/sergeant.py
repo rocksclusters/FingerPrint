@@ -46,7 +46,8 @@ class Sergeant:
         self.error = []
 
     def setExtraPath(self, path):
-        """
+        """path is a string containing a list of path separtated by :
+        This pathes will be added to the search list when looking for dependency
         """
         self.extraPath = path.split(':')
 
@@ -66,8 +67,8 @@ class Sergeant:
         return returnValue
 
     def checkHash(self):
-        """check all the dep for md5sum changes
-        """
+        """check if any dep was modified since the swirl file creation 
+        (using checksuming) """
         self.error = []
         depList = self.swirl.getDependencies()
         returnValue = True
@@ -91,7 +92,9 @@ class Sergeant:
 
 
     def getError(self):
-        """return a string descripting what failed the check"""
+        """after running check or checkHash if they returned False this 
+        function return a list with the dependencies name that failed
+        """
         return sorted(self.error)
 
        
