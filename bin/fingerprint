@@ -9,6 +9,18 @@ import StringIO
 import sys
 from optparse import OptionParser, OptionGroup
 
+#
+# compatibility with python2.4
+#
+if "any" not in dir(__builtins__):
+    def any(iterable):
+        for element in iterable:
+            if element:
+                return True
+        return False
+
+
+
 try:
     import FingerPrint, FingerPrint.sergeant
 except ImportError:
