@@ -70,12 +70,6 @@ class Swirl(object):
         return sorted(tempPro, key=str)
 
 
-    def save(self, saver):
-        """this method is used to serialize this class hierarcy
-        TODO not used yet
-        """
-        saver.save(self)
-
 
     def addFile(self, swirlFile):
         """add a file to the list of the tracked files"""

@@ -126,8 +126,4 @@ class PythonPlugin(PluginManager):
                 for item in cls._getModules(node) :
                     yield item
 
-    @classmethod
-    def _findFile(cls, newDep ):
-        pass
-
 
