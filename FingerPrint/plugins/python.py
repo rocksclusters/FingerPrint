@@ -65,9 +65,12 @@ class PythonPlugin(PluginManager):
             f.seek(0)
             header = f.readline().rstrip()
             f.close()
+            pythonVer = None
             if header[0:2] == '#!':
-                pythonVer = re.split(' |/|!', header)[-1]
-            else:
+                for i in re.split(' |/|!', header):
+                    if 'python' in i:
+                        pythonVer = i
+            if not pythonVer:
                 pythonVer = cls._prefix
             for item in cls._getModules(lis) :
                 newdepName = pythonVer + "(" + item + ")"
@@ -104,7 +107,8 @@ class PythonPlugin(PluginManager):
                             if paths.endswith('.pyc') or paths.endswith('.pyo'):
                                 if os.path.isfile( paths[0:-1] ):
                                     paths = paths[0:-1]
-                    newDep.pathList.append( paths )
+                    if len(paths) > 0:
+                        newDep.pathList.append( paths )
                     swirlFile.addDependency( newDep )
         return swirlFile
     
