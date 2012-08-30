@@ -71,7 +71,7 @@ class ElfPlugin(PluginManager):
         pathToScan = cls.systemPath
         if "LD_LIBRARY_PATH" in os.environ:
             #we need to scan the LD_LIBRARY_PATH too
-            pathToScan += os.environ["LD_LIBRARY_PATH"].split()
+            pathToScan += os.environ["LD_LIBRARY_PATH"].split(':')
         for path in pathToScan:
             provider = path + '/' + soname
             if os.path.isfile(provider) and \
