@@ -32,12 +32,45 @@ def readFromPickle(fileName):
     return Sergeant(swirl)
 
 
+
+# copied from stackoverflow
+# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028
+
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+#this variable is use by getHash
+_isPrelink = None
+
 def getHash(fileName, pluginName):
     """Given a valid fileName it returns a string containing a md5sum
-    of the file content"""
-    if pluginName == 'ELF':
-        #we might have prelinking
-        pass
+    of the file content. If we are running on a system which prelink
+    binaries (aka RedHat based) the command prelink must be on the PATH"""
+    global _isPrelink
+    if _isPrelink == None:
+        #first execution let's check for prelink
+        _isPrelink = which("prelink")
+        if _isPrelink == None:
+            _isPrelink = ""
+        else:
+            print "Using: ", _isPrelink
+    if pluginName == 'ELF' and len(_isPrelink) > 0:
+        #let's use prelink for the md5sum
+        temp = subprocess.check_output([_isPrelink, '-y', '--md5', fileName])
+        return temp.strip()
     try:
         #ok let's do standard md5sum
         fd=open(fileName)
