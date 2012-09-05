@@ -29,6 +29,7 @@ if "any" not in dir(__builtins__):
 
 
 from swirl import Swirl
+import sergeant
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
 
@@ -82,11 +83,7 @@ class Blotter:
                         newDep.pathList.append( p )
                     #md5
                     fileToHash = p
-                    fd=open(fileToHash)
-                    md=md5()
-                    md.update(fd.read())
-                    fd.close()
-                    newDep.hashList.append( md.hexdigest() )
+                    newDep.hashList.append(sergeant.getHash(fileToHash, newDep.pluginName))
                     #package Name
                     package = self._getPackage( fileToHash )
                     newDep.packageList.append( package )

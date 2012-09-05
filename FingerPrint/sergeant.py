@@ -32,7 +32,22 @@ def readFromPickle(fileName):
     return Sergeant(swirl)
 
 
-
+def getHash(fileName, pluginName):
+    """Given a valid fileName it returns a string containing a md5sum
+    of the file content"""
+    if pluginName == 'ELF':
+        #we might have prelinking
+        pass
+    try:
+        #ok let's do standard md5sum
+        fd=open(fileName)
+        md=md5()
+        md.update(fd.read())
+        fd.close()
+        return md.hexdigest()
+    except IOError:
+        #file not found
+        return None
 
 
 class Sergeant:
@@ -74,20 +89,11 @@ class Sergeant:
         returnValue = True
         for dep in depList:
             for file, hash in zip(dep.pathList, dep.hashList):
-                #pass
-                if hash:
-                    try:
-                        fd=open(file)
-                        md=md5()
-                        md.update(fd.read())
-                        fd.close()
-                        if hash != md.hexdigest():
-                            self.error.append(dep.depname)
-                            returnValue = False
-                    except IOError:
-                        #file not found
-                        self.error.append(dep.depname)
-                        returnValue = False
+                if hash and hash != getHash(file, dep.pluginName):
+                    #wrong hash values
+                    print dep.depname, " orig ", hash, " computed ", getHash(file, dep.pluginName)
+                    self.error.append(dep.depname)
+                    returnValue = False
         return returnValue
 
 
