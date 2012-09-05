@@ -1,6 +1,7 @@
 
 from subprocess import PIPE, Popen
 import subprocess
+import os
 
 def getOutputAsList(binary, inputString=None):
     """ run popen pipe inputString and return the output 
@@ -11,7 +12,10 @@ def getOutputAsList(binary, inputString=None):
     return grep_stdout.split('\n')
 
 
-def which(program, extraPath):
+
+# copied from stackoverflow
+# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028
+def which(program):
 
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -21,7 +25,7 @@ def which(program, extraPath):
         if is_exe(program):
             return program
     else:
-        for path in os.environ["PATH"].split(os.pathsep) + extraPath:
+        for path in os.environ["PATH"].split(os.pathsep):
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file

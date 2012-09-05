@@ -8,6 +8,7 @@
 import os
 
 from swirl import Swirl
+import utils
 from FingerPrint.plugins import PluginManager
 from FingerPrint.serializer import PickleSerializer
 #compatibility with python2.4
@@ -33,25 +34,6 @@ def readFromPickle(fileName):
 
 
 
-# copied from stackoverflow
-# http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028
-
-def which(program):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
 #this variable is use by getHash
 _isPrelink = None
 
@@ -62,15 +44,15 @@ def getHash(fileName, pluginName):
     global _isPrelink
     if _isPrelink == None:
         #first execution let's check for prelink
-        _isPrelink = which("prelink")
+        _isPrelink = utils.which("prelink")
         if _isPrelink == None:
             _isPrelink = ""
         else:
             print "Using: ", _isPrelink
     if pluginName == 'ELF' and len(_isPrelink) > 0:
         #let's use prelink for the md5sum
-        temp = subprocess.check_output([_isPrelink, '-y', '--md5', fileName])
-        return temp.strip()
+        temp = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
+        return temp[0]
     try:
         #ok let's do standard md5sum
         fd=open(fileName)
