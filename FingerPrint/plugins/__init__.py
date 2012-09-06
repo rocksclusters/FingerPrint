@@ -105,7 +105,7 @@ if hasattr(pkgutil,'iter_modules'):              #line added
 else:
     # in python 2.4 pkgutil does not have a iter_modules function :-(
     for pth in globals()["__path__"]:
-        for mod_path in os.listdir(pth):
+        for mod_path in sorted(os.listdir(pth)):
             init_py = os.path.join(pth, mod_path)
             if mod_path.endswith('.py') and mod_path != '__init__.py' \
                 and os.path.isfile(init_py): 

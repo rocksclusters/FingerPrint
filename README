@@ -14,6 +14,10 @@ Swirl creation.
 
  --  INSTALL  --
 
+The simplest way to use FingerPrint is to add to your PATH the ./bin directory
+of this source code, and you will be done (on bash
+export PATH=$PATH:<full_path_to_source>/bin )
+
 To install fingerprint on your system from source you can run
 
  # python setup.py install
@@ -24,14 +28,15 @@ This will install FingerPrint in your python. FingerPrint consist of:
 
 You will need writing priviledge on some system direcotries.
 
-Otherwise you can simply add to your PATH the ./bin directory of this source code,
-and you will be done (on bash
-export PATH=$PATH:<full_path_to_source>/bin )
-
 To run some unittest run
 
  # python setup.py test
 
+The only requirement is python 2.4 or greater.
+
+If found on the system (they are not required), fingerprint uses:
+ - prelink (to remove prelinking information from libraries and get their hash)
+ - dpkg or rpm (to record package version and info regarding dependencies)
 
 
  --  USE   --
