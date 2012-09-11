@@ -28,7 +28,7 @@ if "any" not in dir(__builtins__):
         return False
 
 
-from swirl import Swirl
+from swirl import Swirl, SwirlFile
 import sergeant
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
@@ -48,7 +48,8 @@ class Blotter:
         for i in fileList:
             if os.path.islink(i):
                 swirlFile = SwirlFile( i )
-                swirlFile.setPluginName( 'link' )
+                swirlFile.type = 'link'
+                self.swirl.addFile(swirlFile)
             elif os.path.isfile(i):
                 swirlFile = PluginManager.getSwirl(i)
                 self._hashDependencies(swirlFile)
