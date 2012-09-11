@@ -46,7 +46,10 @@ class Blotter:
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
         for i in fileList:
-            if os.path.isfile(i):
+            if os.path.islink(i):
+                swirlFile = SwirlFile( i )
+                swirlFile.setPluginName( 'link' )
+            elif os.path.isfile(i):
                 swirlFile = PluginManager.getSwirl(i)
                 self._hashDependencies(swirlFile)
                 self.swirl.addFile(swirlFile)
