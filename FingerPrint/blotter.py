@@ -120,7 +120,7 @@ class Blotter:
         cmd1 = ['dpkg', '-S']
         cmd2 = ['dpkg-query', '--show', "-f='${Package} ${Version} ${Architecture}'", ]
         try:
-            (package, returncode) = getOutputAsList(cmd1 + [path])[0]
+            (package, returncode) = getOutputAsList(cmd1 + [path])
         except subprocess.CalledProcessError:
             #package not found
             return None
@@ -132,7 +132,7 @@ class Blotter:
             return None
         packageName = package.split(':')[0]
         try:
-            (package, returncode) = getOutputAsList(cmd2 + [packageName])[0]
+            (package, returncode) = getOutputAsList(cmd2 + [packageName])
             if returncode != 0:
                 return None
             return package
@@ -149,7 +149,7 @@ class Blotter:
         only rpm based system"""
         cmd = ['rpm', '-qf']
         try:
-            (package, returncode) = getOutputAsList(cmd + [path])[0]
+            (package, returncode) = getOutputAsList(cmd + [path])
             if returncode != 0:
                 return None
             return package
