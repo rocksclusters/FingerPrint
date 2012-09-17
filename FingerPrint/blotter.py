@@ -127,15 +127,15 @@ class Blotter:
         except OSError:
             #cmd not found
             return None
-        if len(package) == 0 or returncode != 0:
+        if returncode != 0 or len(package[0]) == 0:
             #the file is not tracked
             return None
-        packageName = package.split(':')[0]
+        packageName = package[0].split(':')[0]
         try:
             (package, returncode) = getOutputAsList(cmd2 + [packageName])
             if returncode != 0:
                 return None
-            return package
+            return package[0]
         except subprocess.CalledProcessError:
             #package not found
             return None
@@ -152,7 +152,7 @@ class Blotter:
             (package, returncode) = getOutputAsList(cmd + [path])
             if returncode != 0:
                 return None
-            return package
+            return package[0]
         except subprocess.CalledProcessError:
             #package not found
             return None
