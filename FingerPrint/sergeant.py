@@ -51,7 +51,8 @@ def getHash(fileName, pluginName):
             print "Using: ", _isPrelink
     if pluginName == 'ELF' and len(_isPrelink) > 0:
         #let's use prelink for the md5sum
-        temp = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
+        #TODO what if isPrelink fails
+        (temp, returncode) = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
         return temp[0]
     try:
         #ok let's do standard md5sum

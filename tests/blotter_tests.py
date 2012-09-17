@@ -31,7 +31,8 @@ class TestSequenceFunctions(unittest.TestCase):
         self.files += glob.glob("/lib*/libdmraid.so.*")
         self.files += glob.glob("/lib*/libnss_nis*")
         #a python file
-        cmdFile = getOutputAsList(["python", "-c", "import urllib;print urllib.__file__"])[0]
+        (cmdFile, _) = getOutputAsList(["python", "-c", "import urllib;print urllib.__file__"])[0]
+        print cmdFile
         if cmdFile.endswith(".pyc") or cmdFile.endswith(".pyo"):
             cmdFile = cmdFile[0:-1]
         self.files.append( cmdFile )

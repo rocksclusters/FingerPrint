@@ -116,24 +116,25 @@ class Blotter:
 
     def _getPackageDpkg(self, path):
         """given a path it return the package which provide that 
-        path if if finds one
-        only debian system"""
+        path if if finds one only debian system"""
         cmd1 = ['dpkg', '-S']
         cmd2 = ['dpkg-query', '--show', "-f='${Package} ${Version} ${Architecture}'", ]
         try:
-            package = getOutputAsList(cmd1 + [path])[0]
+            (package, returncode) = getOutputAsList(cmd1 + [path])[0]
         except subprocess.CalledProcessError:
             #package not found
             return None
         except OSError:
             #cmd not found
             return None
-        if len(package) == 0:
+        if len(package) == 0 or returncode != 0:
             #the file is not tracked
             return None
         packageName = package.split(':')[0]
         try:
-            package = getOutputAsList(cmd2 + [packageName])[0]
+            (package, returncode) = getOutputAsList(cmd2 + [packageName])[0]
+            if returncode != 0:
+                return None
             return package
         except subprocess.CalledProcessError:
             #package not found
@@ -148,7 +149,9 @@ class Blotter:
         only rpm based system"""
         cmd = ['rpm', '-qf']
         try:
-            package = getOutputAsList(cmd + [path])[0]
+            (package, returncode) = getOutputAsList(cmd + [path])[0]
+            if returncode != 0:
+                return None
             return package
         except subprocess.CalledProcessError:
             #package not found

@@ -56,7 +56,7 @@ class ElfPlugin(PluginManager):
         if dependency.depname in cls._pathCache :
             return cls._pathCache[dependency.depname]
         #for each library we have in the system
-        for line in getOutputAsList(["/sbin/ldconfig","-p"]):
+        for line in getOutputAsList(["/sbin/ldconfig","-p"])[0]:
             #if dependency is 64 and library is 64 of
             # dependency is 32 and library is 32:
             if len(line) > 0 and soname in line and \
@@ -88,7 +88,7 @@ class ElfPlugin(PluginManager):
     def _checkMinor(cls, libPath, depName):
         """ check if libPath provides the depName (major and minor) """
         realProvider = os.path.realpath(libPath)
-        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], realProvider):
+        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], realProvider)[0]:
             if len(line) > 0 and depName in line:
                 return True
         return False
@@ -100,7 +100,7 @@ class ElfPlugin(PluginManager):
         the provides to it """
 
         #find deps
-        for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path):
+        for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path)[0]:
             if len(line) > 0:
                 newDep = Dependency( line )
                 newDep.setPluginName( cls.pluginName )
@@ -123,7 +123,7 @@ class ElfPlugin(PluginManager):
                     newDep.pathList.append( p )
         
         #find provides
-        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path):
+        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path)[0]:
             if len(line) > 0 :
                 newProv = Provide(line)
                 newProv.setPluginName( cls.pluginName )
