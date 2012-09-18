@@ -53,7 +53,11 @@ def getHash(fileName, pluginName):
         #let's use prelink for the md5sum
         #TODO what if isPrelink fails
         (temp, returncode) = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
-        return temp[0]
+        if returncode == 0:
+            return temp[0]
+        else:
+            #undoing prelinking failed for some reasons
+            pass
     try:
         #ok let's do standard md5sum
         fd=open(fileName)
