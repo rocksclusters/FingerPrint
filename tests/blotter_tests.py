@@ -51,7 +51,14 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(len(p), self.availablePlugin,
             msg="Plugin manager did not load all the available plugins (available %d, detected %d) " 
             % (len(p) , self.availablePlugin) )
-            
+        
+    def test_hash(self):
+        """ test hash function """
+	file = 'tests/files/Ubuntu_12.04_x86_64/libsmbclient.so.0'
+	hash = 'a1264218dc707b5b510ef12548564edc'
+        self.assertEqual(FingerPrint.sergeant.getHash(file, 'ELF'), hash)
+
+
 
     def test_commandline(self):
         """ """
