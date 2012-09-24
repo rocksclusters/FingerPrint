@@ -54,7 +54,7 @@ def getHash(fileName, pluginName):
         #TODO what if isPrelink fails
         (temp, returncode) = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
         if returncode == 0:
-            return temp[0]
+            return temp[0].split()[0]
         else:
             #undoing prelinking failed for some reasons
             pass
