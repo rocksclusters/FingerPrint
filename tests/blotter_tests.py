@@ -32,7 +32,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.files += glob.glob("/lib*/libnss_nis*")
         #a python file
         cmdFile = getOutputAsList(["python", "-c", "import urllib;print urllib.__file__"])[0][0]
-        print cmdFile
+        #print cmdFile
         if cmdFile.endswith(".pyc") or cmdFile.endswith(".pyo"):
             cmdFile = cmdFile[0:-1]
         self.files.append( cmdFile )
