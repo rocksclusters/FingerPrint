@@ -40,11 +40,29 @@ which are the dependencies of the file
 
 class Blotter:
 
-    def __init__(self, name, fileList):
+    def __init__(self, name, fileList, processIDs):
         """give a file list and a name construct a swirl into memory """
         self._pathCache = {}
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
+        # 
+        # let's see if we have proecss ID we might use the /proc
+        # instead of the fileList
+        if processIDs :
+            if not fileList :
+                fileList = []
+            for proc in processIDs.split(','):
+                proc = proc.strip()
+                # add the binary
+                fileList.append(os.readlink('/proc/' + proc + '/exe'))
+                f=open('/proc/' + proc + '/maps')
+                maps = f.read()
+                f.close()
+                for i in maps.split('\n'):
+                    tokens = i.split(' ')
+                    if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
+                        # memory mapped area is executable and point to a files
+                        fileList.append( tokens[5] )
         for i in fileList:
             if os.path.islink(i):
                 swirlFile = SwirlFile( i )

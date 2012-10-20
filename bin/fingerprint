@@ -71,6 +71,9 @@ def main():
     parser.add_option("-p", "--paths", dest="paths", 
                     help="add extra paths (colon separated) to search for " +\
                     " dependencies (valid with verify only)")
+    parser.add_option("-e", "--process", dest="process",
+                    help="PIDs of the processes that should be dinamically traced" +\
+                    " for creating a swirl")
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
                     help="a file containing a list of file which will be " + \
                     "included to this swirl")
@@ -192,12 +195,13 @@ def main():
         if filenameList == []:
             #get the filelist from command line
             filenameList = args
-        if len(filenameList) < 1:
+        if len(filenameList) < 1 and not options.process:
             parser.print_help()
-            parser.error("You need to specify at least one inputfile or the FILELIST parameter.\n")
+            parser.error("You need to specify at least one inputfile or the FILELIST " +\
+            "parameter or the process number to trace (-p option).\n")
         #creating blotter
         try:
-            blotter = Blotter(options.name, filenameList)
+            blotter = Blotter(options.name, filenameList, options.process)
         except IOError, e:
             parser.error("" + str(e))
         if options.verbose:
