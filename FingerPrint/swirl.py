@@ -75,9 +75,16 @@ class Swirl(object):
         """add a file to the list of the tracked files"""
         self.swirlFiles.append(swirlFile)
 
-       
+    def getSwirlFile(self, fileName):
+        """ given a fileName it return the associated swirlFile if
+        present, otherwise None"""
+        for swirlFile in self.swirlFiles:
+            if swirlFile.path == fileName:
+                return swirlFile
+        return None
 
     def getDateString(self):
+        """ return the creation time in a readable format"""
         return self.creationDate.strftime("%Y-%m-%d %H:%M")
 
     def __eq__(self, other):
@@ -123,6 +130,13 @@ class SwirlFile(Swirl):
     
     def getPluginName(self):
         return self.pluginName
+
+    def getListDependenciesFiles(self):
+        """return a list of all the files this swirlfile depends on"""
+        returnList = []
+        for i in self.dependencies:
+            returnList += i.pathList
+        return returnList
 
     def addDependency(self, dep):
         """ dep must be a Dependency object"""
