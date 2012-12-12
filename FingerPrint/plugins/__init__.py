@@ -85,6 +85,10 @@ class PluginManager(object):
         swirlFile = SwirlFile(fileName)
         swirlFile.type="Data"
         return swirlFile
+
+    @classmethod
+    def getDependeciesFromPath(cls, fileName):
+        return cls.plugins["ELF"].getDependeciesFromPath(fileName)
  
 
 
