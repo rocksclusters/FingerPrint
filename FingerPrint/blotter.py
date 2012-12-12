@@ -46,42 +46,66 @@ class Blotter:
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
         # 
-        # let's see if we have proecss ID we might use the /proc
-        # instead of the fileList
+        # let's see if we have proecss ID we might need to scan for dynamic dependecies
+        # with the help of the /proc FS
+        #
+        # synamicDependencies = { 'binarypath' : [list of file it depends to],
+        # '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
+        # '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
+        dynamicDependecies = {}
         if processIDs :
             if not fileList :
                 fileList = []
             for proc in processIDs.split(','):
                 proc = proc.strip()
                 # add the binary
-                fileList.append(os.readlink('/proc/' + proc + '/exe'))
+                binaryFile = os.readlink('/proc/' + proc + '/exe')
+                fileList.append( binaryFile )
+                dynamicDependecies[binaryFile] = []
                 f=open('/proc/' + proc + '/maps')
                 maps = f.read()
                 f.close()
                 for i in maps.split('\n'):
-                    tokens = i.split(' ')
+                    tokens = i.split()
                     if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
                         # memory mapped area is executable and point to a files
-                        fileList.append( tokens[5] )
+                        dynamicDependecies[binaryFile].append( tokens[5] )
         for i in fileList:
             if os.path.islink(i):
                 swirlFile = SwirlFile( i )
                 swirlFile.type = 'link'
                 self.swirl.addFile(swirlFile)
             elif os.path.isfile(i):
-                swirlFile = PluginManager.getSwirl(i)
-                self._hashDependencies(swirlFile)
+                if i in dynamicDependecies:
+                    swirlFile = PluginManager.getSwirl(i)
+                else:
+                    swirlFile = PluginManager.getSwirl(i)
+                #self._hashDependencies(swirlFile)
                 self.swirl.addFile(swirlFile)
             elif os.path.isdir(i):
                 pass
             else:
                 raise IOError("The file %s cannot be opened." % i)
+        #
+        # we might need to add the dynamic dependencies to the swirl
+        # if they did not get detected already
+        for fileName in dynamicDependecies.keys():
+            swirlFile = self.swirl.getSwirlFile(fileName)
+            listDepFile = swirlFile.getListDependenciesFiles()
+            for dynamicDepFile in dynamicDependecies[fileName]:
+                if dynamicDepFile not in listDepFile:
+                    newDeps = PluginManager.getDependeciesFromPath(dynamicDepFile)
+                    for i in newDeps:
+                        swirlFile.addDependency( i )
+        # now that I have all the dependencies in place (both static and dynamic)
+        # I can do the hashing
+        for i in self.swirl.swirlFiles:
+            self._hashDependencies(i)
 
-       
+
     def getSwirl(self):
         """return the current swirl """
         return self.swirl 
-
 
 
     def _hashDependencies(self, swirlFile):
