@@ -9,17 +9,6 @@ import StringIO
 import sys
 from optparse import OptionParser, OptionGroup
 
-#
-# compatibility with python2.4
-#
-if "any" not in dir(__builtins__):
-    def any(iterable):
-        for element in iterable:
-            if element:
-                return True
-        return False
-
-
 
 try:
     import FingerPrint, FingerPrint.sergeant
@@ -29,6 +18,13 @@ except ImportError:
     parDir = os.path.abspath(os.path.join(fullPath, os.path.pardir))
     sys.path.append(parDir)
     import FingerPrint, FingerPrint.sergeant
+
+#
+# compatibility with python2.4
+#
+if "any" not in dir(__builtins__):
+    from FingerPrint.utils import any
+
 
 from FingerPrint.swirl import Swirl
 from FingerPrint.blotter import Blotter

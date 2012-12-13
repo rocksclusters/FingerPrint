@@ -21,12 +21,7 @@ except ImportError:
 # compatibility with python2.4
 #
 if "any" not in dir(__builtins__):
-    def any(iterable):
-        for element in iterable:
-            if element:
-                return True
-        return False
-
+    from FingerPrint.utils import any
 
 from swirl import Swirl, SwirlFile
 import sergeant
