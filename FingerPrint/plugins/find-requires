@@ -23,15 +23,8 @@ filelist=`sed "s/[]['\"*?{}]/\\\\\&/g"`
 exelist=`echo $filelist | xargs -r file | \
 	grep -Ev ":.* (commands|script)[, ]" | \
 	grep ":.*executable" | cut -d: -f1`
-scriptlist=`echo $filelist | xargs -r file | \
-	grep -E ":.* (commands|script)[, ]" | cut -d: -f1`
 liblist=`echo $filelist | xargs -r file | \
 	grep ":.*shared object" | cut -d : -f1`
-
-interplist=
-perllist=
-pythonlist=
-tcllist=
 
 #
 # --- Alpha does not mark 64bit dependencies
@@ -70,23 +63,6 @@ if [ "$needed" -eq 0 ]; then
   done | xargs -r -n 1 basename | sort -u
 fi
 
-#
-# --- Script interpreters.
-for f in $scriptlist; do
-    [ -r $f -a -x $f ] || continue
-    interp=`head -n 1 $f | sed -e 's/^\#\![ 	]*//' | cut -d" " -f1`
-    interplist="$interplist $interp"
-    case $interp in
-    */perl)	perllist="$perllist $f" ;;
-    esac
-done
-[ -n "$interplist" ] && { echo "$interplist" | tr '[:blank:]' \\n | sort -u ; }
-
-#
-# --- Add perl module files to perllist.
-for f in $filelist; do
-    [ -r $f -a "${f%.pm}" != "${f}" ] && perllist="$perllist $f"
-done
 
 #
 # --- Weak symbol versions (from glibc).
@@ -118,19 +94,5 @@ for f in $liblist $exelist ; do
     '
 done | sort -u
 
-#
-# --- Perl modules.
-[ -x /usr/lib/rpm/perl.req -a -n "$perllist" ] && \
-    echo $perllist | tr '[:blank:]' \\n | /usr/lib/rpm/perl.req | sort -u
-
-#
-# --- Python modules.
-[ -x /usr/lib/rpm/python.req -a -n "$pythonlist" ] && \
-    echo $pythonlist | tr '[:blank:]' \\n | /usr/lib/rpm/python.req | sort -u
-
-#
-# --- Tcl modules.
-[ -x /usr/lib/rpm/tcl.req -a -n "$tcllist" ] && \
-    echo $tcllist | tr '[:blank:]' \\n | /usr/lib/rpm/tcl.req | sort -u
 
 exit 0
