@@ -108,12 +108,14 @@ class Sergeant:
         depList = self.swirl.getDependencies()
         returnValue = True
         for dep in depList:
-            for file, hash in zip(dep.pathList, dep.hashList):
-                if hash and hash != getHash(file, dep.pluginName):
-                    #wrong hash values
-                    print dep.depname, " orig ", hash, " computed ", getHash(file, dep.pluginName)
-                    self.error.append(dep.depname)
-                    returnValue = False
+            path = PluginManager.getPathToLibrary(dep)
+            if not path:
+                continue
+            hash = getHash(path, dep.pluginName)
+            if not hash in dep.hashList:
+                self.error.append(dep.depname)
+                returnValue = False
+                print dep.depname, " computed ", hash, " originals ", dep.hashList
         return returnValue
 
 
