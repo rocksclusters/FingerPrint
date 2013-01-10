@@ -98,6 +98,9 @@ class PluginManager(object):
     def getPathToLibrary(cls, dependency):
         """ given a dependency it find the path of the library which provides 
         that dependency """
+        #TODO only for ELF file
+        if dependency.getPluginName() != "ELF":
+            return None
         plugin = cls.plugins[dependency.getPluginName()]
         return plugin.getPathToLibrary(dependency)
 
