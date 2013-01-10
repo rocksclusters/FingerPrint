@@ -88,14 +88,23 @@ class PluginManager(object):
 
     @classmethod
     def getDependeciesFromPath(cls, fileName):
+        """given a file name it returns the dependency name"""
+        #TODO for now it is supported only by the ELF pluging
         return cls.plugins["ELF"].getDependeciesFromPath(fileName)
  
 
 
+    @classmethod
+    def getPathToLibrary(cls, dependency):
+        """ given a dependency it find the path of the library which provides 
+        that dependency """
+        plugin = cls.plugins[dependency.getPluginName()]
+        return plugin.getPathToLibrary(dependency)
+
 
 #
-# now let's import all the plugins aka all the .py file which are inside the p
-# lugins directory
+# now let's import all the plugins aka all the .py file which are inside the
+# plugins directory
 #
 
 import pkgutil

@@ -42,14 +42,14 @@ class ElfPlugin(PluginManager):
         """verify that the dependency passed can be satified on this system
         and return True if so
         """
-        if cls._getPathToLibrary(dependency):
+        if cls.getPathToLibrary(dependency):
             return True
         else:
             return False
 
 
     @classmethod
-    def _getPathToLibrary(cls, dependency):
+    def getPathToLibrary(cls, dependency):
         """ given a dependency it find the path of the library which provides 
         that dependency """
         soname = dependency.getBaseName()
@@ -118,7 +118,7 @@ class ElfPlugin(PluginManager):
                 else:
                     #no parenthesis aka 32 bit 
                     newDep.set32bits()
-                p = cls._getPathToLibrary( newDep )
+                p = cls.getPathToLibrary( newDep )
                 if p:
                     newDep.pathList.append( p )
         
