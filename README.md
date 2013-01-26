@@ -13,7 +13,8 @@ Swirl creation.
 
 
 
- --  INSTALL  --
+INSTALL
+------
 
 The simplest way to use FingerPrint is to add to your PATH the ./bin directory
 of this source code, and you will be done (on bash
