@@ -21,8 +21,7 @@ of this source code, and you will be done (on bash export PATH=$PATH:full_path_t
 
 To install fingerprint on your system from source you can run
 
-``` # python setup.py install 
-```
+    # python setup.py install 
 
 This will install FingerPrint in your python. FingerPrint consist of:
  - a bunch of python modules and submodules inside the FingerPrint module
@@ -32,7 +31,7 @@ You will need writing priviledge on some system direcotries.
 
 To run some unittest run
 
- # python setup.py test
+    # python setup.py test
 
 The only requirement is python 2.4 or greater.
 
@@ -46,7 +45,7 @@ USE
 
 To get some help on the commnad line you can simply type:
 
- # fingerprint -h 
+    # fingerprint -h 
 
 Basically there are four main actions fingerprint can do:
 
