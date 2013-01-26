@@ -17,12 +17,12 @@ INSTALL
 ------
 
 The simplest way to use FingerPrint is to add to your PATH the ./bin directory
-of this source code, and you will be done (on bash
-export PATH=$PATH:<full_path_to_source>/bin )
+of this source code, and you will be done (on bash export PATH=$PATH:full_path_to_source/bin )
 
 To install fingerprint on your system from source you can run
 
- # python setup.py install
+``` # python setup.py install 
+```
 
 This will install FingerPrint in your python. FingerPrint consist of:
  - a bunch of python modules and submodules inside the FingerPrint module
@@ -41,7 +41,8 @@ If found on the system (they are not required), fingerprint uses:
  - dpkg or rpm (to record package version and info regarding dependencies)
 
 
- --  USE   --
+USE
+---
 
 To get some help on the commnad line you can simply type:
 
