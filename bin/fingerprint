@@ -35,13 +35,15 @@ def main():
     #
     # set up the option parser
     # 
-    usage = "usage: %prog [-c|-y|-d|-i] [options] inputfile1 ... inputfileN"
+
+    requiredFlags = "[-q|-c|-y|-d|-i]"
+    usage = "usage: %prog " + requiredFlags + " [options] inputfile1 ... inputfileN"
     parser = OptionParser(usage, version=FingerPrint.version)
 
 
     # required options one of them must be selected
     group = OptionGroup(parser, "Required Options",
-                    "You must select one of these options")
+                    "You must select one (and only one) of these options")
     parser.add_option_group(group)
     group.add_option("-c", "--create", action="store_true", dest="create",
                     default=False,
@@ -49,6 +51,9 @@ def main():
     group.add_option("-d", "--display", action="store_true", dest="display",
                     default=False,
                     help="Display the content of the given swirl file")
+    group.add_option("-q", "--query", action="store_true", dest="query",
+                    default=False,
+                    help="Run a query against a swirl file")
     group.add_option("-y", "--verify", action="store_true", dest="verify",
                     default=False,
                     help="Scan the current system to verify compatibility with given swirl")
@@ -89,9 +94,9 @@ def main():
     #
     # switch based on user input
     #
-    if (options.verify + options.create + options.display + options.integrity) != 1:
+    if (options.query + options.verify + options.create + options.display + options.integrity) != 1:
         #too many or too few flags
-        parser.error("Only one of the flag -y -c -d -i must be used at a time" )
+        parser.error("Only one of the flag " + requiredFlags + " must be used at a time" )
 
     if options.verify or options.integrity :
         #verify the current swirl
@@ -227,9 +232,14 @@ def main():
             print "Global Dependencies:  " , serg.getSwirl().getDependencies()
             print "Global Provides:  ", serg.getSwirl().getProvides()
         return 0
+    elif options.query :
+        # query the swirl file 
+        print "Query option to be implemented."
+        return 0
+            
     else:
         parser.print_help()
-        parser.error( "You must select one option between -d, -c and -y.\n" )
+        parser.error( "You must select one option between the required flags " + requiredFlags + ".\n" )
     
 
 if __name__ == "__main__":
