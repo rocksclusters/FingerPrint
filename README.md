@@ -75,3 +75,14 @@ Basically there are four main actions fingerprint can do:
     failurer, with the verbose flag it prints also a list of modified files.
 
 
+Authors and Contributors
+------------------------
+Fingerprint is an idea of Phil Papadopoulos and it is developed by Phil and Luca
+Clementi.  This work is funded by NSF under the grant #1148473.
+
+
+Support or Contact
+------------------
+If you are having trouble with Fingerprint or if you need some help you can post an
+issue or contact me at clem \a\t sdsc dot edu.
+
