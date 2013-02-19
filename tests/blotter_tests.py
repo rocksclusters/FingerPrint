@@ -79,6 +79,8 @@ class TestSequenceFunctions(unittest.TestCase):
         #let's test the integrity of the dependency
         self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-i'] ), 0,
             msg="fingerprint-verify: failed to verify the integrity of the swirl created on this system %s" % outputfilename)
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-q', '-S', '/usr/libsomeweirdlib.so.2'] ), 1,
+            msg="fingerprint-query: failed to query swirl for non existent library")
         os.remove(outputfilename)
         #let's create a swirl with input file list taken from a file
         filelist='filelist'
