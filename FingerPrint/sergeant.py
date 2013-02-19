@@ -118,6 +118,16 @@ class Sergeant:
                 print dep.depname, " computed ", hash, " originals ", dep.hashList
         return returnValue
 
+    def checkDependencyPath(self, fileName):
+        """return a list of SwirlFiles which requires the given fileName, if the 
+        given file is nor required in this swirl it return None"""
+        returnFilelist = []
+        for swirlFile in self.swirl.swirlFiles:
+            if fileName in swirlFile.getListDependenciesFiles():
+                returnFilelist.append(swirlFile.path)
+        return returnFilelist
+        
+
 
     def getError(self):
         """after running check or checkHash if they returned False this 
