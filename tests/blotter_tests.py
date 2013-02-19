@@ -12,7 +12,7 @@ from FingerPrint.blotter import Blotter
 from FingerPrint.swirl import Swirl
 from FingerPrint.utils import getOutputAsList
 import FingerPrint.sergeant
-
+from FingerPrint.utils import which
 
 class TestSequenceFunctions(unittest.TestCase):
 
@@ -21,11 +21,11 @@ class TestSequenceFunctions(unittest.TestCase):
         import sys
         sys.path.append("../")
         self.files = ["/bin/ls", "/etc/passwd", "/etc/hosts"]
-        if os.path.isfile("/usr/bin/find") :
-            self.files.append("/usr/bin/find")
-        elif os.path.isfile("/bin/find") :
-            self.files.append("/bin/find")
-        if os.path.isfile("/bin/dbus-daemon"):
+        temp = which("find")
+        if temp:
+            self.files.append(temp)
+        temp = which("dbus-daemon")
+        if temp:
             self.files.append("/bin/dbus-daemon")
         self.files += glob.glob("/lib*/libcryptsetup.so.*")
         self.files += glob.glob("/lib*/libdmraid.so.*")
