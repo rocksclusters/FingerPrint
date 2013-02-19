@@ -83,6 +83,10 @@ def main():
                     "will be saved in the FILE in a CSV format, if the file " + \
                     "already exists the output of the new check will be appended " +\
                     "to it if not it will be created", metavar="FILE")
+    parser.add_option("-S", "--query_file", dest="query_file", default=None,
+                    help="Check if the given FILE is required by this swirl, if run " + \
+                    "with verbose it also print the file requiring this FILE. Return " +\
+                    "0 if this FILE is required by this swirl 1 otherwise", metavar="FILE")
 
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", 
@@ -217,10 +221,10 @@ def main():
             pickle.save(blotter.getSwirl() )
             outputfd.close()
             print "File %s saved" % options.filename
-        #success
+        # success
         return 0
     elif options.display :
-        #display the swirl
+        # display the swirl
         if options.filename :
             try:
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)
@@ -234,9 +238,21 @@ def main():
         return 0
     elif options.query :
         # query the swirl file 
-        print "Query option to be implemented."
-        return 0
-            
+        if options.filename :
+            try:
+                serg = FingerPrint.sergeant.readFromPickle(options.filename)
+            except IOError:
+                parser.error("The file %s could not be opened on this system.\n" % options.filename)
+        if options.query_file :
+            # who requires this file
+            files = serg.checkDependencyPath(options.query_file)
+            if files :
+                if options.verbose :
+                    print files
+                return 0
+            else:
+                # given file is not required by this swirl
+                sys.exit(1)
     else:
         parser.print_help()
         parser.error( "You must select one option between the required flags " + requiredFlags + ".\n" )
