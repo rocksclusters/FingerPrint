@@ -41,7 +41,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
 
     def test_plugin(self):
-        print "     -----------------------     Testing pluging manager via API  -------------------------"
+        print "\n     -----------------------     Testing pluging manager via API  -------------------------\n"
         self.swirl = Swirl("test", datetime.now())
         for i in self.files:
             swirlFile = PluginManager.getSwirl(i)
@@ -63,7 +63,7 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_commandline(self):
         """ """
         #test empty command line
-        print "     -----------------------     Running fingerprint command line   -------------------------"
+        print "\n     -----------------------     Running fingerprint command line   -------------------------\n"
         self.assertNotEqual(subprocess.call(['python', './bin/fingerprint']), 0,
             msg="fingerprint: empty command line should fail but it did not")
         #lets create a command wtih input file on the command line with default output filename
@@ -106,7 +106,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_predefinedBinaries(self):
         #that how we get the platform name
-        print "     -----------------------     Running fingerprint on predefined set of files   -------------------------"
+        print "\n     -----------------------     Running fingerprint on predefined set of files   -------------------------\n"
         import platform
         dist = platform.dist()
         arch = platform.machine()
