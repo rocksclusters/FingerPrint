@@ -12,9 +12,23 @@ Swirl creation.
 
 
 
+Requirements
+------------
 
-INSTALL
-------
+FingerPrint will work only on linux system, it does not have any major 
+requirement other than python from version 2.4 up to 2.7. FingerPrint is 
+tested on RHEL 5.x and 6.x and Debian 5.x and 6.x.
+
+It needs also a minimal bash implementation (sed, grep, ldd, and objdump) 
+but all these tools are generally present on most of the systems.
+
+If found on the system (they are not required), fingerprint uses:
+ - prelink (to remove prelinking information from libraries and get their hash)
+ - dpkg or rpm (to record package version and info regarding dependencies)
+
+
+Installation
+------------
 
 The simplest way to use FingerPrint is to add to your PATH the ./bin directory
 of this source code, and you will be done (on bash export PATH=$PATH:full_path_to_source/bin )
@@ -33,14 +47,16 @@ To run some unittest run
 
     # python setup.py test
 
-The only requirement is python 2.4 or greater.
+The unit tests will generate a lot of outputs and errors but if they all succede
+at the end you will see the following lines:
 
-If found on the system (they are not required), fingerprint uses:
- - prelink (to remove prelinking information from libraries and get their hash)
- - dpkg or rpm (to record package version and info regarding dependencies)
+    ----------------------------------------------------------------------
+    Ran 4 tests in 38.870s
+    
+    OK
 
 
-USE
+Use
 ---
 
 To get some help on the commnad line you can simply type:
@@ -73,6 +89,103 @@ Basically there are four main actions fingerprint can do:
     swirl have been modified since its creation (to this purpose it uses the 
     checksums stored in the swirl). It return 0 upon success or 1 in case of 
     failurer, with the verbose flag it prints also a list of modified files.
+
+Examples
+--------
+
+
+Create a fingerprint of your ls command:
+
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -c /bin/ls
+File output.swirl saved
+```
+
+By default it use output.swirl for input or output file name you can choose your own file name with "-f"
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ ls -lh output.swirl
+-rw-rw-r-- 1 clem clem 2.4K Feb 20 15:51 output.swirl
+```
+
+To see the list of libraries your /bin/ls depends on along with
+their hash and local package name (that's what the swirl file saves)
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -d
+File name:  output.swirl
+Global Dependencies:   [
+    libacl.so.1()(64bit)
+        /lib/x86_64-linux-gnu/libacl.so.1
+        /lib/x86_64-linux-gnu/libacl.so.1.1.0 -
+003978a0b6b08cd6eb82e95cdf1e199c ('libacl1 2.2.51-5ubuntu1 amd64'),
+    libc.so.6()(64bit)
+        /lib/x86_64-linux-gnu/libc.so.6
+        /lib/x86_64-linux-gnu/libc-2.15.so -
+242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
+    libc.so.6(GLIBC_2.14)(64bit)
+        /lib/x86_64-linux-gnu/libc.so.6
+        /lib/x86_64-linux-gnu/libc-2.15.so -
+242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
+    libc.so.6(GLIBC_2.2.5)(64bit)
+        /lib/x86_64-linux-gnu/libc.so.6
+        /lib/x86_64-linux-gnu/libc-2.15.so -
+242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
+    libc.so.6(GLIBC_2.3)(64bit)
+        /lib/x86_64-linux-gnu/libc.so.6
+        /lib/x86_64-linux-gnu/libc-2.15.so -
+242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
+    libc.so.6(GLIBC_2.3.4)(64bit)
+        /lib/x86_64-linux-gnu/libc.so.6
+        /lib/x86_64-linux-gnu/libc-2.15.so -
+242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
+    libc.so.6(GLIBC_2.4)(64bit)
+        /lib/x86_64-linux-gnu/libc.so.6
+        /lib/x86_64-linux-gnu/libc-2.15.so -
+242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
+    librt.so.1()(64bit)
+        /lib/x86_64-linux-gnu/librt.so.1
+        /lib/x86_64-linux-gnu/librt-2.15.so -
+43a85e435df106454dd1bbc4ba175c90 ('libc6 2.15-0ubuntu10.3 amd64'),
+    librt.so.1(GLIBC_2.2.5)(64bit)
+        /lib/x86_64-linux-gnu/librt.so.1
+        /lib/x86_64-linux-gnu/librt-2.15.so -
+43a85e435df106454dd1bbc4ba175c90 ('libc6 2.15-0ubuntu10.3 amd64'),
+    libselinux.so.1()(64bit)
+        /lib/x86_64-linux-gnu/libselinux.so.1 -
+317e633a53dec5f82142ffa45cbabf77 ('libselinux1 2.1.0-4.1ubuntu1
+amd64')]
+Global Provides:   []
+```
+
+Scan the current system to verify compatibility with given swirl
+aka all the dependecy can be resolved
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -y
+```
+
+Verify that none of the dependencies have been modified.
+It uses md5sum to check for changes.
+
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -i
+```
+
+You can run same query on the swirl
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -q -S
+/lib/x86_64-linux-gnu/librt.so.1 && echo librt is used
+librt is used
+
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -q -v -S
+/lib/x86_64-linux-gnu/libcrypt.so.1 || echo libcrypt is not used
+libcrypt is not used
+```
+
 
 
 Authors and Contributors
