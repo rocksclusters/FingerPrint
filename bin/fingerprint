@@ -228,8 +228,8 @@ def main():
         if options.filename :
             try:
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)
-            except IOError:
-                parser.error("The file %s could not be opened on this system.\n" % options.filename)
+            except IOError, e:
+                parser.error("The file %s could not be opened on this system: %s.\n" % (options.filename, e))
             print "File name: ", options.filename
             if options.verbose :
                 print serg.getSwirl()
