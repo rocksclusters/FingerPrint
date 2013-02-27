@@ -52,7 +52,8 @@ class PythonPlugin(PluginManager):
             f.close()
             return None
         except :
-            f.close()
+            if f:
+                f.close()
             return None
         else :
             swirlFile = SwirlFile( fileName )
