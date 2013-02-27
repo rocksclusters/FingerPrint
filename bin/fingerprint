@@ -37,7 +37,7 @@ def main():
     # 
 
     requiredFlags = "[-q|-c|-y|-d|-i]"
-    usage = "usage: %prog " + requiredFlags + " [options] inputfile1 ... inputfileN"
+    usage = "usage: %prog " + requiredFlags + " [options] [inputfile1 ... inputfileN]"
     parser = OptionParser(usage, version=FingerPrint.version)
 
 
