@@ -10,7 +10,7 @@ remote_task = FingerPrint/batlab/test.sh
 # remote_task_timeout = 5m
 
 # platforms = x86_64_ubuntu_12.04, x86_rhap_6.3
-platforms = x86_64_ubuntu_12.04, x86_rhap_6.3, x86_rhap_5.8, x86_64_rhap_6.3, x86_64_rhap_5.8, x86_64_deb_5.0
+platforms = x86_64_ubuntu_12, x86_64_Ubuntu10, x86_64_RedHat5, x86_64_RedHat6, x86_64_Debian5, x86_64_Debian6, x86_Debian6, x86_RedHat5, x86_RedHat6
 #platforms = x86_rhap_6.3
 notify = clem@sdsc.edu
 
