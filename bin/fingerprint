@@ -34,7 +34,7 @@ from FingerPrint.serializer import PickleSerializer
 def main():
     #
     # set up the option parser
-    # 
+    #
 
     requiredFlags = "[-q|-c|-y|-d|-i]"
     usage = "usage: %prog " + requiredFlags + " [options] [inputfile1 ... inputfileN]"
@@ -59,42 +59,42 @@ def main():
                     help="Scan the current system to verify compatibility with given swirl")
     group.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
-                    help="Verify the integrity of all the dependencies of the " + \
+                    help="Verify the integrity of all the dependencies of the "
                     "given swirl (using md5sum)")
 
     #various option
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
-                    help="write or read swirl FILE (default to output.swirl)", 
+                    help="write or read swirl FILE (default to output.swirl)",
                     metavar="FILE")
     parser.add_option("-n", "--name", dest="name", default="Swirl",
-                    help="the name of the swirl that will be created, this is " + \
+                    help="the name of the swirl that will be created, this is "
                     "an internal value used at creation time (default to Swirl)")
-    parser.add_option("-p", "--paths", dest="paths", 
-                    help="add extra paths (colon separated) to search for " +\
+    parser.add_option("-p", "--paths", dest="paths",
+                    help="add extra paths (colon separated) to search for "
                     " dependencies (valid with verify only)")
     parser.add_option("-e", "--process", dest="process",
-                    help="PIDs of the processes that should be dinamically traced" +\
+                    help="PIDs of the processes that should be dynamically traced"
                     " for creating a swirl")
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
-                    help="a file containing a list of file which will be " + \
+                    help="a file containing a list of file which will be "
                     "included to this swirl")
     parser.add_option("-s", "--csvfile", dest="csvfile", default=None,
-                    help="The output of a verification or of an integrity check " + \
-                    "will be saved in the FILE in a CSV format, if the file " + \
-                    "already exists the output of the new check will be appended " +\
+                    help="The output of a verification or of an integrity check "
+                    "will be saved in the FILE in a CSV format, if the file "
+                    "already exists the output of the new check will be appended "
                     "to it if not it will be created", metavar="FILE")
     parser.add_option("-S", "--query_file", dest="query_file", default=None,
-                    help="Check if the given FILE is required by this swirl, if run " + \
-                    "with verbose it also print the file requiring this FILE. Return " +\
+                    help="Check if the given FILE is required by this swirl, if run "
+                    "with verbose it also print the file requiring this FILE. Return "
                     "0 if this FILE is required by this swirl 1 otherwise", metavar="FILE")
 
 
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", 
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                     default=False,
                     help="Output a textual representation of the swirl")
     (options, args) = parser.parse_args()
-   
- 
+
+
     #
     # switch based on user input
     #
@@ -165,7 +165,7 @@ def main():
             #verify swirl
             if not serg.check():
                 #error let print some stuff
-                print "The file %s failed.\n" % options.filename 
+                print "The file %s failed.\n" % options.filename
                 if options.verbose :
                     print "Missing Dependecies:"
                     for i in serg.getError():
@@ -186,7 +186,7 @@ def main():
 
 
     elif options.create :
-        #create a swirl 
+        #create a swirl
         filenameList = []
         if options.filelist :
             #read the input filelist from file
@@ -202,8 +202,8 @@ def main():
             filenameList = args
         if len(filenameList) < 1 and not options.process:
             parser.print_help()
-            parser.error("You need to specify at least one inputfile or the FILELIST " +\
-            "parameter or the process number to trace (-p option).\n")
+            parser.error("You need to specify at least one inputfile or the FILELIST "
+                         "parameter or the process number to trace (-p option).\n")
         #creating blotter
         try:
             blotter = Blotter(options.name, filenameList, options.process)
@@ -212,7 +212,7 @@ def main():
         if options.verbose:
             print "swirl structure:\n", blotter.getSwirl()
             #self.assertEqual(self.seq, range(10))
-            print "list of global dependecies:\n", blotter.getSwirl().getDependencies()
+            print "list of global dependencies:\n", blotter.getSwirl().getDependencies()
             print "list of global provides:\n", blotter.getSwirl().getProvides()
         if options.filename:
             #this should be always true
@@ -228,8 +228,8 @@ def main():
         if options.filename :
             try:
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)
-            except IOError:
-                parser.error("The file %s could not be opened on this system.\n" % options.filename)
+            except IOError, e:
+                parser.error("The file %s could not be opened on this system: %s.\n" % (options.filename, e))
             print "File name: ", options.filename
             if options.verbose :
                 print serg.getSwirl()
@@ -237,7 +237,7 @@ def main():
             print "Global Provides:  ", serg.getSwirl().getProvides()
         return 0
     elif options.query :
-        # query the swirl file 
+        # query the swirl file
         if options.filename :
             try:
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)
@@ -256,7 +256,7 @@ def main():
     else:
         parser.print_help()
         parser.error( "You must select one option between the required flags " + requiredFlags + ".\n" )
-    
+
 
 if __name__ == "__main__":
     main()

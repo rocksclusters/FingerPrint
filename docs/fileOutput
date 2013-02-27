@@ -13,7 +13,7 @@ Ramdom notes
  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped
 
 
-if there is "dynamically linked (uses shared libs)" means that some of it needs dinamic libraries
+if there is "dynamically linked (uses shared libs)" means that some of it needs dynamic libraries
 
 
  --  objdump simbol mane
