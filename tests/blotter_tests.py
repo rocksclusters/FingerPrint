@@ -26,7 +26,7 @@ class TestSequenceFunctions(unittest.TestCase):
             self.files.append(temp)
         temp = which("dbus-daemon")
         if temp:
-            self.files.append("/bin/dbus-daemon")
+            self.files.append(temp)
         self.files += glob.glob("/lib*/libcryptsetup.so.*")
         self.files += glob.glob("/lib*/libdmraid.so.*")
         self.files += glob.glob("/lib*/libnss_nis*")
