@@ -41,15 +41,17 @@ class Blotter:
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
         # 
-        # let's see if we have proecss ID we might need to scan for dynamic dependecies
-        # with the help of the /proc FS
-        #
+        # dependencies discovered with dinamic methods
         # dynamicDependencies = { 'binarypath' : [list of file it depends to],
         # '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
         # '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
-        if execCmd :
-            raise IOError("The execute command functionality is not implemented yet")
         dynamicDependecies = {}
+
+        if execCmd :
+            self._straceCmd(execcmd, dynamicDependecies)
+
+        # let's see if we have proecss ID we might need to scan for dynamic dependecies
+        # with the help of the /proc FS
         if processIDs :
             if not fileList :
                 fileList = []
@@ -65,8 +67,10 @@ class Blotter:
                 for i in maps.split('\n'):
                     tokens = i.split()
                     if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
-                        # memory mapped area is executable and point to a files
+                        # assumption: if we have a memory mapped area to a file and it is
+                        # executable then it is a shared library
                         dynamicDependecies[binaryFile].append( tokens[5] )
+        # add all the fileList to the swirl and all its static libraries
         for i in fileList:
             if os.path.islink(i):
                 swirlFile = SwirlFile( i )
@@ -133,6 +137,19 @@ class Blotter:
                     #update the cache
                     self._pathCache[newDep.pathList[0]] = (newDep.pathList, newDep.hashList, newDep.packageList)
 
+
+    # TODO add a way to detach from executed programm
+    def _straceCmd(self, execcmd, dynamicDependecies):
+        """it execute the execmd with execve and then it trace process running and
+        it adds all the dependency to the dynamicDependecies dictionary
+        """
+        raise IOError("The execute command functionality is not implemented yet")
+
+
+    #
+    # package manager related suff
+    # TODO move into their own class
+    #
     def _detectedPackageManager(self):
         """ set the proper _getPackage*(self, path)
         function to handle rpm or dpkg based on /etc/issue content"""
