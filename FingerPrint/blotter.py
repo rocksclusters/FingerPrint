@@ -40,6 +40,8 @@ class Blotter:
         self._pathCache = {}
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
+        if not fileList :
+            fileList = []
         # 
         # dependencies discovered with dinamic methods
         # dynamicDependencies = { 'binarypath' : [list of file it depends to],
@@ -48,13 +50,11 @@ class Blotter:
         dynamicDependecies = {}
 
         if execCmd :
-            self._straceCmd(execcmd, dynamicDependecies)
+            self._straceCmd(execCmd, dynamicDependecies)
 
         # let's see if we have proecss ID we might need to scan for dynamic dependecies
         # with the help of the /proc FS
         if processIDs :
-            if not fileList :
-                fileList = []
             for proc in processIDs.split(','):
                 proc = proc.strip()
                 # add the binary
