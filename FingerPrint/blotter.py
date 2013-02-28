@@ -40,8 +40,6 @@ class Blotter:
         self._pathCache = {}
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
-        if not fileList :
-            fileList = []
         # 
         # dependencies discovered with dinamic methods
         # dynamicDependencies = { 'binarypath' : [list of file it depends to],
@@ -56,20 +54,14 @@ class Blotter:
         # with the help of the /proc FS
         if processIDs :
             for proc in processIDs.split(','):
-                proc = proc.strip()
+                pid = proc.strip()
                 # add the binary
-                binaryFile = os.readlink('/proc/' + proc + '/exe')
-                fileList.append( binaryFile )
-                dynamicDependecies[binaryFile] = []
-                f=open('/proc/' + proc + '/maps')
-                maps = f.read()
-                f.close()
-                for i in maps.split('\n'):
-                    tokens = i.split()
-                    if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
-                        # assumption: if we have a memory mapped area to a file and it is
-                        # executable then it is a shared library
-                        dynamicDependecies[binaryFile].append( tokens[5] )
+                self._getDependecyFromPID(pid)
+
+        # set up the fileList for the static dependency detection
+        if not fileList :
+            fileList = []
+        fileList = fileList + dynamicDependecies.keys()
         # add all the fileList to the swirl and all its static libraries
         for i in fileList:
             if os.path.islink(i):
@@ -144,6 +136,24 @@ class Blotter:
         it adds all the dependency to the dynamicDependecies dictionary
         """
         raise IOError("The execute command functionality is not implemented yet")
+
+
+
+    def _getDependecyFromPID(self, pid, dynamicDependecies):
+        """ given a pid it scan the procfs to find its loaded dependencies """
+        binaryFile = os.readlink('/proc/' + pid + '/exe')
+        if binaryFile not in dynamicDependecies:
+            # new binary file let's add it to the dyctionary
+            dynamicDependecies[binaryFile] = []
+        f=open('/proc/' + pid + '/maps')
+        maps = f.read()
+        f.close()
+        for i in maps.split('\n'):
+            tokens = i.split()
+            if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
+                # assumption: if we have a memory mapped area to a file and it is
+                # executable then it is a shared library
+                dynamicDependecies[binaryFile].append( tokens[5] )
 
 
     #

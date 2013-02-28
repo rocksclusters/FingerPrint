@@ -206,10 +206,10 @@ def main():
         if filenameList == []:
             #get the filelist from command line
             filenameList = args
-        if len(filenameList) < 1 and not options.process and not options.execCmd:
+        if not (len(filenameList) > 0 or options.process or options.execCmd):
             parser.error("To create a swirl you need to specify at least:\n"
                         "    - at least one inputfile\n    - a file name containing the files to fingerpting (-f)\n"
-                        "    - the process number to trace (-p)\n    - or the command line to execute (-x)" + runHelp)
+                        "    - the process number to trace (-e)\n    - or the command line to execute (-x)" + runHelp)
         #creating blotter
         try:
             blotter = Blotter(options.name, filenameList, options.process, options.execCmd)
