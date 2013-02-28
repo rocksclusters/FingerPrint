@@ -35,7 +35,7 @@ which are the dependencies of the file
 
 class Blotter:
 
-    def __init__(self, name, fileList, processIDs):
+    def __init__(self, name, fileList, processIDs, execCmd):
         """give a file list and a name construct a swirl into memory """
         self._pathCache = {}
         self._detectedPackageManager() 
@@ -44,9 +44,11 @@ class Blotter:
         # let's see if we have proecss ID we might need to scan for dynamic dependecies
         # with the help of the /proc FS
         #
-        # synamicDependencies = { 'binarypath' : [list of file it depends to],
+        # dynamicDependencies = { 'binarypath' : [list of file it depends to],
         # '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
         # '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
+        if execCmd :
+            raise IOError("The execute command functionality is not implemented yet")
         dynamicDependecies = {}
         if processIDs :
             if not fileList :

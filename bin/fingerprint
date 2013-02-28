@@ -79,6 +79,9 @@ def main():
     parser.add_option("-l", "--filelist", dest="filelist", default=None,
                     help="a file containing a list of file which will be "
                     "included to this swirl")
+    parser.add_option("-x", "--exec", dest="execCmd", default=None,
+                    help="create a swirl running the command passed as COMMAND and tracing "
+                    "its execution", metavar="COMMAND")
     parser.add_option("-s", "--csvfile", dest="csvfile", default=None,
                     help="The output of a verification or of an integrity check "
                     "will be saved in the FILE in a CSV format, if the file "
@@ -203,12 +206,13 @@ def main():
         if filenameList == []:
             #get the filelist from command line
             filenameList = args
-        if len(filenameList) < 1 and not options.process:
-            parser.error("You need to specify at least one inputfile or the FILELIST "
-                         "parameter or the process number to trace (-p option)." + runHelp)
+        if len(filenameList) < 1 and not options.process and not options.execCmd:
+            parser.error("To create a swirl you need to specify at least:\n"
+                        "    - at least one inputfile\n    - a file name containing the files to fingerpting (-f)\n"
+                        "    - the process number to trace (-p)\n    - or the command line to execute (-x)" + runHelp)
         #creating blotter
         try:
-            blotter = Blotter(options.name, filenameList, options.process)
+            blotter = Blotter(options.name, filenameList, options.process, options.execCmd)
         except IOError, e:
             parser.error("Unable to create the swirl file: " + str(e) + runHelp)
         if options.verbose:
