@@ -56,7 +56,7 @@ class Blotter:
             for proc in processIDs.split(','):
                 pid = proc.strip()
                 # add the binary
-                self._getDependecyFromPID(pid)
+                self._getDependecyFromPID(pid, dynamicDependecies)
 
         # set up the fileList for the static dependency detection
         if not fileList :
@@ -79,9 +79,14 @@ class Blotter:
                 pass
             else:
                 raise IOError("The file %s cannot be opened." % i)
+        # now that I have all the dependencies in place (both static and dynamic)
+        # I can do the hashing
+        for i in self.swirl.swirlFiles:
+            self._hashDependencies(i)
         #
         # we might need to add the dynamic dependencies to the swirl
         # if they did not get detected already
+        reHash = False
         for fileName in dynamicDependecies.keys():
             swirlFile = self.swirl.getSwirlFile(fileName)
             listDepFile = swirlFile.getListDependenciesFiles()
@@ -90,10 +95,12 @@ class Blotter:
                     newDeps = PluginManager.getDependeciesFromPath(dynamicDepFile)
                     for i in newDeps:
                         swirlFile.addDependency( i )
+                        reHash = True
         # now that I have all the dependencies in place (both static and dynamic)
         # I can do the hashing
-        for i in self.swirl.swirlFiles:
-            self._hashDependencies(i)
+        if reHash :
+            for i in self.swirl.swirlFiles:
+                self._hashDependencies(i)
 
 
     def getSwirl(self):
@@ -153,7 +160,9 @@ class Blotter:
             if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
                 # assumption: if we have a memory mapped area to a file and it is
                 # executable then it is a shared library
-                dynamicDependecies[binaryFile].append( tokens[5] )
+                libPath = tokens[5].strip()
+                if libPath not in dynamicDependecies[binaryFile]:
+                    dynamicDependecies[binaryFile].append( libPath )
 
 
     #
