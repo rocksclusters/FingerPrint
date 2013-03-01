@@ -29,9 +29,6 @@ from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
 
 
-"""The getDependencies functions given a swirl file the have to figure out 
-which are the dependencies of the file
-"""
 
 class Blotter:
 
