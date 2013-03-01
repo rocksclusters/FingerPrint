@@ -11,10 +11,11 @@ from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
 class SyscallTracer():
 
-    def main(self, command):
+    def main(self, command, dependencies):
         #
         # main function to launch a process and trace it
         #
+        self.dependencies = dependencies
         returnValue = False
         self.program = command
         self.program[0] = ptrace.tools.locateProgram(self.program[0])
@@ -109,27 +110,19 @@ class SyscallTracer():
         # we have a syscall but we also want to be sure 
         # it's the return of a syscall aka syscall.result is not None
         if syscall and syscall.result is not None :
-            #so we wanna be notifed
-            name = syscall.name
-            text = syscall.format()
-            result = syscall.result_text
-            print "", syscall.process.pid, "\t", syscall.name, "\t", syscall.result
+            # ok we have to scan for new dependencies
+            FingerPrint.blotter.getDependecyFromPID(str(syscall.process.pid), self.dependencies)
+            print self.dependencies
+            #name = syscall.name
+            #text = syscall.format()
+            #result = syscall.result_text
+            #print "", syscall.process.pid, "\t", syscall.name, "\t", syscall.result
+
 
         # Break at next syscall
         process.syscall()
 
 
-
 if __name__ == "__main__":
-    testProgram = ["bash","-c","/usr/bin/find /tmp &> /dev/null "]
-    tracer = SyscallTracer()
-    print "tracer returned ", tracer.main(testProgram)
-
-
-
-
-
-
-
-
+    pass
 
