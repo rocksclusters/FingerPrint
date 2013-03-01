@@ -52,7 +52,7 @@ class Blotter:
 
         # let's see if we have proecss ID we might need to scan for dynamic dependecies
         # with the help of the /proc FS
-        if processIDs :
+        elif processIDs :
             for proc in processIDs.split(','):
                 pid = proc.strip()
                 # add the binary
