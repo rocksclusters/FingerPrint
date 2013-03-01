@@ -29,8 +29,9 @@ from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
 
 
-def _getDependecyFromPID(pid, dynamicDependecies):
-    """ given a pid it scan the procfs to find its loaded dependencies """
+def getDependecyFromPID(pid, dynamicDependecies):
+    """ given a pid it scan the procfs to find its loaded dependencies
+    and places the output in dynamic depenedencies"""
     binaryFile = os.readlink('/proc/' + pid + '/exe')
     if binaryFile not in dynamicDependecies:
         # new binary file let's add it to the dyctionary
@@ -71,7 +72,7 @@ class Blotter:
             for proc in processIDs.split(','):
                 pid = proc.strip()
                 # add the binary
-                _getDependecyFromPID(pid, dynamicDependecies)
+                getDependecyFromPID(pid, dynamicDependecies)
 
         # set up the fileList for the static dependency detection
         if not fileList :
