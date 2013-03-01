@@ -29,6 +29,24 @@ from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
 
 
+def _getDependecyFromPID(pid, dynamicDependecies):
+    """ given a pid it scan the procfs to find its loaded dependencies """
+    binaryFile = os.readlink('/proc/' + pid + '/exe')
+    if binaryFile not in dynamicDependecies:
+        # new binary file let's add it to the dyctionary
+        dynamicDependecies[binaryFile] = []
+    f=open('/proc/' + pid + '/maps')
+    maps = f.read()
+    f.close()
+    for i in maps.split('\n'):
+        tokens = i.split()
+        if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
+            # assumption: if we have a memory mapped area to a file and it is
+            # executable then it is a shared library
+            libPath = tokens[5].strip()
+            if libPath not in dynamicDependecies[binaryFile]:
+                dynamicDependecies[binaryFile].append( libPath )
+
 
 class Blotter:
 
@@ -53,13 +71,13 @@ class Blotter:
             for proc in processIDs.split(','):
                 pid = proc.strip()
                 # add the binary
-                self._getDependecyFromPID(pid, dynamicDependecies)
+                _getDependecyFromPID(pid, dynamicDependecies)
 
         # set up the fileList for the static dependency detection
         if not fileList :
             fileList = []
         fileList = fileList + dynamicDependecies.keys()
-        # add all the fileList to the swirl and all its static libraries
+        # add all the fileList to the swirl and figure out all their static libraries
         for i in fileList:
             if os.path.islink(i):
                 swirlFile = SwirlFile( i )
@@ -76,8 +94,9 @@ class Blotter:
                 pass
             else:
                 raise IOError("The file %s cannot be opened." % i)
-        # now that I have all the dependencies in place (both static and dynamic)
-        # I can do the hashing
+        # I need two hash the dependency twice because I need to resolve all the 
+        # symbolic lynk which is done in the _hashDependency before I add the dinamyc 
+        # dependencies
         for i in self.swirl.swirlFiles:
             self._hashDependencies(i)
         #
@@ -93,8 +112,7 @@ class Blotter:
                     for i in newDeps:
                         swirlFile.addDependency( i )
                         reHash = True
-        # now that I have all the dependencies in place (both static and dynamic)
-        # I can do the hashing
+        # I need to rehash the new dependency
         if reHash :
             for i in self.swirl.swirlFiles:
                 self._hashDependencies(i)
@@ -142,24 +160,6 @@ class Blotter:
         raise IOError("The execute command functionality is not implemented yet")
 
 
-
-    def _getDependecyFromPID(self, pid, dynamicDependecies):
-        """ given a pid it scan the procfs to find its loaded dependencies """
-        binaryFile = os.readlink('/proc/' + pid + '/exe')
-        if binaryFile not in dynamicDependecies:
-            # new binary file let's add it to the dyctionary
-            dynamicDependecies[binaryFile] = []
-        f=open('/proc/' + pid + '/maps')
-        maps = f.read()
-        f.close()
-        for i in maps.split('\n'):
-            tokens = i.split()
-            if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
-                # assumption: if we have a memory mapped area to a file and it is
-                # executable then it is a shared library
-                libPath = tokens[5].strip()
-                if libPath not in dynamicDependecies[binaryFile]:
-                    dynamicDependecies[binaryFile].append( libPath )
 
 
     #
