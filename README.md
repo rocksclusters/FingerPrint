@@ -33,7 +33,9 @@ Installation
 The simplest way to use FingerPrint is to add to your PATH the ./bin directory
 of this source code, and you will be done (on bash export PATH=$PATH:full_path_to_source/bin )
 
-To install fingerprint on your system from source you can run
+FingerPrint uses distutils so you can also run the standrad distutils procedure to install
+FingerPrint on your system from source (we strongly discourag 'normal' user from using this
+method though). To install fingerprint in your system python you can run:
 
     # python setup.py install 
 

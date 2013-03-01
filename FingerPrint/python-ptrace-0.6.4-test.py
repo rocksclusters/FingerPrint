@@ -9,7 +9,6 @@ from ptrace.ctypes_tools import formatAddress
 import ptrace.tools 
 import ptrace.debugger.child
 
-
 class SyscallTracer():
 
 
@@ -22,31 +21,13 @@ class SyscallTracer():
         prefix.append("[%s]" % syscall.process.pid)
         prefix.append("[%s]" % formatAddress(syscall.instr_pointer))
         text = ''.join(prefix) + ' ' + text
-        print(text)
+        #print(text)
+        print "", syscall.process.pid, "\t", syscall.name, "\t", syscall.result
         #print "syscall: " , dir(syscall)
         #print "syscall: " , 
         #os.system("cat /proc/" + str(syscall.process.pid) + "/maps")
 
 
-    def createProcess(self):
-        #if self.options.pid:
-        #    pid = self.options.pid
-        #    is_attached = False
-        #    error("Attach process %s" % pid)
-        #else:
-        #    pid = self.createChild(self.program)
-        #    is_attached = True
-        pid = ptrace.debugger.child.createChild(self.program, False, None)
-        is_attached = True
-        try:
-            return self.debugger.addProcess(pid, is_attached=is_attached)
-        except (ProcessExit, PtraceError), err:
-            if isinstance(err, PtraceError) \
-            and err.errno == EPERM:
-                print("ERROR: You are not allowed to trace process %s (permission denied or process already traced)" % pid)
-            else:
-                print("ERROR: Process can no be attached! %s" % err)
-        return None
 
 
     def prepareProcess(self, process):
@@ -71,21 +52,23 @@ class SyscallTracer():
                 self.processExited(event)
                 continue
             except ProcessSignal, event:
-                event.display()
+                #event.display()
+                print "display signals"
                 process.syscall(event.signum)
                 continue
             except NewProcessEvent, event:
                 # newProcess (event)
-                process = event.process
-                print("*** New process %s ***" % process.pid)
-                self.prepareProcess(self, process)
-                process.parent.syscall()
+                process2 = event.process
+                print("*** New process %s ***" % process2.pid)
+                #import pdb; pdb.set_trace()
+                self.prepareProcess(process2)
+                process2.parent.syscall()
                 continue
             except ProcessExecution, event:
                 #execv
-                process = event.process
-                print("*** Process %s execution ***" % process.pid)
-                process.syscall()
+                process3 = event.process
+                print("*** Process %s execution ***" % process3.pid)
+                process3.syscall()
                 continue
 
             # Process syscall enter or exit
@@ -94,7 +77,10 @@ class SyscallTracer():
     def syscall(self, process):
         state = process.syscall_state
         syscall = state.event(self.syscall_options)
-        if syscall and (syscall.result is not None ):
+        # we have a syscall but we also want to be sure 
+        # it's the return of a syscall aka syscall.result is not None
+        if syscall and syscall.result is not None :
+            #so we wanna be notifed
             self.displaySyscall(syscall)
         # Break at next syscall
         process.syscall()
@@ -106,18 +92,28 @@ class SyscallTracer():
         and state.syscall:
             self.displaySyscall(state.syscall)
         # Display exit message
-        print("*** %s ***" % event)
+        print(" exit      *** %s ***" % event)
 
 
     def ignoreSyscall(self, syscall):
-        #what other functions we want to trace
-        if not syscall.name == 'mmap' and \
-            not syscall.name.startswith('exec'):
+        #trace loading of shared libraries
+        #  mmap, mmap2
+        #trace forks of new process
+        #  execve, clone, fork, vfork
+        #if not syscall.name.startswith('open') and \
+        #    not syscall.name.startswith('exec') and \
+        #    not syscall.name.startswith('fork') and \
+        #    not syscall.name.startswith('vfork') and \
+        #    not syscall.name.startswith('clone'):
+        #    return True
+        if syscall.name.startswith('mmap') :
+            return False
+        else:
             return True
 
 
     def main(self):
-        self.program = ["bash","-c","/usr/bin/find /tmp"]
+        self.program = ["bash","-c","/usr/bin/find /tmp &> /dev/null "]
         self.program[0] = ptrace.tools.locateProgram(self.program[0])
         self.debugger = PtraceDebugger()
         try:
@@ -130,9 +126,8 @@ class SyscallTracer():
             self.syscall_options = FunctionCallOptions(
                 write_types=True,
                 write_argname=True,
-                string_max_length=300,
                 replace_socketcall=True,
-                write_address=True,
+                string_max_length=300,
                 max_array_count=300
             )
             self.syscall_options.instr_pointer = True
@@ -144,6 +139,20 @@ class SyscallTracer():
         except KeyboardInterrupt:
             print("Interrupted.")
         self.debugger.quit()
+
+
+    def createProcess(self):
+        pid = ptrace.debugger.child.createChild(self.program, False, None)
+        is_attached = True
+        try:
+            return self.debugger.addProcess(pid, is_attached=is_attached)
+        except (ProcessExit, PtraceError), err:
+            if isinstance(err, PtraceError) \
+            and err.errno == EPERM:
+                print("ERROR: You are not allowed to trace process %s (permission denied or process already traced)" % pid)
+            else:
+                print("ERROR: Process can no be attached! %s" % err)
+        return None
 
 if __name__ == "__main__":
     SyscallTracer().main()
