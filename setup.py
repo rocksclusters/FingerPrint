@@ -14,7 +14,13 @@ import os
 import sys
 
 class TestCommand(Command):
-    user_options = [ ]
+    user_options = [ 
+        # I would like to selectively run unit tests
+        # TODO implement this
+        ('test=', None,
+         "test file to run, if not specified it will run all the file named _test.py"),
+        ]
+
 
     def initialize_options(self):
         self._dir = os.getcwd()
