@@ -9,6 +9,7 @@ from datetime import datetime
 
 from FingerPrint.plugins import PluginManager
 from FingerPrint.blotter import Blotter
+from FingerPrint.syscalltracer import SyscallTracer
 from FingerPrint.swirl import Swirl
 from FingerPrint.utils import getOutputAsList
 import FingerPrint.sergeant
@@ -57,6 +58,18 @@ class TestSequenceFunctions(unittest.TestCase):
 	file = 'tests/files/Ubuntu_12.04_x86_64/libsmbclient.so.0'
 	hash = 'a1264218dc707b5b510ef12548564edc'
         self.assertEqual(FingerPrint.sergeant.getHash(file, 'ELF'), hash)
+
+
+    def test_calltracer(self):
+        print "\n     -----------------------     Running fingerprint syscall tracer   -------------------------\n"
+        testProgram = ["bash","-c","/usr/bin/find /tmp &> /dev/null "]
+        deps = {}
+        tracer = SyscallTracer()
+        self.assertTrue(tracer.main(testProgram, deps), 
+                msg="fingerprint-calltracer: failed tracing: " + str(testProgram))
+        self.assertEqual(len(deps.keys()),2, 
+                msg="fingerprint-calltracer: failed: traced more than two binaries")
+        print "Executed: ", testProgram, "\nFound dependencies: ", deps
 
 
 
