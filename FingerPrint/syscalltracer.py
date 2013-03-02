@@ -8,6 +8,7 @@ import ptrace.debugger.child
 
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
+import FingerPrint
 
 class SyscallTracer():
 
@@ -90,14 +91,14 @@ class SyscallTracer():
             except NewProcessEvent, event:
                 # newProcess (event)
                 process2 = event.process
-                print("*** New process %s ***" % process2.pid)
+                #print("*** New process %s ***" % process2.pid)
                 self.prepareProcess(process2)
                 process2.parent.syscall()
                 continue
             except ProcessExecution, event:
                 #execv
                 process3 = event.process
-                print("*** Process %s execution ***" % process3.pid)
+                #print("*** Process %s execution ***" % process3.pid)
                 process3.syscall()
                 continue
 
@@ -112,7 +113,6 @@ class SyscallTracer():
         if syscall and syscall.result is not None :
             # ok we have to scan for new dependencies
             FingerPrint.blotter.getDependecyFromPID(str(syscall.process.pid), self.dependencies)
-            print self.dependencies
             #name = syscall.name
             #text = syscall.format()
             #result = syscall.result_text
