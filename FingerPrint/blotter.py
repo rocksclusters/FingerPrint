@@ -8,6 +8,8 @@
 from datetime import datetime
 import subprocess
 import os
+#TODO remove shlex for python 2.4
+import shlex
 
 #
 # compatibility with python2.4
@@ -27,6 +29,7 @@ from swirl import Swirl, SwirlFile
 import sergeant
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
+from FingerPrint.syscalltracer import SyscallTracer
 
 
 def getDependecyFromPID(pid, dynamicDependecies):
@@ -158,9 +161,10 @@ class Blotter:
         """it execute the execmd with execve and then it trace process running and
         it adds all the dependency to the dynamicDependecies dictionary
         """
-        raise IOError("The execute command functionality is not implemented yet")
-
-
+        tracer = SyscallTracer()
+        #TODO check for errors
+        execcmd = shlex.split(execcmd)
+        tracer.main(execcmd, dynamicDependecies)
 
 
     #
