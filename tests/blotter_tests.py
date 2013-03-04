@@ -55,8 +55,8 @@ class TestSequenceFunctions(unittest.TestCase):
         
     def test_hash(self):
         """ test hash function """
-	file = 'tests/files/Ubuntu_12.04_x86_64/libsmbclient.so.0'
-	hash = 'a1264218dc707b5b510ef12548564edc'
+        file = 'tests/files/Ubuntu_12.04_x86_64/libsmbclient.so.0'
+        hash = 'a1264218dc707b5b510ef12548564edc'
         self.assertEqual(FingerPrint.sergeant.getHash(file, 'ELF'), hash)
 
 
