@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+#
+#
+# LC
+#
+# this file is used to trace a process and to see what are the 
+# libraries it depends on
+#
 
 from ptrace import PtraceError
 from ptrace.debugger import (PtraceDebugger, 
@@ -11,6 +18,21 @@ from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 import FingerPrint
 
 class SyscallTracer():
+    """this class can spawn a process and trace its' execution to check 
+    what are its dynamic dependency requirements
+
+    Usage:
+
+        tracer = SyscallTracer()
+        execcmd = shlex.split(execcmd)
+        tracer.main(execcmd, dynamicDependecies)
+
+    dynamicDependencies is a dictionary of 
+    { 'binarypath' : [list of file it depends to],
+    '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
+    '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
+
+    """
 
     def main(self, command, dependencies):
         #
