@@ -16,7 +16,8 @@ except ImportError:
     #we need this to run from sources without installing fingerprint
     fullPath = os.path.dirname(os.path.realpath(__file__))
     parDir = os.path.abspath(os.path.join(fullPath, os.path.pardir))
-    sys.path.append(parDir)
+    #we need to use our local patched python-ptrace and not the system one
+    sys.path.insert(0, parDir)
     import FingerPrint, FingerPrint.sergeant
 
 #
