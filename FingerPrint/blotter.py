@@ -29,7 +29,6 @@ from swirl import Swirl, SwirlFile
 import sergeant
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
-from FingerPrint.syscalltracer import SyscallTracer
 
 
 def getDependecyFromPID(pid, dynamicDependecies):
@@ -161,6 +160,11 @@ class Blotter:
         """it execute the execmd with execve and then it trace process running and
         it adds all the dependency to the dynamicDependecies dictionary
         """
+        try:
+            from FingerPrint.syscalltracer import SyscallTracer
+        except ImportError, e:
+            raise IOError("Dynamic tracing is not supported on this python version: "
+                     + str(e) + "\nGenerally you have to install python ctypes.")
         tracer = SyscallTracer()
         #TODO check for errors
         execcmd = shlex.split(execcmd)

@@ -9,7 +9,6 @@ from datetime import datetime
 
 from FingerPrint.plugins import PluginManager
 from FingerPrint.blotter import Blotter
-from FingerPrint.syscalltracer import SyscallTracer
 from FingerPrint.swirl import Swirl
 from FingerPrint.utils import getOutputAsList
 import FingerPrint.sergeant
@@ -64,6 +63,11 @@ class TestSequenceFunctions(unittest.TestCase):
         print "\n     -----------------------     Running fingerprint syscall tracer   -------------------------\n"
         testProgram = ["bash","-c","/usr/bin/find /tmp &> /dev/null "]
         deps = {}
+        try:
+            from FingerPrint.syscalltracer import SyscallTracer
+        except ImportError, e:
+            print "SyscallTracer is not support on this python version: ", str(e)
+            return
         tracer = SyscallTracer()
         self.assertTrue(tracer.main(testProgram, deps), 
                 msg="fingerprint-calltracer: failed tracing: " + str(testProgram))
