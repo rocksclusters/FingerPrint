@@ -17,7 +17,7 @@ from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
 import FingerPrint
 
-class SyscallTracer():
+class SyscallTracer:
     """this class can spawn a process and trace its' execution to check 
     what are its dynamic dependency requirements
 
