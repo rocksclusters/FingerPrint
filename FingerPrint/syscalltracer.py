@@ -7,15 +7,16 @@
 # libraries it depends on
 #
 
-from ptrace import PtraceError
-from ptrace.debugger import (PtraceDebugger, 
-    ProcessExit, ProcessSignal, NewProcessEvent, ProcessExecution)
-import ptrace.tools 
-import ptrace.debugger.child
+import sys
+sys.path.append('.')
+from ptrace.binding import func as ptrace_func
+import ptrace
 
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
 import FingerPrint
+
+import os, signal
 
 class SyscallTracer:
     """this class can spawn a process and trace its' execution to check 
@@ -41,110 +42,87 @@ class SyscallTracer:
         self.dependencies = dependencies
         returnValue = False
         self.program = command
-        self.program[0] = ptrace.tools.locateProgram(self.program[0])
+        # this is to check if we are entering or returning from a system call
+        syscallEnter = dict()
+        options =  ptrace_func.PTRACE_O_TRACEFORK | ptrace_func.PTRACE_O_TRACEVFORK \
+                | ptrace_func.PTRACE_O_TRACECLONE | ptrace_func.PTRACE_O_TRACEEXIT \
+                | ptrace_func.PTRACE_O_TRACEEXEC | ptrace_func.PTRACE_O_TRACESYSGOOD;
         #logger = getLogger()
         #logger.setLevel(DEBUG)
         # creating the debugger and setting it up
-        self.debugger = PtraceDebugger()
-        try:
-            self.debugger.traceFork()
-            self.debugger.traceExec()
-            self.debugger.traceClone()
-            process = None
-            pid = ptrace.debugger.child.createChild(self.program, False, None)
-            try:
-                process = self.debugger.addProcess(pid, True)
-            except (ProcessExit, PtraceError), err:
-                if isinstance(err, PtraceError) and err.errno == EPERM:
-                    print("ERROR: You are not allowed to trace process %s (permission"
-                        "denied or process already traced)" % pid)
-                else:
-                    print("ERROR: Process can no be attached! %s" % err)
-            if not process:
-                return reutrnValue
-
-            self.syscall_options = ptrace.func_call.FunctionCallOptions()
-            self.syscallTrace(process)
-        except ProcessExit, event:
-            returnValue = True
-        except PtraceError, err:
-            print("ptrace() error: %s" % err)
-        except KeyboardInterrupt:
-            print("Interrupted.")
-        returnValue = True
-        self.debugger.quit()
-        return returnValue
-
-
-    def prepareProcess(self, process):
-        process.syscall()
-        process.syscall_state.ignore_callback = self.ignoreSyscall
-
-
-    def ignoreSyscall(self, syscall):
-        """ we want to trace only the mmap syscall"""
-        if syscall.name.startswith('mmap') :
-            return False
+        child = os.fork()
+        if child == 0:
+            # we are in the child
+            #tracem and execv
+            ptrace_func.ptrace_traceme()
+            os.execl(ptrace.tools.locateProgram(self.program[0]), *self.program)
         else:
-            return True
+            print "process %d tracing %d" % (os.getpid(), child)
+            pid, status = os.waitpid(-1, 0)
+            if pid != child :
+                print("wait did not return what we expected")
+            
+            ptrace_func.ptrace_setoptions(child, options);
+            ptrace_func.ptrace_syscall(child);
+            print("ptracing %d entrering the loop.\n" % child);
+            
+            while True: 
+                try:
+                    (child, status) = os.waitpid(-1, 0)
+                except OSError:
+                    print "Tracing terminated"
+                    break
+                if not child > 0:
+                    print "catastrofic failure"
+                    break
+                event = status >> 16;
+
+                #print "the child process %d stops. status: %d, signal? %d, exit? %d, continue? %d, stop? %d\n" % \
+                #    (child, status , os.WIFSIGNALED(status) ,
+                #    os.WIFEXITED(status), os.WIFCONTINUED(status), os.WIFSTOPPED(status))
+
+                if os.WIFEXITED(status):
+                    print "process ", child, " terminating"
+                    continue
 
 
-    def syscallTrace(self, process):
-        # First query to break at next syscall
-        self.prepareProcess(process)
-
-        while True:
-            # No more process? Exit
-            if not self.debugger:
-                break
-
-            # Wait until next syscall enter
-            try:
-                event = self.debugger.waitSyscall()
-                process = event.process
-            except ProcessExit, event:
-                # some subprocess terminated
-                continue
-            except ProcessSignal, event:
-                #event.display()
-                #print "display signals"
-                process.syscall(event.signum)
-                continue
-            except NewProcessEvent, event:
-                # newProcess (event)
-                process2 = event.process
-                #print("*** New process %s ***" % process2.pid)
-                self.prepareProcess(process2)
-                process2.parent.syscall()
-                continue
-            except ProcessExecution, event:
-                #execv
-                process3 = event.process
-                #print("*** Process %s execution ***" % process3.pid)
-                process3.syscall()
-                continue
-
-            # Process syscall enter or exit
-            self.syscall(process)
-
-    def syscall(self, process):
-        state = process.syscall_state
-        syscall = state.event(self.syscall_options)
-        # we have a syscall but we also want to be sure 
-        # it's the return of a syscall aka syscall.result is not None
-        if syscall and syscall.result is not None :
-            # ok we have to scan for new dependencies
-            FingerPrint.blotter.getDependecyFromPID(str(syscall.process.pid), self.dependencies)
-            #name = syscall.name
-            #text = syscall.format()
-            #result = syscall.result_text
-            #print "", syscall.process.pid, "\t", syscall.name, "\t", syscall.result
+                if os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == (signal.SIGTRAP | 0x80 )):
+                    regs = ptrace_func.ptrace_getregs(child)
+                    if regs.orig_rax == 9 :
+                        # syscall
+                        if child not in syscallEnter.keys() :
+                            #new pid
+                            syscallEnter[child] = True
+                        if syscallEnter[child] :
+                            # we are entering
+                            syscallEnter[child] = False
+                            #print "the process %d enter mmap" % child
+                        else:
+                            syscallEnter[child] = True
+                            print "the process %d exit mmap" % child
+                elif os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == signal.SIGTRAP) :
+                    #TODO detect capability
+                    subChild = ptrace_func.ptrace_geteventmsg(child)
+                    if event == ptrace_func.PTRACE_EVENT_FORK:
+                        print "the process %d fork a new process %d" % (child, subChild)
+                    elif event == ptrace_func.PTRACE_EVENT_VFORK:
+                        print "the process %d vfork a new process %d" % (child, subChild)
+                    elif event == ptrace_func.PTRACE_EVENT_CLONE :
+                        print "the child process %d cloned a new process %d" % (child, subChild)
+                    elif event == ptrace_func.PTRACE_EVENT_EXEC :
+                        print "the child process %d execd %d" % (child, subChild)
+                    elif event == ptrace_func.PTRACE_EVENT_EXIT:
+                        pass
+                        #print "the process %d is in a event exit %d" % (child, subChild)
+                
+                ptrace_func.ptrace_setoptions(child, options);
+                ptrace_func.ptrace_syscall(child);
 
 
-        # Break at next syscall
-        process.syscall()
-
+    def test(self):
+        
+        self.main(["bash", "-c", "sleep 5 & find /tmp > /dev/null &"], dict())
 
 if __name__ == "__main__":
-    pass
+    SyscallTracer().test()
 
