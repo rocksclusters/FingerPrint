@@ -14,7 +14,7 @@ import ptrace
 
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
-import FingerPrint
+import FingerPrint.blotter
 
 import os, signal
 
@@ -52,76 +52,86 @@ class SyscallTracer:
         # creating the debugger and setting it up
         child = os.fork()
         if child == 0:
-            # we are in the child
-            #tracem and execv
+            # we are in the child or traced process
+            # traceme and execv
             ptrace_func.ptrace_traceme()
             os.execl(ptrace.tools.locateProgram(self.program[0]), *self.program)
         else:
-            print "process %d tracing %d" % (os.getpid(), child)
+            # father or tracer process
+            # we trace the execution here
+            print "The fingerprint process %d going to trace %d" % (os.getpid(), child)
             pid, status = os.waitpid(-1, 0)
             if pid != child :
-                print("wait did not return what we expected")
+                print("The process tracer could not bootstrap.")
+                return False
             
             ptrace_func.ptrace_setoptions(child, options);
             ptrace_func.ptrace_syscall(child);
-            print("ptracing %d entrering the loop.\n" % child);
+            #print("ptracing %d entrering the loop.\n" % child);
             
             while True: 
+                # main loop tracer
+                # 1. wait for syscall from the children
+                # 2. analyze what happen, if mmap syscall scan /proc/PID/maps
+                # 3. get ready to  wait for the next syscall
                 try:
                     (child, status) = os.waitpid(-1, 0)
                 except OSError:
-                    print "Tracing terminated"
-                    break
+                    print "Tracing terminated successfully"
+                    return True
                 if not child > 0:
-                    print "catastrofic failure"
-                    break
-                event = status >> 16;
+                    print "Catastrofic failure"
+                    return False
 
+                event = status >> 16;
                 #print "the child process %d stops. status: %d, signal? %d, exit? %d, continue? %d, stop? %d\n" % \
                 #    (child, status , os.WIFSIGNALED(status) ,
                 #    os.WIFEXITED(status), os.WIFCONTINUED(status), os.WIFSTOPPED(status))
-
                 if os.WIFEXITED(status):
-                    print "process ", child, " terminating"
+                    # a process died, report it and go back to wait for syscall
+                    print "The process ", child, " exited"
                     continue
-
 
                 if os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == (signal.SIGTRAP | 0x80 )):
                     regs = ptrace_func.ptrace_getregs(child)
+                    # mmap on x86_64 is orig_rax == 0
+                    # TODO check syscall number for other platform
                     if regs.orig_rax == 9 :
-                        # syscall
                         if child not in syscallEnter.keys() :
                             #new pid
                             syscallEnter[child] = True
                         if syscallEnter[child] :
-                            # we are entering
+                            # we are entering mmap
                             syscallEnter[child] = False
                             #print "the process %d enter mmap" % child
                         else:
+                            # we are returning from mmap
                             syscallEnter[child] = True
-                            print "the process %d exit mmap" % child
+                            FingerPrint.blotter.getDependecyFromPID(str(child), self.dependencies)
                 elif os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == signal.SIGTRAP) :
-                    #TODO detect capability
+                    # this is just to print some output to the users
                     subChild = ptrace_func.ptrace_geteventmsg(child)
                     if event == ptrace_func.PTRACE_EVENT_FORK:
-                        print "the process %d fork a new process %d" % (child, subChild)
+                        print "The process %d forked a new process %d" % (child, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_VFORK:
-                        print "the process %d vfork a new process %d" % (child, subChild)
+                        print "The process %d vforked a new process %d" % (child, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_CLONE :
-                        print "the child process %d cloned a new process %d" % (child, subChild)
+                        print "The child process %d cloned a new process %d" % (child, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_EXEC :
-                        print "the child process %d execd %d" % (child, subChild)
+                        print "The child process %d run exec" % (child)
                     elif event == ptrace_func.PTRACE_EVENT_EXIT:
                         pass
                         #print "the process %d is in a event exit %d" % (child, subChild)
-                
+
+                # set the ptrace option and wait for the next syscall notification
                 ptrace_func.ptrace_setoptions(child, options);
                 ptrace_func.ptrace_syscall(child);
 
 
     def test(self):
-        
-        self.main(["bash", "-c", "sleep 5 & find /tmp > /dev/null &"], dict())
+        a = {}
+        self.main(["bash", "-c", "sleep 5 > /dev/null & find /tmp > /dev/null &"], a)
+        print "dict: ", a
 
 if __name__ == "__main__":
     SyscallTracer().test()
