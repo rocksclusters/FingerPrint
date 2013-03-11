@@ -10,6 +10,7 @@
 import sys
 sys.path.append('.')
 from FingerPrint.ptrace import func as ptrace_func
+import FingerPrint.ptrace.cpu_info
 
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
@@ -94,9 +95,13 @@ class SyscallTracer:
 
                 if os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == (signal.SIGTRAP | 0x80 )):
                     regs = ptrace_func.ptrace_getregs(child)
-                    # mmap on x86_64 is orig_rax == 0
-                    # TODO check syscall number for other platform
-                    if regs.orig_rax == 9 :
+                    # mmap on x86_64 is orig_rax == 9
+                    # mmap on 32bit is orig_eax == 90 or 120
+                    # taken from linux src arch/x86/syscalls/syscall_[32|64].tbl
+                    if (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 9)\
+                            or (FingerPrint.ptrace.cpu_info.CPU_I386 and \
+                            (regs.orig_eax == 90 or regs.orig_eax == 192 ) ):
+                        #we are inside a mmap function
                         if child not in syscallEnter.keys() :
                             #new pid
                             syscallEnter[child] = True
