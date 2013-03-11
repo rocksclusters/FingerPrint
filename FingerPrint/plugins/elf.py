@@ -57,9 +57,10 @@ class ElfPlugin(PluginManager):
             return cls._pathCache[dependency.depname]
         #for each library we have in the system
         for line in getOutputAsList(["/sbin/ldconfig","-p"])[0]:
-            # if dependency is 64 and library is 64 of
+            # TODO it needs to handle in a better way the hwcap field
+            # if dependency is 64 and library is 64 or
             # dependency is 32 and library is 32:
-            if len(line) > 0 and soname in line and \
+            if len(line) > 0 and soname in line and 'hwcap' not in line and \
                 ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
                 (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
                 temp = line.split('=>')
