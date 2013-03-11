@@ -9,12 +9,12 @@
 
 import sys
 sys.path.append('.')
-from ptrace.binding import func as ptrace_func
-import ptrace
+from FingerPrint.ptrace import func as ptrace_func
 
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
 import FingerPrint.blotter
+import FingerPrint.utils
 
 import os, signal
 
@@ -55,7 +55,7 @@ class SyscallTracer:
             # we are in the child or traced process
             # traceme and execv
             ptrace_func.ptrace_traceme()
-            os.execl(ptrace.tools.locateProgram(self.program[0]), *self.program)
+            os.execl(FingerPrint.utils.which(self.program[0]), *self.program)
         else:
             # father or tracer process
             # we trace the execution here
