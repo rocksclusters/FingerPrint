@@ -241,8 +241,10 @@ def main():
             print "File name: ", options.filename
             if options.verbose :
                 print serg.getSwirl()
-            print "Global Dependencies:  " , serg.getSwirl().getDependencies()
-            print "Global Provides:  ", serg.getSwirl().getProvides()
+            print "Global Dependencies:  " , \
+                    FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getDependencies() )
+            print "Global Provides:  ", \
+                    FingerPrint.swirl.Dependency.printListDependencies ( serg.getSwirl().getProvides() )
         return 0
     elif options.query :
         # query the swirl file
