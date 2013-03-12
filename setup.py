@@ -47,8 +47,8 @@ class TestCommand(Command):
 setup(
     name = 'FingerPrint',
     version = '0.1',
-    description = 'This is my Python module.',
-
+    description = 'Module and application for fingerprinting application '
+                  'dependencies',
     author = 'Phil Papadopoulos',
     author_email =  'philip.papadopoulos@gmail.com',
     maintainer = 'Luca Clementi',

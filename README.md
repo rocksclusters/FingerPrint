@@ -2,9 +2,9 @@
 FingerPrint
 ===========
 
-Fingherprint is an software tool able to analyze an application and to 
-automatically save all its dependencies in a file (called Swirl) along with 
-several other information.
+FingerPrint is a tool to analyze an arbitrary application to 
+automatically list all its dependencies in a file (called Swirl) along with 
+other information to describe the running process.
 
 A Swirl can then be used to understand if the given application can run on 
 another system or if some of the dependencies got modified since the 
@@ -15,12 +15,13 @@ Swirl creation.
 Requirements
 ------------
 
-FingerPrint will work only on linux system, it does not have any major 
-requirement other than python from version 2.4 up to 2.7. FingerPrint is 
-tested on RHEL 5.x and 6.x and Debian 5.x and 6.x.
+FingerPrint will work only on a Linux system, it does not have any major 
+requirement other than Python from version 2.4 up to 2.7. FingerPrint is 
+currently tested on RHEL (5.x and 6.x) and (Debian 5.x and 6.x) systems.
 
-It needs also a minimal bash implementation (sed, grep, ldd, and objdump) 
-but all these tools are generally present on most of the systems.
+It also requires a minimal set of core utilities (bash, sed, grep,
+ldd, and objdump) but all these tools are generally present on most of
+the systems.
 
 If found on the system (they are not required), fingerprint uses:
  - prelink (to remove prelinking information from libraries and get their hash)
@@ -31,23 +32,24 @@ Installation
 ------------
 
 The simplest way to use FingerPrint is to add to your PATH the ./bin directory
-of this source code, and you will be done (on bash export PATH=$PATH:full_path_to_source/bin )
+of this source code, and you will be done (on bash export PATH=$PATH:$PWD/bin )
 
 To install fingerprint on your system from source you can run
 
-    # python setup.py install 
+    # python setup.py install
 
-This will install FingerPrint in your python. FingerPrint consist of:
- - a bunch of python modules and submodules inside the FingerPrint module
+This will make FingerPrint available within your Python environment.
+You might need writing privilege on system directories for such installation.
+
+FingerPrint consist of:
+ - a bunch of Python modules and sub-modules inside the FingerPrint module
  - a command line called fingerprint
 
-You will need writing priviledge on some system direcotries.
-
-To run some unittest run
+To invoke unit-tests run
 
     # python setup.py test
 
-The unit tests will generate a lot of outputs and errors but if they all succede
+Unit-tests will generate a lot of outputs and errors but if they all succeed
 at the end you will see the following lines:
 
     ----------------------------------------------------------------------
@@ -59,9 +61,9 @@ at the end you will see the following lines:
 Use
 ---
 
-To get some help on the commnad line you can simply type:
+To get some help on the command line you can simply type:
 
-    # fingerprint -h 
+    # fingerprint -h
 
 Basically there are four main actions fingerprint can do:
 
@@ -76,19 +78,19 @@ Basically there are four main actions fingerprint can do:
 
  3. Query the content of a swirl file (flag -q). In this mode fingerprint
     will run a query against the specified swirl file and return 0 upon success
-    or 1 when failing. If the query is run with the verbous flag (-v) it will
-    also print to stdout more infromation regarding the query.
+    or 1 when failing. If the query is run with the verbose flag (-v) it will
+    also print to stdout more information regarding the query.
 
  4. Verify a swirl (flag -y). In this mode fingerprint scan the current system
     for the dependencies listed in the input swirl and return 0 if they were 
     all found or 1 if some of then are unavailable. If verbose flag is given 
-    it will print also a list of unmet depenencies.
+    it will print also a list of unmet dependencies.
 
  5. Integrity check (flag -i). In this mode fingerprint scans the system were
     it is invoked and checks if any of the dependencies listed in the input 
     swirl have been modified since its creation (to this purpose it uses the 
     checksums stored in the swirl). It return 0 upon success or 1 in case of 
-    failurer, with the verbose flag it prints also a list of modified files.
+    failure, with the verbose flag it prints also a list of modified files.
 
 Examples
 --------
@@ -160,21 +162,20 @@ Global Provides:   []
 ```
 
 Scan the current system to verify compatibility with given swirl
-aka all the dependecy can be resolved
+i.e. either all dependencies could be resolved
 
 ```
 clem@sirius:~/projects/FingerPrint/temp$ fingerprint -y
 ```
 
-Verify that none of the dependencies have been modified.
-It uses md5sum to check for changes.
-
+Verify that none of the dependencies have been modified
+(it uses md5sum to check for changes).
 
 ```
 clem@sirius:~/projects/FingerPrint/temp$ fingerprint -i
 ```
 
-You can run same query on the swirl
+You can run the same query on the swirl
 
 ```
 clem@sirius:~/projects/FingerPrint/temp$ fingerprint -q -S
@@ -196,6 +197,6 @@ Clementi.  This work is funded by NSF under the grant #1148473.
 
 Support or Contact
 ------------------
-If you are having trouble with Fingerprint or if you need some help you can post an
+If you are having trouble with FingerPrint or if you need some help you can post an
 issue or contact me at clem \a\t sdsc dot edu.
 
