@@ -21,6 +21,7 @@ class Swirl(object):
     def __init__(self, name, creationDate):
         self.name = name
         self.creationDate = creationDate
+        #list of file tracked
         self.swirlFiles = []
 
     #TODO use integer to save memory
@@ -57,6 +58,16 @@ class Swirl(object):
         #this removes from tempDep provides element :-o
         tempDep[:] = [i for i in tempDep if not i.depname in provides]
         return sorted(tempDep, key=str)
+
+
+    def getDependency(self, depname):
+        """given a depname it find the dep amond all the swirlFile.dependencies lists
+        and return its object"""
+        for dep in self.getDependencies():
+            if dep.depname == depname:
+                return dep
+        return None
+
 
 
     def getProvides(self):
@@ -141,6 +152,15 @@ class SwirlFile(Swirl):
     def addDependency(self, dep):
         """ dep must be a Dependency object"""
         self.dependencies.append(dep)
+
+    def getDependency(self, depname):
+        """ given a dependency name it returns it object if found in the 
+        dependecies list"""
+        for dep in self.dependencies:
+            if dep.depname == depname:
+                return dep
+        return None
+
 
     def addProvide(self, provide):
         """ provide is a Provide object"""
