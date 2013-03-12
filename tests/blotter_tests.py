@@ -2,7 +2,7 @@
 
 import unittest
 import subprocess
-import os
+import os, string
 import glob
 from datetime import datetime
 
@@ -61,7 +61,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_calltracer(self):
         print "\n     -----------------------     Running fingerprint syscall tracer   -------------------------\n"
-        testProgram = ["bash","-c","/usr/bin/find /tmp &> /dev/null "]
+        testProgram = ["bash","-c","find /tmp &> /dev/null "]
         deps = {}
         try:
             from FingerPrint.syscalltracer import SyscallTracer
@@ -74,6 +74,19 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(len(deps.keys()),2, 
                 msg="fingerprint-calltracer: failed: traced more than two binaries")
         print "Executed: ", testProgram, "\nFound dependencies: ", deps
+        #lets create a command wtih input file on the command line with default output filename
+        outputfilename='output.swirl'
+        command = 'bash -c "find /tmp &> /dev/null "'
+        self.assertEqual(
+            subprocess.call(['python', './bin/fingerprint', '-c', '-x', command]), 0,
+            msg="fingerprint-calltracer: failed to trace: " + string.join(testProgram))
+        self.assertTrue( os.path.isfile(outputfilename),
+            msg="fingerprint-calltracer: the output file %s was not created properly" % outputfilename )
+        #let's verify that swirl, the test must pass!!
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-y'] ), 0,
+            msg="fingerprint-calltracer: failed to verify swirl created on this system %s" % outputfilename)
+        os.remove(outputfilename)
+
 
 
 
