@@ -163,19 +163,12 @@ class Blotter:
         try:
             from FingerPrint.syscalltracer import SyscallTracer
         except ImportError, e:
-            raise IOError("Dynamic tracing is not supported on this python version: "
-                    + str(e) + "\nGenerally you have to install python ctypes.")
+            raise IOError("Dynamic tracing is not supported on this platform")
         tracer = SyscallTracer()
         #TODO check for errors
         execcmd = shlex.split(execcmd)
-        try:
-            tracer.main(execcmd, dynamicDependecies)
-        except AttributeError, e:
-            if "traceClone" in str(e):
-                raise IOError("You need to use the patched version of ptrace see "
-                    "the README file for more instruction.")
-            else:
-                raise e
+        if not tracer.main(execcmd, dynamicDependecies):
+            raise IOError("Unable to trace the process")
 
 
 
