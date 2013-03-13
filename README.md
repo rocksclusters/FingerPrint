@@ -34,7 +34,7 @@ Installation
 The simplest way to use FingerPrint is to add to your PATH the ./bin directory
 of this source code, and you will be done (on bash export PATH=$PATH:$PWD/bin )
 
-If you want to verify your installation you can run the unittests:
+To invoke unit-tests run
 
     # python setup.py test
 
@@ -49,17 +49,16 @@ at the end you will see the following lines:
 
 FingerPrint uses distutils so you can also run the standrad distutils procedure to install
 FingerPrint on your system from source (we strongly discourag 'normal' user from using this
-method though). To install fingerprint in your system python you can run:
+method though). To install fingerprint in your system from source you can run:
 
     # python setup.py install
 
-This will install FingerPrint in your python. FingerPrint consist of:
+This will install FingerPrint within your Python environment. You might need writing 
+privilege on system directories for such installation.
+
+FingerPrint consist of:
  - a bunch of python modules and submodules inside the FingerPrint/ directory
  - a command line called fingerprint, inside bin/ directory
-
-You will need writing priviledge on some system direcotries. To run the dynamic tracing
-you will need the local python-ptrace patched version. The python-ptrace distributed with
-your distro is bugged and can not properly trace subprocesses (as per python-ptrace 0.6.5).
 
 
 Use
