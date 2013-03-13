@@ -85,6 +85,8 @@ class SyscallTracer:
                     return False
 
                 event = status >> 16;
+                signalValue = os.WSTOPSIG(status)
+                deliverSignal = 0
                 #print "the child process %d stops. status: %d, signal? %d, exit? %d, continue? %d, stop? %d\n" % \
                 #    (child, status , os.WIFSIGNALED(status) ,
                 #    os.WIFEXITED(status), os.WIFCONTINUED(status), os.WIFSTOPPED(status))
@@ -93,7 +95,7 @@ class SyscallTracer:
                     print "The process ", child, " exited"
                     continue
 
-                if os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == (signal.SIGTRAP | 0x80 )):
+                if os.WIFSTOPPED(status) and signalValue == (signal.SIGTRAP | 0x80 ):
                     regs = ptrace_func.ptrace_getregs(child)
                     # mmap on x86_64 is orig_rax == 9
                     # mmap on 32bit is orig_eax == 90 or 120
@@ -113,7 +115,7 @@ class SyscallTracer:
                             # we are returning from mmap
                             syscallEnter[child] = True
                             FingerPrint.blotter.getDependecyFromPID(str(child), self.dependencies)
-                elif os.WIFSTOPPED(status) and (os.WSTOPSIG(status) == signal.SIGTRAP) :
+                elif os.WIFSTOPPED(status) and (signalValue == signal.SIGTRAP) and event != 0:
                     # this is just to print some output to the users
                     subChild = ptrace_func.ptrace_geteventmsg(child)
                     if event == ptrace_func.PTRACE_EVENT_FORK:
@@ -127,10 +129,16 @@ class SyscallTracer:
                     elif event == ptrace_func.PTRACE_EVENT_EXIT:
                         pass
                         #print "the process %d is in a event exit %d" % (child, subChild)
+                else:
+                    # same signal was delivered to one of the child and we got notified 
+                    # now we need to relay it properly (in particular SIGCHLD must be rerouted 
+                    # to the parents if not mpirun will never end)
+                    print "Signal %d delivered to %d " % (signalValue, child)
+                    deliverSignal = signalValue
 
                 # set the ptrace option and wait for the next syscall notification
                 ptrace_func.ptrace_setoptions(child, options);
-                ptrace_func.ptrace_syscall(child);
+                ptrace_func.ptrace_syscall(child, deliverSignal);
 
 
     def test(self):
