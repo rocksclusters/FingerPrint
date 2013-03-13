@@ -11,6 +11,7 @@ import sys
 sys.path.append('.')
 from FingerPrint.ptrace import func as ptrace_func
 import FingerPrint.ptrace.cpu_info
+import FingerPrint.ptrace.signames
 
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
@@ -130,10 +131,12 @@ class SyscallTracer:
                         pass
                         #print "the process %d is in a event exit %d" % (child, subChild)
                 else:
-                    # same signal was delivered to one of the child and we got notified 
-                    # now we need to relay it properly (in particular SIGCHLD must be rerouted 
-                    # to the parents if not mpirun will never end)
-                    print "Signal %d delivered to %d " % (signalValue, child)
+                    # when a signal is delivered to one of the child and we get notified
+                    # we need to relay it properly to the child
+                    # (in particular SIGCHLD must be rerouted to the parents if not mpirun
+                    # will never end)
+                    print "Signal %s(%d) delivered to %d " % \
+                        (FingerPrint.ptrace.signames.signalName(signalValue), signalValue, child)
                     deliverSignal = signalValue
 
                 # set the ptrace option and wait for the next syscall notification
