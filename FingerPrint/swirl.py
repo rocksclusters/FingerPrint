@@ -21,6 +21,7 @@ class Swirl(object):
     def __init__(self, name, creationDate):
         self.name = name
         self.creationDate = creationDate
+        #list of file tracked
         self.swirlFiles = []
 
     #TODO use integer to save memory
@@ -59,6 +60,15 @@ class Swirl(object):
         return sorted(tempDep, key=str)
 
 
+    def getDependency(self, depname):
+        """given a depname it find the dep amond all the swirlFile.dependencies lists
+        and return its object"""
+        for dep in self.getDependencies():
+            if dep.depname == depname:
+                return dep
+        return None
+
+
     def getProvides(self):
         """get the full list of Provide in this swirl
         deleting duplicate"""
@@ -68,7 +78,6 @@ class Swirl(object):
                 if prov not in tempPro:
                     tempPro.append(prov)
         return sorted(tempPro, key=str)
-
 
 
     def addFile(self, swirlFile):
@@ -142,6 +151,14 @@ class SwirlFile(Swirl):
         """ dep must be a Dependency object"""
         self.dependencies.append(dep)
 
+    def getDependency(self, depname):
+        """ given a dependency name it returns its object if found in the
+        dependecies list"""
+        for dep in self.dependencies:
+            if dep.depname == depname:
+                return dep
+        return None
+
     def addProvide(self, provide):
         """ provide is a Provide object"""
         self.provides.append(provide)
@@ -154,9 +171,11 @@ class SwirlFile(Swirl):
             string += str(self.type) + "  "
         string += " File name: " + self.path + "\n"
         if len(self.dependencies) > 0:
-            string += "  Deps: " + str(self.dependencies) + "\n"
+            string += "  Deps: "
+            string += Dependency.printListDependencies(self.dependencies)
         if len(self.provides) > 0:
-            string += "  Prov: " + str(self.provides) + "\n"
+            string += "  Prov: "
+            string += Dependency.printListDependencies(self.provides)
         return string
 
 
@@ -181,21 +200,47 @@ class Dependency(SwirlFile):
         dependency name"""
         return self.depname.split('(')[0]
 
+    def printPaths(self):
+        """ return a string which represent the paths of this dependency"""
+        string = ""
+        for path, hash, package in zip(self.pathList, self.hashList, self.packageList):
+            string += "\n        " + path
+            if hash:
+                string += " - " + hash
+            if package:
+                string += " (" + package + ")"
+        return string
+
+
     def __str__( self ):
         string = self.depname
         if hasattr(self, 'pathList'):
-            for path, hash, package in zip(self.pathList, self.hashList, self.packageList):
-                string += "\n        " + path
-                if hash:
-                    string += " - " + hash
-                if package:
-                    string += " (" + package + ")"
+            string += self.printPaths()
         return string
 
     def __repr__(self):
         #to print list properly i need this method
         return "\n    " + self.__str__() 
 
+    @staticmethod
+    def printListDependencies( depList):
+        """given a list of depenendency it return a string with a human readable
+        representation of the list """
+        string = ""
+        depBaseName = []
+        for i in depList:
+            name = i.getBaseName()
+            if name not in depBaseName:
+                depBaseName.append(name)
+        for depBaseName in depBaseName:
+            string += "\n    "
+            for dep in depList:
+                if depBaseName in dep.depname:
+                    string += dep.depname + " "
+                    path = dep.printPaths()
+            string += path
+        string += "\n"
+        return string
 
 
 class Provide(SwirlFile):
