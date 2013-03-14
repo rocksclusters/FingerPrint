@@ -2,7 +2,9 @@
 #
 # LC
 #
-# given a swirl it detect if it can run on the system
+# read an already created swirl and check if it can be run of the current 
+# system, which deps are missing, print on the screen current swirl
+# 
 #
 
 import os
@@ -18,10 +20,6 @@ except ImportError:
     from md5 import md5
 
 
-
-
-"""Given a swirl it detect if it can run on this system
-"""
 
 
 def readFromPickle(fileName):
@@ -71,6 +69,12 @@ def getHash(fileName, pluginName):
 
 
 class Sergeant:
+    """It reads an already created swirl and:
+      - it detects if it can run on this system
+      - it detects what has been changed
+      - print this swirl on the screen
+    """
+
 
     def __init__(self, swirl, extraPath=None):
         """ swirl is a valid Swirl object

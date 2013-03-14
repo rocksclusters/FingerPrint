@@ -2,7 +2,8 @@
 #
 # LC
 #
-# using existing static analysis tool to create a swirl into memory
+# This class create swirl starting from binaries, command lines, 
+# or process number
 #
 
 from datetime import datetime
@@ -52,6 +53,12 @@ def getDependecyFromPID(pid, dynamicDependecies):
 
 
 class Blotter:
+    """
+    This class creates a swirl file starting from:
+     - a list of binaries
+     - command lines that we want to execute and trace
+     - a list of pids
+    """
 
     def __init__(self, name, fileList, processIDs, execCmd):
         """give a file list and a name construct a swirl into memory """
