@@ -159,6 +159,19 @@ class SwirlFile(Swirl):
                 return dep
         return None
 
+    def getOrderedDependencies(self):
+        """ return a dictionary containing the dependencies with
+        {'soname1' : ['version1', 'version2'],
+         'soname2' : ['version1', 'version2']}
+        """
+        retDict = {}
+        for i in self.dependencies:
+            if i.getBaseName() not in retDict.keys():
+                retDict[i.getBaseName()] = []
+            if i.getVersion() not in retDict[i.getBaseName()]:
+                retDict[i.getBaseName()].append(i.getVersion())
+        return retDict
+
     def addProvide(self, provide):
         """ provide is a Provide object"""
         self.provides.append(provide)
@@ -197,8 +210,12 @@ class Dependency(SwirlFile):
     def getBaseName(self):
         """ depname are generally in the form of 'python2.7(sys)' or 
         'libc.so.6(LIBC_2_4)' this function return only the first part of the 
-        dependency name"""
+        dependency name also called soname"""
         return self.depname.split('(')[0]
+
+    def getVersion(self):
+        """return the version of this dependency aka string inside the first parenthesis"""
+        return self.depname.split('(')[1].split(')')[0]
 
     def printPaths(self):
         """ return a string which represent the paths of this dependency"""
@@ -223,7 +240,7 @@ class Dependency(SwirlFile):
         return "\n    " + self.__str__() 
 
     @staticmethod
-    def printListDependencies( depList):
+    def printListDependencies(depList):
         """given a list of depenendency it return a string with a human readable
         representation of the list """
         string = ""
