@@ -7,7 +7,7 @@
 # 
 #
 
-import os
+import os, string
 
 from swirl import Swirl
 import utils
@@ -30,6 +30,19 @@ def readFromPickle(fileName):
     inputfd.close()
     return Sergeant(swirl)
 
+def getShortPath(path):
+    """given a full path it shorten it leaving only
+    /bin/../filename"""
+    if len(path.split('/')) <= 3:
+        #no need to shorten
+        return '"' + path + '"'
+    returnValue = '"'
+    if path[0] == '/':
+        # absolute path name
+        returnValue += '/' + path.split('/')[1]
+    else:
+        returnValue += path.split('/')[0]
+    return returnValue + '/../' + os.path.basename(path) + '"'
 
 
 #this variable is use by getHash
@@ -131,6 +144,59 @@ class Sergeant:
                 returnFilelist.append(swirlFile.path)
         return returnFilelist
         
+    def getDotFile(self):
+        """return a dot representation of this swirl
+        """
+        retString = "digraph FingerPrint {\n  rankdir=LR;label =\""
+        retString += self.swirl.name + " " + self.swirl.getDateString()
+        retString += "\"\n"
+        clusterExec = []
+        clusterDeps = []
+        clusterPack = []
+        connections = ""
+        for swirlFile in self.swirl.swirlFiles:
+            clusterExec.append(getShortPath(swirlFile.path))
+            for soname, versions in swirlFile.getOrderedDependencies().iteritems():
+                for i in swirlFile.dependencies:
+                    if i.depname.startswith(soname):
+                        fileName = i.pathList[0]
+                        packageName = '"' + i.packageList[-1].strip("'") + '"'
+                # swirlfile -> soname
+                depNameStr = '"' + soname + string.join(versions, '\\n') + '"'
+                connections += '  ' + getShortPath(swirlFile.path)
+                connections += ' -> ' + depNameStr + ';\n'
+                # soname -> Filename
+                connections += '  ' + depNameStr
+                connections += ' -> ' + getShortPath(fileName) + ';\n'
+                # filename -> packagename
+                connections += '  ' + getShortPath(fileName)
+                connections += ' -> ' + packageName + ';\n'
+                clusterDeps.append(depNameStr)
+                clusterDeps.append(getShortPath(fileName))
+                if packageName not in clusterPack:
+                    clusterPack.append(packageName)
+        # cluster section
+        retString += '  subgraph cluster_execution {\n    label = "Execution Realm";\n'
+        retString += '    node [shape=hexagon];\n'
+        retString += '    ' + string.join(clusterExec, ';\n    ')
+        retString += ";\n  }\n"
+        # linker section
+        retString += '  subgraph cluster_linker {\n    label = "Lynker Realm";\n'
+        retString += '    ' + string.join(clusterDeps, ';\n    ')
+        retString += ";\n  }\n"
+        # linker packager
+        retString += '  subgraph cluster_packager {\n    label = "Pakcager Realm";\n'
+        retString += '    node [shape=box];\n'
+        retString += '    ' + string.join(clusterPack, ';\n    ')
+        retString += ";\n  }\n"
+        retString += connections
+
+        retString += "\n}"
+
+        return retString
+
+
+
 
 
     def getError(self):
