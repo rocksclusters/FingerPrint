@@ -92,6 +92,9 @@ def main():
                     help="Check if the given FILE is required by this swirl, if run "
                     "with verbose it also print the file requiring this FILE. Return "
                     "0 if this FILE is required by this swirl 1 otherwise", metavar="FILE")
+    parser.add_option("-g", "--graph", dest="graph", default=None,
+                    help="create a file FILENAME to display the current swirl graph with dot program",
+                    metavar="FILENAME")
 
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -244,7 +247,13 @@ def main():
             print "Global Dependencies:  " , \
                     FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getDependencies() )
             print "Global Provides:  ", \
-                    FingerPrint.swirl.Dependency.printListDependencies ( serg.getSwirl().getProvides() )
+                    FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getProvides() )
+            if options.graph :
+                print "Writing dot file ", options.graph
+                outfile = open(options.graph, 'w')
+                outfile.write(serg.getDotFile())
+                outfile.close()
+                print "To get a image run:\ndot -Tpng -o %s.png %s" % (options.graph, options.graph)
         return 0
     elif options.query :
         # query the swirl file
