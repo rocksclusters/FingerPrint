@@ -166,8 +166,10 @@ class Sergeant:
                 connections += '  ' + getShortPath(swirlFile.path)
                 connections += ' -> ' + depNameStr + ';\n'
                 # soname -> Filename
-                connections += '  ' + depNameStr
-                connections += ' -> ' + getShortPath(fileName) + ';\n'
+                newConnection = '  ' + depNameStr
+                newConnection += ' -> ' + getShortPath(fileName) + ';\n'
+                if newConnection not in connections:
+                    connections += newConnection
                 # filename -> packagename
                 connections += '  ' + getShortPath(fileName)
                 connections += ' -> ' + packageName + ';\n'
