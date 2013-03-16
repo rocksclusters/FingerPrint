@@ -149,7 +149,7 @@ class Sergeant:
         """
         retString = "digraph FingerPrint {\n  rankdir=LR;label =\""
         retString += self.swirl.name + " " + self.swirl.getDateString()
-        retString += "\"\n"
+        retString += "\";\n"
         clusterExec = []
         clusterDeps = []
         clusterPack = []
@@ -191,6 +191,7 @@ class Sergeant:
         retString += '    node [shape=box];\n'
         retString += '    ' + string.join(clusterPack, ';\n    ')
         retString += ";\n  }\n"
+        # adding connections
         retString += connections
 
         retString += "\n}"
