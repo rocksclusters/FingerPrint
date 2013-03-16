@@ -77,7 +77,8 @@ class SyscallTracer:
                 # 2. analyze what happen, if mmap syscall scan /proc/PID/maps
                 # 3. get ready to  wait for the next syscall
                 try:
-                    (child, status) = os.waitpid(-1, 0)
+                    # wait for all cloned children __WALL = 0x40000000
+                    (child, status) = os.waitpid(-1, 0x40000000 )
                 except OSError:
                     print "Tracing terminated successfully"
                     return True
