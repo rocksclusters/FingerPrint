@@ -150,9 +150,10 @@ class Sergeant:
         retString = "digraph FingerPrint {\n  rankdir=LR;label =\""
         retString += self.swirl.name + " " + self.swirl.getDateString()
         retString += "\";\n"
+        retString += "  labelloc=top;"
         clusterExec = []
-        clusterDeps = []
-        clusterPack = []
+        clusterLinker = []
+        clusterPackage = []
         connections = ""
         for swirlFile in self.swirl.swirlFiles:
             clusterExec.append(getShortPath(swirlFile.path))
@@ -173,10 +174,24 @@ class Sergeant:
                 # filename -> packagename
                 connections += '  ' + getShortPath(fileName)
                 connections += ' -> ' + packageName + ';\n'
-                clusterDeps.append(depNameStr)
-                clusterDeps.append(getShortPath(fileName))
-                if packageName not in clusterPack:
-                    clusterPack.append(packageName)
+                # need to get the index of the color scheme for this package
+                # which is also the index of the clusterPackage list
+                colorIndex = 0
+                for index, package in enumerate(clusterPackage):
+                    if packageName in package:
+                        # color scheme312 has 12 colors in it
+                        colorIndex = (index % 12) + 1
+                        break
+                if colorIndex == 0:
+                    # we need have a new color
+                    colorIndex = (len(clusterPackage) % 12) + 1
+                    clusterPackage.append(packageName + \
+                            " [style=filled colorscheme=set312 color=\"%d\" shape=box]"
+                            % colorIndex )
+                clusterLinker.append(depNameStr + \
+                        " [style=filled colorscheme=set312 color=\"%d\"]" % colorIndex)
+                clusterLinker.append(getShortPath(fileName) + \
+                        " [style=filled colorscheme=set312 color=\"%d\"]" % colorIndex )
         # cluster section
         retString += '  subgraph cluster_execution {\n    label = "Execution Realm";\n'
         retString += '    node [shape=hexagon];\n'
@@ -184,22 +199,15 @@ class Sergeant:
         retString += ";\n  }\n"
         # linker section
         retString += '  subgraph cluster_linker {\n    label = "Lynker Realm";\n'
-        retString += '    ' + string.join(clusterDeps, ';\n    ')
+        retString += '    ' + string.join(clusterLinker, ';\n    ')
         retString += ";\n  }\n"
-        ## linker packager
-        #retString += '  subgraph cluster_packager {\n    label = "Pakcager Realm";\n'
-        #retString += '    node [shape=box];\n'
-        #retString += '    ' + string.join(clusterPack, ';\n    ')
-        #retString += ";\n  }\n"
-        # adding connections
         retString += connections
 
+        #repeat the cluster nodes to set the color and the shape
+        retString += '\n  ' + string.join(clusterPackage, ';')
         retString += "\n}"
 
         return retString
-
-
-
 
 
     def getError(self):
