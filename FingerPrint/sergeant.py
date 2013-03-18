@@ -186,11 +186,11 @@ class Sergeant:
         retString += '  subgraph cluster_linker {\n    label = "Lynker Realm";\n'
         retString += '    ' + string.join(clusterDeps, ';\n    ')
         retString += ";\n  }\n"
-        # linker packager
-        retString += '  subgraph cluster_packager {\n    label = "Pakcager Realm";\n'
-        retString += '    node [shape=box];\n'
-        retString += '    ' + string.join(clusterPack, ';\n    ')
-        retString += ";\n  }\n"
+        ## linker packager
+        #retString += '  subgraph cluster_packager {\n    label = "Pakcager Realm";\n'
+        #retString += '    node [shape=box];\n'
+        #retString += '    ' + string.join(clusterPack, ';\n    ')
+        #retString += ";\n  }\n"
         # adding connections
         retString += connections
 
