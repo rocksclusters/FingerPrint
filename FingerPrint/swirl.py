@@ -250,10 +250,10 @@ class Dependency(SwirlFile):
             if name not in depBaseName:
                 depBaseName.append(name)
         for depBaseName in depBaseName:
-            string += "\n    "
+            string += "\n    " + depBaseName + " "
             for dep in depList:
                 if depBaseName in dep.depname:
-                    string += dep.depname + " "
+                    string += "(" + dep.getVersion() + ") "
                     path = dep.printPaths()
             string += path
         string += "\n"
