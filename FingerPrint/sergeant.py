@@ -147,10 +147,10 @@ class Sergeant:
     def getDotFile(self):
         """return a dot representation of this swirl
         """
-        retString = "digraph FingerPrint {\n  rankdir=LR;label =\""
+        retString = "digraph FingerPrint {\n  rankdir=LR;nodesep=0.15; ranksep=0.1; fontsize=26;label =\""
         retString += self.swirl.name + " " + self.swirl.getDateString()
         retString += "\";\n"
-        retString += "  labelloc=top;"
+        retString += "  labelloc=top;\n"
         clusterExec = []
         clusterLinker = []
         clusterPackage = []
@@ -185,26 +185,37 @@ class Sergeant:
                 if colorIndex == 0:
                     # we need have a new color
                     colorIndex = (len(clusterPackage) % 12) + 1
-                    clusterPackage.append(packageName + \
-                            " [style=filled colorscheme=set312 color=\"%d\" shape=box]"
+                    clusterPackage.append(packageName + " [color=\"%d\"]"
                             % colorIndex )
-                clusterLinker.append(depNameStr + \
-                        " [style=filled colorscheme=set312 color=\"%d\"]" % colorIndex)
+                clusterLinker.append(depNameStr + " [color=\"%d\"]" % colorIndex)
                 clusterLinker.append(getShortPath(fileName) + \
-                        " [style=filled colorscheme=set312 color=\"%d\"]" % colorIndex )
-        # cluster section
-        retString += '  subgraph cluster_execution {\n    label = "Execution Realm";\n'
+                        " [color=\"%d\"]" % colorIndex )
+        # execution section
+        retString += '  {\n'
+        retString += '    rank=same;\n'
+        retString += '    "Execution Domain" [shape=none fontsize=26];\n'
         retString += '    node [shape=hexagon];\n'
-        retString += '    ' + string.join(clusterExec, ';\n    ')
-        retString += ";\n  }\n"
+        retString += '    ' + string.join(clusterExec, ';\n    ') + ";\n"
+        retString += "  }\n"
         # linker section
-        retString += '  subgraph cluster_linker {\n    label = "Lynker Realm";\n'
-        retString += '    ' + string.join(clusterLinker, ';\n    ')
-        retString += ";\n  }\n"
-        retString += connections
+        retString += '  subgraph cluster_linker {\n'
+        retString += '    label="";\n'
+        retString += '    "Linker Domain" [shape=none fontsize=26];\n'
+        retString += '    node [style=filled colorscheme=set312];\n'
+        retString += '    ' + string.join(clusterLinker, ';\n    ') + ';\n'
+        retString += "  }\n"
 
-        #repeat the cluster nodes to set the color and the shape
-        retString += '\n  ' + string.join(clusterPackage, ';')
+        # pakcage section
+        retString += '  {\n'
+        retString += '    rank=same;\n'
+        retString += '    "Package Domain" [shape=none style="" fontsize=26];\n'
+        retString += '    node [shape=box style=filled colorscheme=set312];\n'
+        retString += '    ' + string.join(clusterPackage, ';\n    ') + ';\n'
+        retString += '  }\n'
+
+        retString += '  "Execution Domain" -> "Linker Domain" -> "Package Domain" [style=invis];\n'
+
+        retString += connections
         retString += "\n}"
 
         return retString
