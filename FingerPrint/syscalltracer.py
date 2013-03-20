@@ -7,8 +7,6 @@
 # libraries it depends on
 #
 
-import sys
-sys.path.append('.')
 from FingerPrint.ptrace import func as ptrace_func
 import FingerPrint.ptrace.cpu_info
 import FingerPrint.ptrace.signames
