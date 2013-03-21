@@ -71,9 +71,10 @@ class Blotter:
         # '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
         # '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
         dynamicDependecies = {}
+        files = {}
 
         if execCmd :
-            self._straceCmd(execCmd, dynamicDependecies)
+            self._straceCmd(execCmd, dynamicDependecies, files)
 
         # let's see if we have proecss ID we might need to scan for dynamic dependecies
         # with the help of the /proc FS
@@ -134,6 +135,15 @@ class Blotter:
             for i in self.swirl.swirlFiles:
                 self._hashDependencies(i)
 
+        print files
+        #let's add the files
+        for binary in files:
+            swirlFile = self.swirl.getSwirlFile(binary)
+            sharedLibraries = swirlFile.getListDependenciesFiles()
+            for fileName in files[binary]:
+                if fileName not in sharedLibraries:
+                    swirlFile.files.append(fileName)
+
 
     def getSwirl(self):
         """return the current swirl """
@@ -170,7 +180,7 @@ class Blotter:
 
 
     # TODO add a way to detach from executed programm
-    def _straceCmd(self, execcmd, dynamicDependecies):
+    def _straceCmd(self, execcmd, dynamicDependecies, files):
         """it execute the execmd with execve and then it trace process running and
         it adds all the dependency to the dynamicDependecies dictionary
         """
@@ -181,7 +191,7 @@ class Blotter:
         tracer = SyscallTracer()
         #TODO check for errors
         execcmd = shlex.split(execcmd)
-        if not tracer.main(execcmd, dynamicDependecies):
+        if not tracer.main(execcmd, dynamicDependecies, files):
             raise IOError("Unable to trace the process")
 
 

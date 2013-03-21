@@ -131,6 +131,7 @@ class SwirlFile(Swirl):
         self.pluginName=None
         #do we need this?
         self.md5sum = None
+        self.files = []
 
     def setPluginName(self, name):
         """this hold the name of the plugin who handled this
@@ -189,6 +190,10 @@ class SwirlFile(Swirl):
         if len(self.provides) > 0:
             string += "  Prov: "
             string += Dependency.printListDependencies(self.provides)
+        if self.files:
+            string += "  Files: \n"
+            for i in self.files:
+                string += "    " + i + "\n"
         return string
 
 
