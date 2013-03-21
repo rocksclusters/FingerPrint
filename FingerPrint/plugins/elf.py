@@ -52,9 +52,9 @@ class ElfPlugin(PluginManager):
     def getPathToLibrary(cls, dependency):
         """ given a dependency it find the path of the library which provides 
         that dependency """
-        soname = dependency.getBaseName()
-        if dependency.depname in cls._pathCache :
-            return cls._pathCache[dependency.depname]
+        soname = dependency.getMajor()
+        if dependency.getName() in cls._pathCache :
+            return cls._pathCache[dependency.getName()]
         #for each library we have in the system
         for line in getOutputAsList(["/sbin/ldconfig","-p"])[0]:
             # TODO it needs to handle in a better way the hwcap field
@@ -66,8 +66,8 @@ class ElfPlugin(PluginManager):
                 temp = line.split('=>')
                 if len(temp) == 2:
                     provider=temp[1].strip()
-                    if cls._checkMinor(provider, dependency.depname):
-                        cls._pathCache[dependency.depname] = provider
+                    if cls._checkMinor(provider, dependency.getName()):
+                        cls._pathCache[dependency.getName()] = provider
                         return provider
         pathToScan = cls.systemPath
         if "LD_LIBRARY_PATH" in os.environ:
@@ -76,9 +76,9 @@ class ElfPlugin(PluginManager):
         for path in pathToScan:
             provider = path + '/' + soname
             if os.path.isfile(provider) and \
-                cls._checkMinor(provider, dependency.depname):
+                cls._checkMinor(provider, dependency.getName()):
                 #we found the soname and minor are there return true
-                cls._pathCache[dependency.depname] = provider
+                cls._pathCache[dependency.getName()] = provider
                 return provider
         #the dependency could not be located
         return None
@@ -96,38 +96,23 @@ class ElfPlugin(PluginManager):
 
 
     @classmethod
-    def _setDepsRequs(cls, swirlFile):
+    def _setDepsRequs(cls, swirlFile, swirl):
         """given a SwirlFile object it add to it all the dependency and all 
         the provides to it """
 
         #find deps
         for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path)[0]:
             if len(line) > 0:
-                newDep = Dependency( line )
-                newDep.setPluginName( cls.pluginName )
+                newDep = Dependency.fromString( line )
                 swirlFile.addDependency( newDep )
-                #i need to take the parenthesis out of the game
-                tempList = re.split('\(|\)',line)
-                if len(tempList) > 3:
-                    #set the 32/64 bits 
-                    #probably unecessary
-                    if tempList[3].find("64bit") >= 0 :
-                        newDep.set64bits()
-                    elif tempList[3].find("32bit") >= 0 :
-                        #this should never happen
-                        newDep.set32bits()
-                else:
-                    #no parenthesis aka 32 bit 
-                    newDep.set32bits()
                 p = cls.getPathToLibrary( newDep )
                 if p:
-                    newDep.pathList.append( p )
+                    cls.getSwirl(p, swirl)
         
         #find provides
         for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path)[0]:
             if len(line) > 0 :
-                newProv = Provide(line)
-                newProv.setPluginName( cls.pluginName )
+                newProv = Dependency.fromString(line)
                 swirlFile.addProvide(newProv)
         
 
@@ -135,6 +120,7 @@ class ElfPlugin(PluginManager):
     def getDependeciesFromPath(cls, fileName):
         """given a file name it returns a Provide object with all the goodies in it
         """
+        print "TODO removeme"
         returnValue = []
         for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], fileName)[0]:
             if len(line) == 0:
@@ -160,7 +146,7 @@ class ElfPlugin(PluginManager):
 
 
     @classmethod
-    def getSwirl(cls, fileName):
+    def getSwirl(cls, fileName, swirl):
         """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
@@ -171,9 +157,11 @@ class ElfPlugin(PluginManager):
         if magic == '\x7f\x45\x4c\x46':
             #it's an elf see specs
             #http://www.sco.com/developers/gabi/1998-04-29/ch4.eheader.html#elfid
-            swirlFile = SwirlFile( fileName )
+            swirlFile = swirl.getSwirlFile( fileName )
+            if swirlFile.staticDependencies :
+                # we already did this file, do not do it again
+                return swirlFile
             swirlFile.setPluginName( cls.pluginName )
-            swirlFile.dyn = True
         else:
             #not an elf
             return None
@@ -183,7 +171,8 @@ class ElfPlugin(PluginManager):
         elif bitness == '\x02':
             swirlFile.set64bits()
         swirlFile.type = 'ELF'
-        cls._setDepsRequs(swirlFile)
+        print "processing: ", swirlFile
+        cls._setDepsRequs(swirlFile, swirl)
         return swirlFile
 
        

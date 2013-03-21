@@ -135,6 +135,11 @@ class Sergeant:
                 print dep.depname, " computed ", hash, " originals ", dep.hashList
         return returnValue
 
+    def printVerbose(self):
+        """ return a verbose representation of this swirl"""
+        return self.swirl
+
+
     def checkDependencyPath(self, fileName):
         """return a list of SwirlFiles which requires the given fileName, if the 
         given file is nor required in this swirl it return None"""

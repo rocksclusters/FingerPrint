@@ -90,26 +90,12 @@ class Blotter:
         fileList = fileList + dynamicDependecies.keys()
         # add all the fileList to the swirl and figure out all their static libraries
         for i in fileList:
-            if os.path.islink(i):
-                swirlFile = SwirlFile( i )
-                swirlFile.type = 'link'
-                self.swirl.addFile(swirlFile)
-            elif os.path.isfile(i):
-                if i in dynamicDependecies:
-                    swirlFile = PluginManager.getSwirl(i)
-                else:
-                    swirlFile = PluginManager.getSwirl(i)
-                #self._hashDependencies(swirlFile)
-                self.swirl.addFile(swirlFile)
+            if os.path.isfile(i):
+                swirlFile = PluginManager.getSwirl(i, self.swirl)
             elif os.path.isdir(i):
                 pass
             else:
                 raise IOError("The file %s cannot be opened." % i)
-        # I need two hash the dependency twice because I need to resolve all the 
-        # symbolic lynk which is done in the _hashDependency before I add the dinamyc 
-        # dependencies
-        for i in self.swirl.swirlFiles:
-            self._hashDependencies(i)
         #
         # we might need to add the dynamic dependencies to the swirl
         # if they did not get detected already
@@ -130,10 +116,6 @@ class Blotter:
                         else:
                             swirlFile.addDependency( i )
                         reHash = True
-        # I need to rehash the new dependency
-        if reHash :
-            for i in self.swirl.swirlFiles:
-                self._hashDependencies(i)
 
         #let's add the files
         for binary in files:
@@ -142,6 +124,7 @@ class Blotter:
             for fileName in files[binary]:
                 if fileName not in sharedLibraries:
                     swirlFile.files.append(fileName)
+        #TODO hash dependency and find packages
 
 
     def getSwirl(self):
@@ -151,6 +134,7 @@ class Blotter:
 
     def _hashDependencies(self, swirlFile):
         """after the swirlFile is created it add md5sum for each dependency """
+        ##TODO remove links stuff 
         for newDep in swirlFile.dependencies:
             if len(newDep.pathList) > 0:
                 # let's check in the cache

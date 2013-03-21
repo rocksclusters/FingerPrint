@@ -7,12 +7,11 @@
 # 
 
 from datetime import datetime
-import StringIO
+import StringIO, os, re
 
 
 """Swirl hold in memory the representation of a swirl.
-The two main components are SwirlFile aka files tracked by this swirl
-Dependency aka dependencies needed by SwirlFile to run
+A Swirl is a container of SwirlFiles aka files tracked by this swirl
 """
 
 class Swirl(object):
@@ -21,11 +20,65 @@ class Swirl(object):
     def __init__(self, name, creationDate):
         self.name = name
         self.creationDate = creationDate
-        #list of file tracked
+        # list of file tracked
         self.swirlFiles = []
+        # files used to track this project
+        self.execedFiles = []
+        # command line used for dynamic tracing
+        self.cmdLine = None
+
+    def getDependencies(self):
+        """the all the dependency of this swirl"""
+        pass
+
+    def getProvider(self, depname):
+        """given a depname it find the swirlfile which provides it""" 
+        pass
+
+
+    def getSwirlFile(self, fileName):
+        """ given a fileName it return the associated swirlFile if
+        present, otherwise it creates a new one with all the symlinks resolved"""
+        links = []
+        while os.path.islink(fileName) :
+            p = os.readlink(fileName)
+            if not os.path.isabs(p):
+                p = os.path.join( os.path.dirname(fileName), p)
+            links.append(p)
+            fileName = p
+        for swirlFile in self.swirlFiles:
+            if swirlFile.path == fileName:
+                #we found it
+                swirlFile.setLinks(links)
+                return swirlFile
+        swirlFile = SwirlFile(fileName, links)
+        self.swirlFiles.append(swirlFile)
+        return swirlFile
+
+
+    def getDateString(self):
+        """ return the creation time in a readable format"""
+        return self.creationDate.strftime("%Y-%m-%d %H:%M")
+
+    def __str__( self ):
+        #header
+        string = self.name + " " + self.getDateString() + "\n"
+        #file list
+        string += " -- File List -- "+str(len(self.swirlFiles))+"\n"
+        for i in self.swirlFiles:
+            string += str(i) + "\n"
+        #dependency set
+        return string
+
+
+class Arch:
+    """ old style classes for backward compability"""
+
+    def __init__(self):
+        self.arch = None
 
     #TODO use integer to save memory
-    #this function are used by SwirlFile and Dependency subclasses
+    #this function are used by SwirlFile
     def set64bits(self):
         self.arch="x86_64"
 
@@ -45,239 +98,169 @@ class Swirl(object):
             return False
 
 
-    def getDependencies(self):
-        """the all the dependency of this swirl"""
-        tempDep=[]
-        for file in self.swirlFiles:
-            for dep in file.dependencies:
-                if dep not in tempDep:
-                    tempDep.append(dep)
-        #tempDep now contains all the dependency
-        #I need to take the provides available in this swirl off of it
-        provides = map( lambda x: x.provname, self.getProvides())
-        #this removes from tempDep provides element :-o
-        tempDep[:] = [i for i in tempDep if not i.depname in provides]
-        return sorted(tempDep, key=str)
 
-
-    def getDependency(self, depname):
-        """given a depname it find the dep amond all the swirlFile.dependencies lists
-        and return its object"""
-        for dep in self.getDependencies():
-            if dep.depname == depname:
-                return dep
-        return None
-
-
-    def getProvides(self):
-        """get the full list of Provide in this swirl
-        deleting duplicate"""
-        tempPro=[]
-        for file in self.swirlFiles:
-            for prov in file.provides:
-                if prov not in tempPro:
-                    tempPro.append(prov)
-        return sorted(tempPro, key=str)
-
-
-    def addFile(self, swirlFile):
-        """add a file to the list of the tracked files"""
-        self.swirlFiles.append(swirlFile)
-
-    def getSwirlFile(self, fileName):
-        """ given a fileName it return the associated swirlFile if
-        present, otherwise None"""
-        for swirlFile in self.swirlFiles:
-            if swirlFile.path == fileName:
-                return swirlFile
-        return None
-
-    def getDateString(self):
-        """ return the creation time in a readable format"""
-        return self.creationDate.strftime("%Y-%m-%d %H:%M")
-
-    def __eq__(self, other):
-        #I need this to get the 
-        #depA in depList working
-        #see function getProvides and getDependecies
-        if other is None:
-            return False
-        return self.__dict__ == other.__dict__
-
-    def __str__( self ):
-        #header
-        string = self.name + " " + self.getDateString() + "\n"
-        #file list
-        string += " -- File List -- \n"
-        for i in self.swirlFiles:
-            string += str(i) + "\n"
-        #dependency set
-        return string
-
-
-class SwirlFile(Swirl):
+class SwirlFile(Arch):
     """
-    describe a file which tracked by this swirl
-    at the moment only ELF aka binary file are supported
+    describe a file which is tracked by this swirl
+    at the moment only ELF aka binary file are really supported
     """
-    def __init__(self, path):
+    def __init__(self, path, links):
+        """create a swirl file starting from a file name"""
+        Arch.__init__(self)
         self.path=path
-        self.arch=None
+        #symbolic links
+        self.links=links
         self.type=None
-        #do we need this?
-        self.dyn=True
-        self.dependencies=[]
+        # list of Dependency this file depend on
+        self.staticDependencies=[]
+        # list of Dependency that this file provides
         self.provides=[]
-        self.pluginName=None
-        #do we need this?
+        # list of Swirl files
+        self.dynamicDependency=[]
+        self.openedFiles=[]
         self.md5sum = None
-        self.files = []
+        self.package = None
+        # by default all files are data files (aka unknown type)
+        self.type = "Data"
+        # i386 X86_64 noarch
+        self.arch = None
 
     def setPluginName(self, name):
-        """this hold the name of the plugin who handled this
-        attribute used by SwirlFile Dependency and Provide"""
-        self.pluginName = name
-    
-    def getPluginName(self):
-        return self.pluginName
+        """set the type of this file"""
+        self.type = name
+
+    def setLinks(self, links):
+        """update the list of symbolic links pointing to this swirl file"""
+        for link in links:
+            if link not in self.links:
+                self.links.append(link)
+
+    def addDependency(self, dependency):
+        """if dependency is not already in the static dependency of this swirl file it
+        gets added"""
+        for dep in self.staticDependencies:
+            if dep == dependency:
+                return
+        self.staticDependencies.append(dependency)
+
+    def addProvide(self, dependency):
+        """if dependency is not already in the provides of this SwirlFile it gets
+        added"""
+        for prov in self.provides:
+            if prov == dependency:
+                return
+        self.provides.append(dependency)
+
+
 
     def getListDependenciesFiles(self):
-        """return a list of all the files this swirlfile depends on"""
-        returnList = []
-        for i in self.dependencies:
-            returnList += i.pathList
-        return returnList
+        """return a list of swirl file if found in the current swirl"""
+        #TODO
+        pass
 
-    def addDependency(self, dep):
-        """ dep must be a Dependency object"""
-        self.dependencies.append(dep)
+    def isYourPath(self, path):
+        """check if this path is part of this swirlFile looking into the links as well"""
+        if path == self.path:
+            return True
+        else:
+            for link in self.links:
+                if link == path:
+                    return True
+        return False
 
-    def getDependency(self, depname):
-        """ given a dependency name it returns its object if found in the
-        dependecies list"""
-        for dep in self.dependencies:
-            if dep.depname == depname:
-                return dep
-        return None
 
-    def getOrderedDependencies(self):
+    def getProvidesDict(self):
+        return self.getDependenciesDict(True)
+
+    def getDependenciesDict(self, provides=False):
         """ return a dictionary containing the dependencies with
         {'soname1' : ['version1', 'version2'],
          'soname2' : ['version1', 'version2']}
+
+         if provides==ture it returns the provives
         """
         retDict = {}
-        for i in self.dependencies:
-            if i.getBaseName() not in retDict.keys():
-                retDict[i.getBaseName()] = []
-            if i.getVersion() not in retDict[i.getBaseName()]:
-                retDict[i.getBaseName()].append(i.getVersion())
+        if provides:
+            transformList = self.provides
+        else:
+            transformList = self.staticDependencies
+        for i in transformList:
+            if i.major not in retDict.keys():
+                retDict[i.major] = []
+            if i.minor not in retDict[i.major]:
+                retDict[i.major].append(i.minor)
         return retDict
 
-    def addProvide(self, provide):
-        """ provide is a Provide object"""
-        self.provides.append(provide)
+    def printDependencies(self):
+        """ return a string with the static dependencies """
+
 
     def __str__(self):
-        string = "File type: "
-        if self.type == "Data":
-            string += "data     "
+        """ return a minimal string representation of this swrilfile"""
+        retString = "  " + self.path + "\n"
+        retString += "    Deps: " + str(self.getDependenciesDict()) + "\n"
+        retString += "    Provs: " + str(self.getProvidesDict()) + "\n"
+        return retString
+
+
+
+class Dependency(Arch):
+    """this class reperesent a dependency declarations, it can be used to
+    represent either a dependency or a provices in a swirlFile. It is an
+    abstract representation of a piece of software"""
+
+    def __init__(self, major, minor = None, hwcap=None):
+        Arch.__init__(self)
+        # string representing the main dependency
+        # for elf is the soname of the binary path
+        self.major = major
+        # a list of version supported by this dependency
+        # for elf this is the simobl versions
+        # http://tldp.org/HOWTO/Program-Library-HOWTO/miscellaneous.html#VERSION-SCRIPTS
+        self.minor = minor
+        # hwcap (shouldn't this be part of swirlfile)
+        self.hwcap = hwcap
+
+    @classmethod
+    def fromString(cls, string):
+        """ Create a dependency from a string returned by find-require find-provide
+        """
+        tempList = re.split('\(|\)',string)
+        major = tempList[0]
+        minor = None
+        if len(tempList) > 1 :
+            #we have soname
+            minor = string.split('(')[1].split(')')[0]
+        newDep = cls(major, minor)
+        if len(tempList) > 3:
+            #set the 32/64 bits 
+            #probably unecessary
+            if tempList[3].find("64bit") >= 0 :
+                newDep.set64bits()
+            elif tempList[3].find("32bit") >= 0 :
+                #this should never happen
+                newDep.set32bits()
         else:
-            string += str(self.type) + "  "
-        string += " File name: " + self.path + "\n"
-        if len(self.dependencies) > 0:
-            string += "  Deps: "
-            string += Dependency.printListDependencies(self.dependencies)
-        if len(self.provides) > 0:
-            string += "  Prov: "
-            string += Dependency.printListDependencies(self.provides)
-        if self.files:
-            string += "  Files: \n"
-            for i in self.files:
-                string += "    " + i + "\n"
-        return string
+            #no parenthesis aka 32 bit 
+            newDep.set32bits()
+        return newDep
+
+    def getMajor(self):
+        return self.major
+
+    def getMinor(self):
+        return self.minor
+
+    def getName(self):
+        """return canonical representation of this dependency """
+        return self.__str__()
 
 
-class Dependency(SwirlFile):
-    """ This class represent a single dependency
-    """
-
-    def __init__(self, name):
-        self.depname = name
-        self.hashList = []
-        self.arch = None
-        self.pluginName = None
-        self.pathList = []
-        self.packageList = []
-        #http://www.trevorpounds.com/blog/?p=33
-        #http://www.akkadia.org/drepper/symbol-versioning
-        #self.symbolVersion = None
-
-    def getBaseName(self):
-        """ depname are generally in the form of 'python2.7(sys)' or 
-        'libc.so.6(LIBC_2_4)' this function return only the first part of the 
-        dependency name also called soname"""
-        return self.depname.split('(')[0]
-
-    def getVersion(self):
-        """return the version of this dependency aka string inside the first parenthesis"""
-        return self.depname.split('(')[1].split(')')[0]
-
-    def printPaths(self):
-        """ return a string which represent the paths of this dependency"""
-        string = ""
-        for path, hash, package in zip(self.pathList, self.hashList, self.packageList):
-            string += "\n        " + path
-            if hash:
-                string += " - " + hash
-            if package:
-                string += " (" + package + ")"
-        return string
+    def __str__(self):
+        """ """
+        return "" + self.major + "(" + self.minor + ")"
 
 
-    def __str__( self ):
-        string = self.depname
-        if hasattr(self, 'pathList'):
-            string += self.printPaths()
-        return string
-
-    def __repr__(self):
-        #to print list properly i need this method
-        return "\n    " + self.__str__() 
-
-    @staticmethod
-    def printListDependencies(depList):
-        """given a list of depenendency it return a string with a human readable
-        representation of the list """
-        string = ""
-        depBaseName = []
-        for i in depList:
-            name = i.getBaseName()
-            if name not in depBaseName:
-                depBaseName.append(name)
-        for depBaseName in depBaseName:
-            string += "\n    " + depBaseName + " "
-            for dep in depList:
-                if depBaseName in dep.depname:
-                    string += "(" + dep.getVersion() + ") "
-                    path = dep.printPaths()
-            string += path
-        string += "\n"
-        return string
-
-
-class Provide(SwirlFile):
-    """ This class represent a single dependency
-    """
-
-    def __init__(self, name):
-        self.provname = name
-
-    def __str__( self ):
-        string = self.provname
-        return string
-
-    def __repr__(self):
-        #to print list properly i need this method
-        return "\n    " + self.__str__()
-
-
+class Provide:
+    """remove me """
+    pass

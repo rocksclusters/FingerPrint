@@ -40,7 +40,7 @@ class PythonPlugin(PluginManager):
                 
 
     @classmethod
-    def getSwirl(cls, fileName) :
+    def getSwirl(cls, fileName, swirl) :
         """Given a path to a python file it return a list of dependecy"""
         returnList = []
         try :
@@ -56,7 +56,7 @@ class PythonPlugin(PluginManager):
                 f.close()
             return None
         else :
-            swirlFile = SwirlFile( fileName )
+            swirlFile = swirl.getSwirlFile( fileName )
             swirlFile.setPluginName( cls.pluginName )
             swirlFile.type = cls.pluginName
             swirlFile.dyn = True

@@ -243,11 +243,11 @@ def main():
 			(options.filename, e) + runHelp)
             print "File name: ", options.filename
             if options.verbose :
-                print serg.getSwirl()
-            print "Global Dependencies:  " , \
-                    FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getDependencies() )
-            print "Global Provides:  ", \
-                    FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getProvides() )
+                print serg.printVerbose()
+            #print "Global Dependencies:  " , \
+            #        FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getDependencies() )
+            #print "Global Provides:  ", \
+            #        FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getProvides() )
             if options.graph :
                 print "Writing dot file ", options.graph
                 outfile = open(options.graph, 'w')

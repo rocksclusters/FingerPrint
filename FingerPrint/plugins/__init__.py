@@ -64,13 +64,13 @@ class PluginManager(object):
         """verify that the dependency passed can be satified on this system
         and return True if so
         """
-        #let get the plugin
-        #TODO catch exception key not found
+        # let get the plugin
+        # TODO catch exception key not found
         plugin = self.plugins[dependency.getPluginName()]
         return plugin.isDepsatisfied( dependency )
 
     @classmethod
-    def getSwirl(self, fileName):
+    def getSwirl(self, fileName, swirl):
         """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
@@ -78,12 +78,11 @@ class PluginManager(object):
         """
         #we call all the getSwirl method of all the plugin
         for key, plugin in self.plugins.iteritems():
-            temp = plugin.getSwirl(fileName)
+            temp = plugin.getSwirl(fileName, swirl)
             if temp != None:
                 return temp
         #nobady claimed the file let's make it a Data file
-        swirlFile = SwirlFile(fileName)
-        swirlFile.type="Data"
+        swirlFile = swirl.getSwirlFile(fileName)
         return swirlFile
 
     @classmethod
