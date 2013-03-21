@@ -16,7 +16,7 @@ from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 import FingerPrint.blotter
 import FingerPrint.utils
 
-import os, signal
+import os, signal, ctypes
 
 class SyscallTracer:
     """this class can spawn a process and trace its' execution to check 
@@ -24,29 +24,39 @@ class SyscallTracer:
 
     Usage:
 
+        file = {}
+        dynamicDependecies = {}
         tracer = SyscallTracer()
         execcmd = shlex.split(execcmd)
-        tracer.main(execcmd, dynamicDependecies)
+        tracer.main(execcmd, dynamicDependecies, files)
 
-    dynamicDependencies is a dictionary of 
-    { 'binarypath' : [list of file it depends to],
-    '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
-    '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
 
     """
 
-    def main(self, command, dependencies):
+    def main(self, command, dependencies, files):
+        """start the trace
+
+        The input parameters are:
+            `command' command line to trace passed through shlex.split
+            `dynamicDependencies' is a dictionary of shared libraries used by the various 
+            processes e.g.: { 'binarypath' : [list of file it depends to],
+            '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
+            '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
+            `files' is a dictionary of opened files by the various processes
+
+        return false if something went wrong
+        """
         #
         # main function to launch a process and trace it
         #
-        self.dependencies = dependencies
         returnValue = False
         self.program = command
         # this is to check if we are entering or returning from a system call
-        syscallEnter = dict()
+        processesStatus = dict()
         options =  ptrace_func.PTRACE_O_TRACEFORK | ptrace_func.PTRACE_O_TRACEVFORK \
                 | ptrace_func.PTRACE_O_TRACECLONE | ptrace_func.PTRACE_O_TRACEEXIT \
                 | ptrace_func.PTRACE_O_TRACEEXEC | ptrace_func.PTRACE_O_TRACESYSGOOD;
+        #TODO add the logger
         #logger = getLogger()
         #logger.setLevel(DEBUG)
         # creating the debugger and setting it up
@@ -67,7 +77,6 @@ class SyscallTracer:
             
             ptrace_func.ptrace_setoptions(child, options);
             ptrace_func.ptrace_syscall(child);
-            #print("ptracing %d entrering the loop.\n" % child);
             
             while True: 
                 # main loop tracer
@@ -76,11 +85,11 @@ class SyscallTracer:
                 # 3. get ready to  wait for the next syscall
                 try:
                     # wait for all cloned children __WALL = 0x40000000
-                    (child, status) = os.waitpid(-1, 0x40000000 )
+                    (pid, status) = os.waitpid(-1, 0x40000000 )
                 except OSError:
                     print "Tracing terminated successfully"
                     return True
-                if not child > 0:
+                if not pid > 0:
                     print "Catastrofic failure"
                     return False
 
@@ -92,61 +101,123 @@ class SyscallTracer:
                 #    os.WIFEXITED(status), os.WIFCONTINUED(status), os.WIFSTOPPED(status))
                 if os.WIFEXITED(status):
                     # a process died, report it and go back to wait for syscall
-                    print "The process ", child, " exited"
+                    print "The process ", pid, " exited"
+                    processesStatus.pop(pid)
                     continue
 
                 if os.WIFSTOPPED(status) and signalValue == (signal.SIGTRAP | 0x80 ):
-                    regs = ptrace_func.ptrace_getregs(child)
-                    # mmap on x86_64 is orig_rax == 9
-                    # mmap on 32bit is orig_eax == 90 or 120
+                    #
+                    # we have a syscall
+                    # orig_rax or orig_eax contains the syscall number 
                     # taken from linux src arch/x86/syscalls/syscall_[32|64].tbl
-                    if (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 9)\
+                    # switch on the syscal number to intercept mmap and open
+                    regs = ptrace_func.ptrace_getregs(pid)
+                    if pid not in processesStatus :
+                        #new pid
+                        processesStatus[pid] = TracerControlBlock( pid )
+                    if (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 2):# or regs.orig_rax == 257):
+                        #
+                        # handle open (orig_rax == 2 on 64bit)
+                        #
+                        if processesStatus[pid].enterCall :
+                            # we are entering open, regs.rsi contains the first arguments
+                            # https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S#L585
+                            processesStatus[pid].firstArg = regs.rdi
+                            processesStatus[pid].enterCall = False
+                        else:
+                            # we are exiting from a open
+                            processesStatus[pid].enterCall = True
+                            # cast from c_ulong to c_long
+                            returnValue = ctypes.c_long(regs.rax).value
+                            if returnValue >= 0:
+                                openPath = self.readCString(regs.rdi, pid)
+                                if openPath[0] == '/':
+                                    #absolute path let's save it
+                                    procName = processesStatus[pid].getProcessName()
+                                    if procName not in files:
+                                        files[procName] = []
+                                    files[procName].append(openPath)
+                            # else don't do anything
+                            # TODO use close to check for used files (easier to trace full path)
+
+                    elif (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 9)\
                             or (FingerPrint.ptrace.cpu_info.CPU_I386 and \
                             (regs.orig_eax == 90 or regs.orig_eax == 192 ) ):
-                        #we are inside a mmap function
-                        if child not in syscallEnter.keys() :
-                            #new pid
-                            syscallEnter[child] = True
-                        if syscallEnter[child] :
+                        #
+                        # handle mmap (orig_rax == 9 64bit or orig_eax == 90 or 192 on 32bit)
+                        #
+                        if processesStatus[pid].enterCall :
                             # we are entering mmap
-                            syscallEnter[child] = False
-                            #print "the process %d enter mmap" % child
+                            processesStatus[pid].enterCall = False
+                            #print "the process %d enter mmap" % pid
                         else:
                             # we are returning from mmap
-                            syscallEnter[child] = True
-                            FingerPrint.blotter.getDependecyFromPID(str(child), self.dependencies)
+                            processesStatus[pid].enterCall = True
+                            FingerPrint.blotter.getDependecyFromPID(str(pid), dependencies)
                 elif os.WIFSTOPPED(status) and (signalValue == signal.SIGTRAP) and event != 0:
                     # this is just to print some output to the users
-                    subChild = ptrace_func.ptrace_geteventmsg(child)
+                    subChild = ptrace_func.ptrace_geteventmsg(pid)
                     if event == ptrace_func.PTRACE_EVENT_FORK:
-                        print "The process %d forked a new process %d" % (child, subChild)
+                        print "The process %d forked a new process %d" % (pid, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_VFORK:
-                        print "The process %d vforked a new process %d" % (child, subChild)
+                        print "The process %d vforked a new process %d" % (pid, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_CLONE :
-                        print "The child process %d cloned a new process %d" % (child, subChild)
+                        print "The process %d cloned a new process %d" % (pid, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_EXEC :
-                        print "The child process %d run exec" % (child)
+                        print "The process %d run exec" % (pid)
                     elif event == ptrace_func.PTRACE_EVENT_EXIT:
                         pass
-                        #print "the process %d is in a event exit %d" % (child, subChild)
+                        #print "the process %d is in a event exit %d" % (pid, subChild)
                 else:
                     # when a signal is delivered to one of the child and we get notified
                     # we need to relay it properly to the child
                     # (in particular SIGCHLD must be rerouted to the parents if not mpirun
                     # will never end)
                     print "Signal %s(%d) delivered to %d " % \
-                        (FingerPrint.ptrace.signames.signalName(signalValue), signalValue, child)
+                        (FingerPrint.ptrace.signames.signalName(signalValue), signalValue, pid)
                     deliverSignal = signalValue
 
                 # set the ptrace option and wait for the next syscall notification
-                ptrace_func.ptrace_setoptions(child, options);
-                ptrace_func.ptrace_syscall(child, deliverSignal);
+                ptrace_func.ptrace_setoptions(pid, options);
+                ptrace_func.ptrace_syscall(pid, deliverSignal);
+
+
+
+    def readCString(self, address, pid):
+        data = []
+        mem = open("/proc/" + str(pid) + "/mem", 'rb')
+        mem.seek(address)
+        while True:
+            b = mem.read(1)
+            if b == '\0':
+                break
+            data.append(b)
+        mem.close()
+        return ''.join(data)
 
 
     def test(self):
         a = {}
         self.main(["bash", "-c", "sleep 5 > /dev/null & find /tmp > /dev/null &"], a)
         print "dict: ", a
+
+
+class TracerControlBlock:
+    """hold data for tracing multiple processes
+
+    Insiperd by strace code (strct tcb)). This structure hold the data we need to trace
+    the status of a proce with the SyscallTracer
+    """
+
+    def __init__(self, pid):
+        self.pid = pid
+        self.enterCall = True
+        self.firstArg = None
+
+    def getProcessName(self):
+        return os.readlink('/proc/' + str(self.pid) + '/exe')
+
+
 
 if __name__ == "__main__":
     SyscallTracer().test()
