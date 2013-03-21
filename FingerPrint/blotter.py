@@ -135,7 +135,6 @@ class Blotter:
             for i in self.swirl.swirlFiles:
                 self._hashDependencies(i)
 
-        print files
         #let's add the files
         for binary in files:
             swirlFile = self.swirl.getSwirlFile(binary)
