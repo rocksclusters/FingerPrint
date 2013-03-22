@@ -62,7 +62,6 @@ class Blotter:
 
     def __init__(self, name, fileList, processIDs, execCmd):
         """give a file list and a name construct a swirl into memory """
-        self._pathCache = {}
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
         # 
@@ -125,42 +124,15 @@ class Blotter:
             for fileName in files[binary]:
                 if fileName not in sharedLibraries:
                     swirlFile.files.append(fileName)
-        #TODO hash dependency and find packages
+        #hash and get package name
+        for i in self.swirl.swirlFiles:
+            i.md5sum = sergeant.getHash(i.path, i.type)
+            i.package = self._getPackage(i.path)
 
 
     def getSwirl(self):
         """return the current swirl """
         return self.swirl 
-
-
-    def _hashDependencies(self, swirlFile):
-        """after the swirlFile is created it add md5sum for each dependency """
-        ##TODO remove links stuff 
-        for newDep in swirlFile.dependencies:
-            if len(newDep.pathList) > 0:
-                # let's check in the cache
-                if newDep.pathList[0] in self._pathCache :
-                    newDep.pathList, newDep.hashList, newDep.packageList = self._pathCache[newDep.pathList[0]]
-                else:
-                    #new file we have to do it
-                    p = newDep.pathList[0]
-                    #add all the simbolik links till we hit the real file
-                    while os.path.islink(newDep.pathList[-1]) :
-                        p = os.readlink(newDep.pathList[-1])
-                        if not os.path.isabs(p):
-                            p = os.path.join(
-                                    os.path.dirname(newDep.pathList[-1]), p)
-                        newDep.packageList.append( None )
-                        newDep.hashList.append( None )
-                        newDep.pathList.append( p )
-                    #md5
-                    fileToHash = p
-                    newDep.hashList.append(sergeant.getHash(fileToHash, newDep.pluginName))
-                    #package Name
-                    package = self._getPackage( fileToHash )
-                    newDep.packageList.append( package )
-                    #update the cache
-                    self._pathCache[newDep.pathList[0]] = (newDep.pathList, newDep.hashList, newDep.packageList)
 
 
     # TODO add a way to detach from executed programm

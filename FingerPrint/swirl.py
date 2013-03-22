@@ -260,7 +260,10 @@ class SwirlFile(Arch):
 
     def printVerbose(self, separator=""):
         """a more detailed representation of this swrilfile """
-        retString = separator + "  " + self.path + "\n"
+        retString = separator + "  " + self.path
+        if self.package:
+            retString += " - " + self.package
+        retString += "\n"
         retString += separator + "    Deps: " + str(self.getDependenciesDict()) + "\n"
         retString += separator + "    Provs: " + str(self.getProvidesDict()) + "\n"
         return retString

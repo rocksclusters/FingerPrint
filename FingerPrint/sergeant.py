@@ -48,7 +48,7 @@ def getShortPath(path):
 #this variable is use by getHash
 _isPrelink = None
 
-def getHash(fileName, pluginName):
+def getHash(fileName, fileType):
     """Given a valid fileName it returns a string containing a md5sum
     of the file content. If we are running on a system which prelink
     binaries (aka RedHat based) the command prelink must be on the PATH"""
@@ -60,7 +60,7 @@ def getHash(fileName, pluginName):
             _isPrelink = ""
         else:
             print "Using: ", _isPrelink
-    if pluginName == 'ELF' and len(_isPrelink) > 0:
+    if fileType == 'ELF' and len(_isPrelink) > 0:
         #let's use prelink for the md5sum
         #TODO what if isPrelink fails
         (temp, returncode) = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
@@ -128,7 +128,7 @@ class Sergeant:
             path = PluginManager.getPathToLibrary(dep)
             if not path:
                 continue
-            hash = getHash(path, dep.pluginName)
+            hash = getHash(path, dep.type)
             if not hash in dep.hashList:
                 self.error.append(dep.depname)
                 returnValue = False
