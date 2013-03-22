@@ -63,14 +63,6 @@ class Swirl(object):
         return None
 
 
-    def getDependencies(self):
-        """the all the dependency of this swirl"""
-        print "TODO fixme"
-        pass
-
-    def getProvider(self, depname):
-        """given a depname it find the swirlfile which provides it"""
-        pass
 
     def getListSwirlFileProvide(self, dependencies, excludeSwirlFile=[]):
         """return a list of swirl file if found in the current swirl which
