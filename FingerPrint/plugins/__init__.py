@@ -86,14 +86,6 @@ class PluginManager(object):
         return swirlFile
 
     @classmethod
-    def getDependeciesFromPath(cls, fileName):
-        """given a file name it returns the dependency name"""
-        #TODO for now it is supported only by the ELF pluging
-        return cls.plugins["ELF"].getDependeciesFromPath(fileName)
- 
-
-
-    @classmethod
     def getPathToLibrary(cls, dependency):
         """ given a dependency it find the path of the library which provides 
         that dependency """

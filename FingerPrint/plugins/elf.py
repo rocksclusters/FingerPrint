@@ -118,35 +118,6 @@ class ElfPlugin(PluginManager):
         
 
     @classmethod
-    def getDependeciesFromPath(cls, fileName):
-        """given a file name it returns a Provide object with all the goodies in it
-        """
-        print "TODO removeme"
-        returnValue = []
-        for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], fileName)[0]:
-            if len(line) == 0:
-                continue
-            newDep = Dependency( line )
-            newDep.setPluginName( cls.pluginName )
-            newDep.pathList.append( fileName )
-            #i need to take the parenthesis out of the game
-            tempList = re.split( '\(|\)', line )
-            if len( tempList ) > 3:
-                #set the 32/64 bits
-                #probably unecessary
-                if tempList[3].find( "64bit" ) >= 0 :
-                    newDep.set64bits()
-                elif tempList[3].find( "32bit" ) >= 0 :
-                    #this should never happen
-                    newDep.set32bits()
-            else:
-                #no parenthesis aka 32 bit
-                newDep.set32bits()
-            returnValue.append( newDep )
-        return returnValue
-
-
-    @classmethod
     def getSwirl(cls, fileName, swirl):
         """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
