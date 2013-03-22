@@ -125,18 +125,24 @@ class Sergeant:
         """check if any dep was modified since the swirl file creation 
         (using checksuming) """
         self.error = []
-        depList = self.swirl.swirlFiles
+        pathCache = []
         returnValue = True
-        for dep in depList:
-            path = PluginManager.getPathToLibrary(dep)
-            if not path:
-                continue
-            hash = getHash(path, dep.type)
-            if not hash in dep.hashList:
-                self.error.append(str(dep))
-                returnValue = False
-                #TODO move this in fingerprint  
-                print dep.getName(), " computed ", hash, " originals ", dep.hashList
+        for swF in self.swirl.execedFiles:
+            for dep in swF.staticDependencies:
+                path = PluginManager.getPathToLibrary(dep)
+                if not path or path in pathCache:
+                    continue
+                hash = getHash(path, dep.type)
+                pathCache.append(path)
+                swirlProvider = self.swirl.getSwirlFileByProv(dep)
+                if not swirlProvider:
+                    self.error.append("SwirlFile has unresolved dependency " + str(dep) \
+                            + " the hash can not be verified")
+                    returnValue = False
+                if hash != swirlProvider.md5sum :
+                    self.error.append(str(dep) + " wrong hash (computed " + hash \
+                            + " originals " + swirlProvider.md5sum + ")")
+                    returnValue = False
         return returnValue
 
 
