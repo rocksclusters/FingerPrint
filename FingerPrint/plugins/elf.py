@@ -10,7 +10,7 @@ from subprocess import PIPE, Popen
 import StringIO
 import re
 
-from FingerPrint.swirl import SwirlFile, Dependency, Provide
+from FingerPrint.swirl import SwirlFile, Dependency
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
 

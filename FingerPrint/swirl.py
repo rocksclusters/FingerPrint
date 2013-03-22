@@ -333,7 +333,3 @@ class Dependency(Arch):
     def __repr__(self):
         return self.__str__()
 
-
-class Provide:
-    """remove me """
-    pass
