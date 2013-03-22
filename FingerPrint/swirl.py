@@ -44,7 +44,7 @@ class Swirl(object):
             p = os.readlink(fileName)
             if not os.path.isabs(p):
                 p = os.path.join( os.path.dirname(fileName), p)
-            links.append(p)
+            links.append(fileName)
             fileName = p
         for swirlFile in self.swirlFiles:
             if swirlFile.path == fileName:
