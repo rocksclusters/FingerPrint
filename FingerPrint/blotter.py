@@ -99,31 +99,28 @@ class Blotter:
         #
         # we might need to add the dynamic dependencies to the swirl
         # if they did not get detected already
-        reHash = False
         for fileName in dynamicDependecies.keys():
-            swirlFile = self.swirl.createSwirlFile(fileName)
-            listDepFile = swirlFile.getListDependenciesFiles()
+            swirlFile = PluginManager.getSwirl(fileName, self.swirl)
+            #let's add it to the execed file list
+            if swirlFile not in self.swirl.execedFiles:
+                print "adding file ", swirlFile.path
+                self.swirl.execedFile.append(swirlFile)
             for dynamicDepFile in dynamicDependecies[fileName]:
-                if dynamicDepFile not in listDepFile:
-                    newDeps = PluginManager.getDependeciesFromPath(dynamicDepFile)
-                    for i in newDeps:
-                        # let's check if the swirlFile already has this dependency
-                        oldDep = swirlFile.getDependency( i )
-                        if oldDep and len(oldDep.pathList) < 1 :
-                            # this is an unresolved dependency let's use the new one
-                            swirlFile.dependencies.remove(oldDep)
-                            swirlFile.addDependency( i )
-                        else:
-                            swirlFile.addDependency( i )
-                        reHash = True
+                newSwirlFileDependency = PluginManager.getSwirl(dynamicDepFile, self.swirl)
+                #I need to verify it if is static dep or dynamic dep
+                #TODO need to optimize this
+                swirlDependencies = self.swirl.getListSwirlFileProvide(swirlFile.staticDependencies)
+                if newSwirlFileDependency.path not in [x.path for x in swirlDependencies]:
+                    swirlFile.dynamicDependencies.append(newSwirlFileDependency)
 
-        #let's add the files
+        #let's see if it used some Data files
         for binary in files:
             swirlFile = self.swirl.createSwirlFile(binary)
-            sharedLibraries = swirlFile.getListDependenciesFiles()
+            allDependencies = self.swirl.getListSwirlFilesDependent(swirlFile)
+            allFiles = [ x.getPaths() for x in allDependencies ]
             for fileName in files[binary]:
-                if fileName not in sharedLibraries:
-                    swirlFile.files.append(fileName)
+                if fileName not in allFiles:
+                    swirlFile.openedFiles.append(fileName)
         #hash and get package name
         for i in self.swirl.swirlFiles:
             i.md5sum = sergeant.getHash(i.path, i.type)
