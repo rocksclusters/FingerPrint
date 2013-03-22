@@ -66,7 +66,7 @@ class PluginManager(object):
         """
         # let get the plugin
         # TODO catch exception key not found
-        plugin = self.plugins[dependency.getPluginName()]
+        plugin = self.plugins[dependency.type]
         return plugin.isDepsatisfied( dependency )
 
     @classmethod
@@ -98,9 +98,9 @@ class PluginManager(object):
         """ given a dependency it find the path of the library which provides 
         that dependency """
         #TODO only for ELF file
-        if dependency.getPluginName() != "ELF":
+        if dependency.type != "ELF":
             return None
-        plugin = cls.plugins[dependency.getPluginName()]
+        plugin = cls.plugins[dependency.type]
         return plugin.getPathToLibrary(dependency)
 
 

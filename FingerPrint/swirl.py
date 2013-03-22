@@ -65,6 +65,7 @@ class Swirl(object):
 
     def getDependencies(self):
         """the all the dependency of this swirl"""
+        print "TODO fixme"
         pass
 
     def getProvider(self, depname):
@@ -160,7 +161,6 @@ class Arch:
         return self.__dict__ == other.__dict__
 
 
-
 class SwirlFile(Arch):
     """
     describe a file which is tracked by this swirl
@@ -204,18 +204,20 @@ class SwirlFile(Arch):
     def addDependency(self, dependency):
         """if dependency is not already in the static dependency of this swirl file it
         gets added"""
-        for dep in self.staticDependencies:
-            if dep == dependency:
-                return
-        self.staticDependencies.append(dependency)
+        if dependency in self.staticDependencies:
+            return
+        else:
+            dependency.type = self.type
+            self.staticDependencies.append(dependency)
 
     def addProvide(self, dependency):
         """if dependency is not already in the provides of this SwirlFile it gets
         added"""
-        for prov in self.provides:
-            if prov == dependency:
-                return
-        self.provides.append(dependency)
+        if dependency in self.provides:
+            return
+        else:
+            dependency.type = self.type
+            self.provides.append(dependency)
 
     def isYourPath(self, path):
         """check if this path is part of this swirlFile looking into the links as well"""
@@ -235,7 +237,7 @@ class SwirlFile(Arch):
         {'soname1' : ['version1', 'version2'],
          'soname2' : ['version1', 'version2']}
 
-         if provides==ture it returns the provives
+         if provides==ture it returns the provides
         """
         retDict = {}
         if provides:
@@ -286,6 +288,9 @@ class Dependency(Arch):
         self.minor = minor
         # hwcap (shouldn't this be part of swirlfile)
         self.hwcap = hwcap
+        # the type of this dependency for the moment is the same as the type of the 
+        # swirlfile it belongs to
+        self.type = None
 
     @classmethod
     def fromString(cls, string):
@@ -321,10 +326,15 @@ class Dependency(Arch):
         """return soname(minor_version) """
         return "" + self.major + "(" + self.minor + ")"
 
+    def __hash__(self):
+        return hash(str(self.arch) + str(self.major) + str(self.minor) + str(self.hwcap))
 
     def __str__(self):
         """ """
         return "" + self.major + "(" + self.minor + ")(" + self.arch + ")"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Provide:

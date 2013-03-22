@@ -108,7 +108,7 @@ class Blotter:
                     newDeps = PluginManager.getDependeciesFromPath(dynamicDepFile)
                     for i in newDeps:
                         # let's check if the swirlFile already has this dependency
-                        oldDep = swirlFile.getDependency( i.depname )
+                        oldDep = swirlFile.getDependency( i )
                         if oldDep and len(oldDep.pathList) < 1 :
                             # this is an unresolved dependency let's use the new one
                             swirlFile.dependencies.remove(oldDep)

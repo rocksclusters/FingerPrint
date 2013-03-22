@@ -109,12 +109,15 @@ class Sergeant:
         the dependencies can be satisfied on the current system
         """
         self.error = []
-        depList = self.swirl.getDependencies()
+        #remove duplicates
+        depList = set()
+        for i in self.swirl.execedFiles:
+            depList |= set(i.staticDependencies)
         returnValue = True
         PluginManager.addSystemPaths(self.extraPath)
         for dep in depList:
             if not PluginManager.isDepsatisfied(dep):
-                self.error.append(dep.depname)
+                self.error.append(dep.getName())
                 returnValue = False
         return returnValue
 
@@ -122,7 +125,7 @@ class Sergeant:
         """check if any dep was modified since the swirl file creation 
         (using checksuming) """
         self.error = []
-        depList = self.swirl.getDependencies()
+        depList = self.swirl.swirlFiles
         returnValue = True
         for dep in depList:
             path = PluginManager.getPathToLibrary(dep)
@@ -130,9 +133,10 @@ class Sergeant:
                 continue
             hash = getHash(path, dep.type)
             if not hash in dep.hashList:
-                self.error.append(dep.depname)
+                self.error.append(str(dep))
                 returnValue = False
-                print dep.depname, " computed ", hash, " originals ", dep.hashList
+                #TODO move this in fingerprint  
+                print dep.getName(), " computed ", hash, " originals ", dep.hashList
         return returnValue
 
 
@@ -171,7 +175,7 @@ class Sergeant:
             clusterExec.append(getShortPath(swirlFile.path))
             for soname, versions in swirlFile.getOrderedDependencies().iteritems():
                 for i in swirlFile.dependencies:
-                    if i.depname.startswith(soname):
+                    if i.getName().startswith(soname):
                         fileName = i.pathList[0]
                         packageName = '"' + i.packageList[-1].strip("'") + '"'
                 # swirlfile -> soname
