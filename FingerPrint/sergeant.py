@@ -163,7 +163,6 @@ class Sergeant:
         returnFilelist = []
         for execSwirlFile in self.swirl.execedFiles:
             for swDepFile in self.swirl.getListSwirlFilesDependent(execSwirlFile):
-                print "checking ", swDepFile.getPaths()
                 if fileName in swDepFile.getPaths():
                     returnFilelist.append(execSwirlFile.path)
         return returnFilelist
