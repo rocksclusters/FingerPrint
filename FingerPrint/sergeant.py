@@ -161,9 +161,11 @@ class Sergeant:
         """return a list of SwirlFiles which requires the given fileName, if the 
         given file is nor required in this swirl it return None"""
         returnFilelist = []
-        for swirlFile in self.swirl.swirlFiles:
-            if fileName in swirlFile.getListDependenciesFiles():
-                returnFilelist.append(swirlFile.path)
+        for execSwirlFile in self.swirl.execedFiles:
+            for swDepFile in self.swirl.getListSwirlFilesDependent(execSwirlFile):
+                print "checking ", swDepFile.getPaths()
+                if fileName in swDepFile.getPaths():
+                    returnFilelist.append(execSwirlFile.path)
         return returnFilelist
         
     def getDotFile(self):

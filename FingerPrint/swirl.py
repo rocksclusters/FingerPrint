@@ -63,6 +63,13 @@ class Swirl(object):
         return None
 
 
+    def getListSwirlFilesDependent(self, swirlFile):
+        """given a swirlFile it returns a list of its required swirlfiles"""
+        returnList = self.getListSwirlFileProvide(swirlFile.staticDependencies)
+        for swF in swirlFile.dynamicDependencies:
+            if swF not in returnList:
+                returnList.append(swF)
+        return returnList
 
     def getListSwirlFileProvide(self, dependencies, excludeSwirlFile=[]):
         """return a list of swirl file if found in the current swirl which
@@ -170,7 +177,7 @@ class SwirlFile(Arch):
         # list of Dependency that this file provides
         self.provides=[]
         # list of Swirl files
-        self.dynamicDependency=[]
+        self.dynamicDependencies=[]
         self.openedFiles=[]
         self.md5sum = None
         self.package = None
