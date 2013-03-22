@@ -315,8 +315,8 @@ class Dependency(Arch):
         return self.minor
 
     def getName(self):
-        """return canonical representation of this dependency """
-        return self.__str__()
+        """return soname(minor_version) """
+        return "" + self.major + "(" + self.minor + ")"
 
 
     def __str__(self):
