@@ -37,15 +37,14 @@ class TestSequenceFunctions(unittest.TestCase):
             cmdFile = cmdFile[0:-1]
         self.files.append( cmdFile )
         #print "File list: ", self.files
-        self.availablePlugin = 2
+        self.availablePlugin = 1
 
 
     def test_plugin(self):
         print "\n     -----------------------     Testing pluging manager via API  -------------------------\n"
         self.swirl = Swirl("test", datetime.now())
         for i in self.files:
-            swirlFile = PluginManager.getSwirl(i)
-            self.swirl.addFile(swirlFile)
+            swirlFile = PluginManager.getSwirl(i, self.swirl)
         p = PluginManager.get_plugins()
         print "plugins: ", p
         self.assertEqual(len(p), self.availablePlugin,
