@@ -64,7 +64,8 @@ class Swirl(object):
 
 
     def getListSwirlFilesDependent(self, swirlFile):
-        """given a swirlFile it returns a list of its required swirlfiles"""
+        """given a swirlFile it returns a list of all its required swirlfiles
+        It includes both static and dynamic dependencies """
         returnList = self.getListSwirlFileProvide(swirlFile.staticDependencies)
         for swF in swirlFile.dynamicDependencies:
             if swF not in returnList:
@@ -249,9 +250,6 @@ class SwirlFile(Arch):
             if i.minor not in retDict[i.major]:
                 retDict[i.major].append(i.minor)
         return retDict
-
-    def printDependencies(self):
-        """ return a string with the static dependencies """
 
 
     def __str__(self):
