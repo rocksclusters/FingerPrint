@@ -135,9 +135,16 @@ class Sergeant:
                 print dep.depname, " computed ", hash, " originals ", dep.hashList
         return returnValue
 
+
+
     def printVerbose(self):
-        """ return a verbose representation of this swirl"""
-        return self.swirl
+        """return a verbose representation of this swirl"""
+        return self.swirl.printVerbose()
+
+
+    def printMinimal(self):
+        """return a minimal representation of this swirl"""
+        return self.swirl.printMinimal()
 
 
     def checkDependencyPath(self, fileName):

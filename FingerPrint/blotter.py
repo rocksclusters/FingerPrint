@@ -92,6 +92,7 @@ class Blotter:
         for i in fileList:
             if os.path.isfile(i):
                 swirlFile = PluginManager.getSwirl(i, self.swirl)
+                self.swirl.execedFiles.append(swirlFile)
             elif os.path.isdir(i):
                 pass
             else:
@@ -101,7 +102,7 @@ class Blotter:
         # if they did not get detected already
         reHash = False
         for fileName in dynamicDependecies.keys():
-            swirlFile = self.swirl.getSwirlFile(fileName)
+            swirlFile = self.swirl.createSwirlFile(fileName)
             listDepFile = swirlFile.getListDependenciesFiles()
             for dynamicDepFile in dynamicDependecies[fileName]:
                 if dynamicDepFile not in listDepFile:
@@ -119,7 +120,7 @@ class Blotter:
 
         #let's add the files
         for binary in files:
-            swirlFile = self.swirl.getSwirlFile(binary)
+            swirlFile = self.swirl.createSwirlFile(binary)
             sharedLibraries = swirlFile.getListDependenciesFiles()
             for fileName in files[binary]:
                 if fileName not in sharedLibraries:

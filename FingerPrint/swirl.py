@@ -27,18 +27,18 @@ class Swirl(object):
         # command line used for dynamic tracing
         self.cmdLine = None
 
-    def getDependencies(self):
-        """the all the dependency of this swirl"""
-        pass
 
-    def getProvider(self, depname):
-        """given a depname it find the swirlfile which provides it""" 
-        pass
+    def isFileTracked(self, fileName):
+        """return true if fileName is already tracked by this swirl """
+        for f in self.swirlFiles:
+            if fileName in f.getPaths():
+                return True
+        return False
 
 
-    def getSwirlFile(self, fileName):
-        """ given a fileName it return the associated swirlFile if
-        present, otherwise it creates a new one with all the symlinks resolved"""
+    def createSwirlFile(self, fileName):
+        """ given a fileName it return the associated swirlFile if present
+        otherwise it creates a new one with all the symlinks resolved"""
         links = []
         while os.path.islink(fileName) :
             p = os.readlink(fileName)
@@ -55,20 +55,75 @@ class Swirl(object):
         self.swirlFiles.append(swirlFile)
         return swirlFile
 
+    def getSwirlFileByProv(self, dependency):
+        """find the swirl file which provides the given dependency"""
+        for swF in self.swirlFiles:
+            if dependency in swF.provides :
+                return swF
+        return None
+
+
+    def getDependencies(self):
+        """the all the dependency of this swirl"""
+        pass
+
+    def getProvider(self, depname):
+        """given a depname it find the swirlfile which provides it"""
+        pass
+
+    def getListSwirlFileProvide(self, dependencies, excludeSwirlFile=[]):
+        """return a list of swirl file if found in the current swirl which
+        can satisfy the given list of dependencies
+
+        `dependency' a list of Dependency which should be satisfied
+        `exludeSwirlFile' a list of swirlfile which should be excluded from the returned list """
+        returnList = []
+        for dep in dependencies:
+            swirlFile = self.getSwirlFileByProv(dep)
+            if swirlFile and swirlFile not in excludeSwirlFile and \
+                swirlFile not in returnList:
+                returnList.append(swirlFile)
+        return returnList
+
 
     def getDateString(self):
         """ return the creation time in a readable format"""
         return self.creationDate.strftime("%Y-%m-%d %H:%M")
 
+    def printMinimal(self):
+        """ """
+        #header
+        retStr = self.name + " " + self.getDateString() + "\n"
+        #file list
+        retStr += " -- File List -- \n"
+        for swF in self.execedFiles:
+            retStr += str(swF) + '\n'
+            for provider in self.getListSwirlFileProvide(swF.staticDependencies):
+                retStr += "  " + str(provider) + '\n'
+        return retStr
+
+    def printVerbose(self):
+        """ """
+        #header
+        retStr = self.name + " " + self.getDateString() + "\n"
+        #file list
+        retStr += " -- File List -- \n"
+        for swF in self.execedFiles:
+            retStr += swF.printVerbose()
+            for provider in self.getListSwirlFileProvide(swF.staticDependencies):
+                retStr += provider.printVerbose("  ")
+        return retStr
+
+
     def __str__( self ):
         #header
-        string = self.name + " " + self.getDateString() + "\n"
+        retStr = self.name + " " + self.getDateString() + "\n"
         #file list
-        string += " -- File List -- "+str(len(self.swirlFiles))+"\n"
+        retStr += " -- File List -- "+str(len(self.swirlFiles))+"\n"
         for i in self.swirlFiles:
-            string += str(i) + "\n"
+            retStr += str(i) + "\n"
         #dependency set
-        return string
+        return retStr
 
 
 class Arch:
@@ -96,6 +151,13 @@ class Arch:
             return True
         else:
             return False
+
+    def __eq__(self, other):
+        # I need this to get the comparison working
+        # so I can do if depA in depList:
+        if other is None:
+            return False
+        return self.__dict__ == other.__dict__
 
 
 
@@ -125,6 +187,10 @@ class SwirlFile(Arch):
         # i386 X86_64 noarch
         self.arch = None
 
+    def getPaths(self):
+        """ return a list of path used by this SwirlFile"""
+        return self.links + [self.path]
+
     def setPluginName(self, name):
         """set the type of this file"""
         self.type = name
@@ -151,13 +217,6 @@ class SwirlFile(Arch):
                 return
         self.provides.append(dependency)
 
-
-
-    def getListDependenciesFiles(self):
-        """return a list of swirl file if found in the current swirl"""
-        #TODO
-        pass
-
     def isYourPath(self, path):
         """check if this path is part of this swirlFile looking into the links as well"""
         if path == self.path:
@@ -167,7 +226,6 @@ class SwirlFile(Arch):
                 if link == path:
                     return True
         return False
-
 
     def getProvidesDict(self):
         return self.getDependenciesDict(True)
@@ -196,10 +254,15 @@ class SwirlFile(Arch):
 
 
     def __str__(self):
-        """ return a minimal string representation of this swrilfile"""
-        retString = "  " + self.path + "\n"
-        retString += "    Deps: " + str(self.getDependenciesDict()) + "\n"
-        retString += "    Provs: " + str(self.getProvidesDict()) + "\n"
+        """minimal string representation of this swrilfile aka its path"""
+        return "  " + self.path
+
+
+    def printVerbose(self, separator=""):
+        """a more detailed representation of this swrilfile """
+        retString = separator + "  " + self.path + "\n"
+        retString += separator + "    Deps: " + str(self.getDependenciesDict()) + "\n"
+        retString += separator + "    Provs: " + str(self.getProvidesDict()) + "\n"
         return retString
 
 
@@ -235,9 +298,9 @@ class Dependency(Arch):
         if len(tempList) > 3:
             #set the 32/64 bits 
             #probably unecessary
-            if tempList[3].find("64bit") >= 0 :
+            if "64bit" in tempList[3] :
                 newDep.set64bits()
-            elif tempList[3].find("32bit") >= 0 :
+            elif "32bit" in tempList[3] :
                 #this should never happen
                 newDep.set32bits()
         else:
@@ -258,7 +321,7 @@ class Dependency(Arch):
 
     def __str__(self):
         """ """
-        return "" + self.major + "(" + self.minor + ")"
+        return "" + self.major + "(" + self.minor + ")(" + self.arch + ")"
 
 
 class Provide:

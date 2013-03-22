@@ -106,7 +106,8 @@ class ElfPlugin(PluginManager):
                 newDep = Dependency.fromString( line )
                 swirlFile.addDependency( newDep )
                 p = cls.getPathToLibrary( newDep )
-                if p:
+                if p and not swirl.isFileTracked(p):
+                    # p not null and p is not already in swirl
                     cls.getSwirl(p, swirl)
         
         #find provides
@@ -157,7 +158,7 @@ class ElfPlugin(PluginManager):
         if magic == '\x7f\x45\x4c\x46':
             #it's an elf see specs
             #http://www.sco.com/developers/gabi/1998-04-29/ch4.eheader.html#elfid
-            swirlFile = swirl.getSwirlFile( fileName )
+            swirlFile = swirl.createSwirlFile( fileName )
             if swirlFile.staticDependencies :
                 # we already did this file, do not do it again
                 return swirlFile
@@ -171,7 +172,6 @@ class ElfPlugin(PluginManager):
         elif bitness == '\x02':
             swirlFile.set64bits()
         swirlFile.type = 'ELF'
-        print "processing: ", swirlFile
         cls._setDepsRequs(swirlFile, swirl)
         return swirlFile
 

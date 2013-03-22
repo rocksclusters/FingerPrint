@@ -56,7 +56,7 @@ class PythonPlugin(PluginManager):
                 f.close()
             return None
         else :
-            swirlFile = swirl.getSwirlFile( fileName )
+            swirlFile = swirl.createSwirlFile( fileName )
             swirlFile.setPluginName( cls.pluginName )
             swirlFile.type = cls.pluginName
             swirlFile.dyn = True

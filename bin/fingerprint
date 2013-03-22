@@ -244,6 +244,8 @@ def main():
             print "File name: ", options.filename
             if options.verbose :
                 print serg.printVerbose()
+            else:
+                print serg.printMinimal()
             #print "Global Dependencies:  " , \
             #        FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getDependencies() )
             #print "Global Provides:  ", \

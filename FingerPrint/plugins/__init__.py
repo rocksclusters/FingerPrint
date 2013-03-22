@@ -82,7 +82,7 @@ class PluginManager(object):
             if temp != None:
                 return temp
         #nobady claimed the file let's make it a Data file
-        swirlFile = swirl.getSwirlFile(fileName)
+        swirlFile = swirl.createSwirlFile(fileName)
         return swirlFile
 
     @classmethod
