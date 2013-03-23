@@ -107,6 +107,8 @@ class Swirl(object):
             retStr += str(swF) + '\n'
             for provider in self.getListSwirlFileProvide(swF.staticDependencies):
                 retStr += "  " + str(provider) + '\n'
+            for swFile in swF.dynamicDependencies:
+                retStr += "  " + str(swFile) + ' --(Dyn)--\n'
         return retStr
 
     def printVerbose(self):
@@ -119,6 +121,8 @@ class Swirl(object):
             retStr += swF.printVerbose()
             for provider in self.getListSwirlFileProvide(swF.staticDependencies):
                 retStr += provider.printVerbose("  ")
+            for swFile in swF.dynamicDependencies:
+                retStr += swFile.printVerbose("  ", "--(Dyn)--")
         return retStr
 
 
@@ -263,14 +267,14 @@ class SwirlFile(Arch):
         return "  " + self.path
 
 
-    def printVerbose(self, separator=""):
+    def printVerbose(self, separator="", dynamic=""):
         """a more detailed representation of this swrilfile """
-        retString = separator + "  " + self.path
+        retString = separator + "  " + self.path + " " + dynamic
         if self.package:
             retString += " - " + self.package
         retString += "\n"
-        retString += separator + "    Deps: " + str(self.getDependenciesDict()) + "\n"
-        retString += separator + "    Provs: " + str(self.getProvidesDict()) + "\n"
+        retString += separator + "    Deps: " + str(self.getDependenciesDict().keys()) + "\n"
+        retString += separator + "    Provs: " + str(self.getProvidesDict().keys()) + "\n"
         return retString
 
 
