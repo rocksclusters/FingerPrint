@@ -110,18 +110,15 @@ class Sergeant:
         """
         self.error = []
         #remove duplicates
-        depList = set()
-        for i in self.swirl.execedFiles:
-            depList |= set(i.staticDependencies)
         returnValue = True
         PluginManager.addSystemPaths(self.extraPath)
-        for dep in depList:
+        for dep in self.swirl.getDependencies():
             if not PluginManager.isDepsatisfied(dep):
                 self.error.append(dep.getName())
                 returnValue = False
         return returnValue
 
-    def checkHash(self):
+    def checkHash(self, verbose=False):
         """check if any dep was modified since the swirl file creation 
         (using checksuming) """
         self.error = []
@@ -140,8 +137,11 @@ class Sergeant:
                             + " the hash can not be verified")
                     returnValue = False
                 if hash != swirlProvider.md5sum :
-                    self.error.append(str(dep) + " wrong hash (computed " + hash \
-                            + " originals " + swirlProvider.md5sum + ")")
+                    tmpStr = str(dep)
+                    if verbose:
+                        tmpStr += " wrong hash (computed " + hash + " originals " + \
+                                swirlProvider.md5sum + ")"
+                    self.error.append(tmpStr)
                     returnValue = False
         return returnValue
 

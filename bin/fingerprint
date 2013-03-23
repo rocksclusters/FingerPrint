@@ -130,7 +130,7 @@ def main():
                 csvfilein.write(swirl.name + ',' + swirl.getDateString())
                 csvfilein.write('\n\nVerification type\nDate\n')
                 for dep in swirl.getDependencies():
-                    csvfilein.write(dep.depname + '\n')
+                    csvfilein.write(dep.getName() + '\n')
                 csvfilein.close()
             csvfilein = open(options.csvfile, 'r')
             csvfileout = open(options.csvfile + '.tmp', 'w')
@@ -182,7 +182,7 @@ def main():
                         print "    ", i
                 sys.exit(1)
         elif options.integrity :
-            if not serg.checkHash():
+            if not serg.checkHash( True ):
                 #error let print some stuff
                 print "The file %s failed.\n" % options.filename
                 if options.verbose :

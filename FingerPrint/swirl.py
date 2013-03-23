@@ -86,6 +86,12 @@ class Swirl(object):
                 returnList.append(swirlFile)
         return returnList
 
+    def getDependencies(self):
+        """return a list with all the dependencies in this swirl"""
+        depList = set()
+        for i in self.execedFiles:
+            depList |= set(i.staticDependencies)
+        return depList
 
     def getDateString(self):
         """ return the creation time in a readable format"""
