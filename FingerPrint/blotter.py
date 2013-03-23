@@ -48,7 +48,7 @@ def getDependecyFromPID(pid, dynamicDependecies):
             # assumption: if we have a memory mapped area to a file and it is
             # executable then it is a shared library
             libPath = tokens[5].strip()
-            if libPath not in dynamicDependecies[binaryFile]:
+            if libPath not in dynamicDependecies[binaryFile] and libPath != binaryFile:
                 dynamicDependecies[binaryFile].append( libPath )
 
 
