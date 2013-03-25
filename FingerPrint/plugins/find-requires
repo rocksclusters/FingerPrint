@@ -46,6 +46,9 @@ if [ "$needed" -eq 0 ]; then
 	    printf "%s'$lib64'\n", $1
 	}
     }'
+    # Clem
+    # add dynamic loader dependency
+    ldd $f |  awk '$0 !~ /=>/ { n=split($1,path,"/"); print path[n] "()'$lib64'"}'
   done | xargs -r -n 1 basename | sort -u
 
 #
@@ -92,7 +95,11 @@ for f in $liblist $exelist ; do
 	    print LIBNAME "(" $4 ")'$lib64'";
 	}
     '
+    # Clem
+    # add dynamic loader dependency
+    [ -x $f ] &&  ldd $f |  awk '$0 !~ /=>/ { n=split($1,path,"/"); print path[n] "()'$lib64'"}'
 done | sort -u
+
 
 
 exit 0
