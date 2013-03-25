@@ -162,7 +162,7 @@ class Sergeant:
         given file is nor required in this swirl it return None"""
         returnFilelist = []
         for execSwirlFile in self.swirl.execedFiles:
-            for swDepFile in self.swirl.getListSwirlFilesDependent(execSwirlFile):
+            for swDepFile in self.swirl.getListSwirlFilesDependentStaticAndDynamic(execSwirlFile):
                 if fileName in swDepFile.getPaths():
                     returnFilelist.append(execSwirlFile.path)
         return returnFilelist

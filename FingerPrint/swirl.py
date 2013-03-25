@@ -63,18 +63,57 @@ class Swirl(object):
         return None
 
 
-    def getListSwirlFilesDependent(self, swirlFile):
+    def getListSwirlFilesDependentStaticAndDynamic(self, swirlFile):
         """given a swirlFile it returns a list of all its required swirlfiles
-        It includes both static and dynamic dependencies """
-        returnList = self.getListSwirlFileProvide(swirlFile.staticDependencies)
+        It includes both static recursive and dynamic dependencies """
+        returnList = self.getListSwirlFilesDependentStatic(swirlFile)
         for swF in swirlFile.dynamicDependencies:
             if swF not in returnList:
                 returnList.append(swF)
         return returnList
 
+
+    def getListSwirlFilesDependentStatic(self, swirlFile):
+        """given a swirlFile it return a list of all the recursively required dependent
+        swirlFiles (only static)
+
+        it _recursively_ find all the required swirlFile invoking getListSwirlFile
+        until all dependencies and dependencies of dependencies are resolved (when the
+        loader start program 'a' which depend on lib 'b' which in its turn depends on
+        lib 'c', the loader will load a, b, and c at the same time).  """
+
+        returnList = []
+        provides = set()
+
+        # verifySubDepList list of deps we need to verify in this loop
+        verifySubDepList = [swirlFile]
+        # new verifySubDepList list of deps we need to verify in the next loop
+        newVerifySubDepList = []
+        while verifySubDepList :
+            # I need another temporary list to accumulate the new dependency
+            for swF in verifySubDepList:
+                if not set(swF.staticDependencies).issubset( provides ):
+                    # we found an unmet dependency
+                    newDeps = self.getListSwirlFileProvide(swF.staticDependencies, returnList )
+                    # add the new dependencies to the return list and to the list for the new loop
+                    returnList += newDeps
+                    newVerifySubDepList += newDeps
+                    for newDep in newDeps:
+                        provides |= set(newDep.provides)
+            verifySubDepList = newVerifySubDepList
+            newVerifySubDepList = []
+        return returnList
+
+
     def getListSwirlFileProvide(self, dependencies, excludeSwirlFile=[]):
-        """return a list of swirl file if found in the current swirl which
-        can satisfy the given list of dependencies
+        """return a list of swirl file if found in the current swirl which can satisfy
+        the given list of dependencies
+
+        This function does not find recursive dependencies like
+        getListSwirlFilesDependentStatic and getListSwirlFilesDependentStaticAndDynamic
+
+        Parameters:
+        ----------
 
         `dependency' a list of Dependency which should be satisfied
         `exludeSwirlFile' a list of swirlfile which should be excluded from the returned list """
@@ -97,6 +136,8 @@ class Swirl(object):
         """ return the creation time in a readable format"""
         return self.creationDate.strftime("%Y-%m-%d %H:%M")
 
+
+
     def printMinimal(self):
         """ """
         #header
@@ -105,7 +146,7 @@ class Swirl(object):
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += str(swF) + '\n'
-            for provider in self.getListSwirlFileProvide(swF.staticDependencies):
+            for provider in self.getListSwirlFilesDependentStatic(swF):
                 retStr += "  " + str(provider) + '\n'
             for swFile in swF.dynamicDependencies:
                 retStr += "  " + str(swFile) + ' --(Dyn)--\n'
@@ -119,7 +160,7 @@ class Swirl(object):
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += swF.printVerbose()
-            for provider in self.getListSwirlFileProvide(swF.staticDependencies):
+            for provider in self.getListSwirlFilesDependentStatic(swF):
                 retStr += provider.printVerbose("  ")
             for swFile in swF.dynamicDependencies:
                 retStr += swFile.printVerbose("  ", "--(Dyn)--")

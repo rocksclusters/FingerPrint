@@ -109,14 +109,14 @@ class Blotter:
                 newSwirlFileDependency = PluginManager.getSwirl(dynamicDepFile, self.swirl)
                 #I need to verify it if is static dep or dynamic dep
                 #TODO need to optimize this
-                swirlDependencies = self.swirl.getListSwirlFileProvide(swirlFile.staticDependencies)
+                swirlDependencies = self.swirl.getListSwirlFilesDependentStatic( swirlFile )
                 if newSwirlFileDependency.path not in [x.path for x in swirlDependencies]:
                     swirlFile.dynamicDependencies.append(newSwirlFileDependency)
 
         #let's see if it used some Data files
         for binary in files:
             swirlFile = self.swirl.createSwirlFile(binary)
-            allDependencies = self.swirl.getListSwirlFilesDependent(swirlFile)
+            allDependencies = self.swirl.getListSwirlFilesDependentStaticAndDynamic(swirlFile)
             allFiles = [ x.getPaths() for x in allDependencies ]
             for fileName in files[binary]:
                 if fileName not in allFiles:
