@@ -7,7 +7,7 @@
 # 
 #
 
-import os, string
+import os, string, stat
 
 from swirl import Swirl
 import utils
@@ -52,6 +52,13 @@ def getHash(fileName, fileType):
     """Given a valid fileName it returns a string containing a md5sum
     of the file content. If we are running on a system which prelink
     binaries (aka RedHat based) the command prelink must be on the PATH"""
+    # let's skip weird stuff
+    if fileName.startswith("/proc") or fileName.startswith("/sys/"):
+        return ""
+    if not stat.S_ISREG( os.stat(fileName).st_mode  ):
+        # probably a socket, fifo, or similar
+        return ""
+
     global _isPrelink
     if _isPrelink == None:
         #first execution let's check for prelink
@@ -70,7 +77,7 @@ def getHash(fileName, fileType):
             #undoing prelinking failed for some reasons
             pass
     try:
-        #ok let's do standard md5sum
+        # ok let's do standard md5sum
         fd=open(fileName)
         md=md5()
         md.update(fd.read())
