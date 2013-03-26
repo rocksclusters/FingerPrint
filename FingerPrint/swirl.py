@@ -150,6 +150,10 @@ class Swirl(object):
                 retStr += "  " + str(provider) + '\n'
             for swFile in swF.dynamicDependencies:
                 retStr += "  " + str(swFile) + ' --(Dyn)--\n'
+            if swF.openedFiles:
+                retStr += "    Opened files:\n"
+                for swFile in swF.openedFiles:
+                    retStr += "    " + str(swFile) + '\n'
         return retStr
 
     def printVerbose(self):
@@ -164,6 +168,10 @@ class Swirl(object):
                 retStr += provider.printVerbose("  ")
             for swFile in swF.dynamicDependencies:
                 retStr += swFile.printVerbose("  ", "--(Dyn)--")
+            if swF.openedFiles:
+                retStr += "    Opened files:\n"
+                for swFile in swF.openedFiles:
+                    retStr += swFile.printVerbose("    ")
         return retStr
 
 
