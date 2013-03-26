@@ -134,7 +134,16 @@ class Sergeant:
         for swF in self.swirl.execedFiles:
             for dep in swF.staticDependencies:
                 path = PluginManager.getPathToLibrary(dep)
-                if not path or path in pathCache:
+                if not path:
+                    # error `
+                    tmpStr = str(dep)
+                    if verbose:
+                        tmpStr += " unable to find its file"
+                    self.error.append(tmpStr)
+                    returnValue = False
+                    continue
+                if path in pathCache:
+                    #we already did this file
                     continue
                 hash = getHash(path, dep.type)
                 pathCache.append(path)
