@@ -177,13 +177,11 @@ class Sergeant:
     def getDotFile(self):
         """return a dot representation of this swirl
         """
-        retString = "digraph FingerPrint {\n  rankdir=LR;nodesep=0.15; ranksep=0.1; fontsize=26;label =\""
-        retString += self.swirl.name + " " + self.swirl.getDateString()
-        retString += "\";\n"
-        retString += "  labelloc=top;\n"
         clusterExec = []
-        clusterLinker = []
+        clusterSoname = set()
+        clusterLinker = set()
         clusterPackage = []
+        newDependencies = []
         connections = ""
         for execedSwirlFile in self.swirl.execedFiles:
             clusterExec.append( getShortPath( execedSwirlFile.path ) )
@@ -191,8 +189,8 @@ class Sergeant:
             for soname in dependenciesDict:
                 # get the dep which satisfy the soname
                 depSwf = self.swirl.getListSwirlFileProvide( [dependenciesDict[soname][0]] )[0]
+                newDependencies.append(depSwf)
                 fileName = getShortPath(depSwf.path)
-                packageName = '"' + depSwf.package + '"'
                 # depName is soname\nversion1\nversion2\nversion3 etc.
                 depNameStr = '"' + soname  + string.join(
                         [ dep.minor for dep in dependenciesDict[soname] ], '\\n') + '"'
@@ -205,38 +203,58 @@ class Sergeant:
                 if newConnection not in connections:
                     connections += newConnection
                 # filename -> packagename
-                newConnection = '  ' + fileName
-                newConnection += ' -> ' + packageName + ';\n'
-                if newConnection not in connections:
-                    connections += newConnection
-                # need to get the index of the color scheme for this package
-                # which is also the index of the clusterPackage list
-                colorIndex = 0
-                for index, package in enumerate(clusterPackage):
-                    if packageName in package:
-                        # color scheme312 has 12 colors in it
-                        colorIndex = (index % 12) + 1
-                        break
-                if colorIndex == 0:
-                    # we need have a new color
-                    colorIndex = (len(clusterPackage) % 12) + 1
-                    clusterPackage.append(packageName + " [color=\"%d\"]"
-                            % colorIndex )
-                clusterLinker.append(depNameStr + " [color=\"%d\"]" % colorIndex)
-                clusterLinker.append(fileName + \
-                        " [color=\"%d\"]" % colorIndex )
+                if depSwf.package :
+                    packageName = '"' + depSwf.package + '"'
+                    newConnection = '  ' + fileName
+                    newConnection += ' -> ' + packageName + ';\n'
+                    if newConnection not in connections:
+                        connections += newConnection
+                else:
+                    packageName = None
+                colorStr = self._getColor(packageName, clusterPackage)
+                # these are sets so no need to check for duplicate
+                clusterSoname.add(depNameStr + colorStr)
+                clusterLinker.add(fileName + colorStr )
+
+        #TODO secondary dependencies
+        #for swf in newDependencies:
+            for dynDep in execedSwirlFile.dynamicDependencies:
+                # create a dynamic dependencies
+                fileName = getShortPath(dynDep.path)
+                # swirlfile -> synDepPath
+                connections += '  ' + getShortPath(execedSwirlFile.path)
+                connections += ' -> ' + fileName + ';\n'
+                if dynDep.package :
+                    packageName = '"' + dynDep.package + '"'
+                    newConnection = '  ' + fileName
+                    newConnection += ' -> ' + packageName + ';\n'
+                    if newConnection not in connections:
+                        connections += newConnection
+                else:
+                    packageName = None
+                colorStr = self._getColor(packageName, clusterPackage)
+                # these are sets so no need to check for duplicate
+                clusterSoname.add(depNameStr + colorStr)
+                clusterLinker.add(fileName + colorStr )
+
+        retString = "digraph FingerPrint {\n  rankdir=LR;nodesep=0.15; ranksep=0.1; fontsize=26;label =\""
+        retString += self.swirl.name + " " + self.swirl.getDateString()
+        retString += "\";\n"
+        retString += "  labelloc=top;\n"
         # execution section
         retString += '  {\n'
         retString += '    rank=same;\n'
         retString += '    "Execution Domain" [shape=none fontsize=26];\n'
-        retString += '    node [shape=hexagon];\n'
+        retString += '    node [shape=hexagon fontsize=12];\n'
         retString += '    ' + string.join(clusterExec, ';\n    ') + ";\n"
         retString += "  }\n"
         # linker section
         retString += '  subgraph cluster_linker {\n'
         retString += '    label="";\n'
         retString += '    "Linker Domain" [shape=none fontsize=26];\n'
-        retString += '    node [style=filled colorscheme=set312];\n'
+        retString += '    node [style=filled colorscheme=set312 fontsize=12];\n'
+        retString += '    ' + string.join(clusterSoname, ';\n    ') + ';\n'
+        retString += '    rank=same;\n'
         retString += '    ' + string.join(clusterLinker, ';\n    ') + ';\n'
         retString += "  }\n"
 
@@ -244,7 +262,7 @@ class Sergeant:
         retString += '  {\n'
         retString += '    rank=same;\n'
         retString += '    "Package Domain" [shape=none style="" fontsize=26];\n'
-        retString += '    node [shape=box style=filled colorscheme=set312];\n'
+        retString += '    node [shape=box style=filled colorscheme=set312 fontsize=12];\n'
         retString += '    ' + string.join(clusterPackage, ';\n    ') + ';\n'
         retString += '  }\n'
 
@@ -254,6 +272,29 @@ class Sergeant:
         retString += "\n}"
 
         return retString
+
+
+    def _getColor(self, packageName, clusterPackage):
+        """return the color number associated with the given packageName"""
+        # need to get the index of the color scheme for this package
+        # which is also the index of the clusterPackage list
+        if not packageName:
+            #no package get gray
+            return " [color=\"gray\"]"
+        colorIndex = 0
+        for index, package in enumerate(clusterPackage):
+            if packageName in package:
+                # color scheme312 has 12 colors in it
+                colorIndex = (index % 12) + 1
+                break
+        if colorIndex == 0:
+            # we need have a new color
+            colorIndex = (len(clusterPackage) % 12) + 1
+            clusterPackage.append(packageName + " [color=\"%d\"]"
+                    % colorIndex )
+        colorStr = " [color=\"%d\"]" % colorIndex
+        return colorStr
+
 
 
     def getError(self):
