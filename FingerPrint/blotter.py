@@ -181,7 +181,7 @@ class Blotter:
         """given a path it return the package which provide that 
         path if if finds one only debian system"""
         cmd1 = ['dpkg', '-S']
-        cmd2 = ['dpkg-query', '--show', "-f='${Package} ${Version} ${Architecture}'", ]
+        cmd2 = ['dpkg-query', '--show', "-f=${Package}\ ${Version}\ ${Architecture}", ]
         try:
             (package, returncode) = getOutputAsList(cmd1 + [path])
         except subprocess.CalledProcessError:
