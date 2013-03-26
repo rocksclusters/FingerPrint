@@ -107,7 +107,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-y'] ), 0,
             msg="fingerprint-verify: failed to verify swirl created on this system %s" % outputfilename)
         #let's test the integrity of the dependency
-        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-i'] ), 0,
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-yi'] ), 0,
             msg="fingerprint-verify: failed to verify the integrity of the swirl created on this system %s" % outputfilename)
         self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-q', '-S', '/usr/libsomeweirdlib.so.2'] ), 1,
             msg="fingerprint-query: failed to query swirl for non existent library")
@@ -125,7 +125,7 @@ class TestSequenceFunctions(unittest.TestCase):
             msg="fingerprint-create: the output file %s was not created properly" % outputfilename )
         #let's check the csv file creation
         csvfile = 'test.csv'
-        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-i', '-s', csvfile]), 0,
+        self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-yi', '-s', csvfile]), 0,
             msg="fingerprint-verify: failed to create csv file %s" % csvfile)
         self.assertEqual( subprocess.call(['python', './bin/fingerprint', '-y', '-s', csvfile]), 0,
             msg="fingerprint-verify: failed to create csv file %s" % csvfile)
