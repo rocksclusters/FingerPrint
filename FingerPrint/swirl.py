@@ -306,8 +306,8 @@ class SwirlFile(Arch):
         for i in transformList:
             if i.major not in retDict.keys():
                 retDict[i.major] = []
-            if i.minor not in retDict[i.major]:
-                retDict[i.major].append(i.minor)
+            if i not in retDict[i.major]:
+                retDict[i.major].append(i)
         return retDict
 
 
