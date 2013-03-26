@@ -68,12 +68,13 @@ To get some help on the command line you can simply type:
 
     # fingerprint -h
 
-Basically there are four main actions fingerprint can do:
+Basically there are four main actions fingerprint can do (-c create, -d disaply,
+-q query, and -y verify):
 
- 1. Create a swirl from a set of input file (flag -c). In this mode
-    fingerprint will scan the list of files passed on the command line
-    and it will write a swirl file containing all the dependency detected 
-    in the files.
+ 1. Create a swirl from a set of input file (flag -c) or with dynamic tracing.
+    In this mode fingerprint will scan the list of files passed on the command
+    line or it will (-x) trace the execution of the command specified to output
+    a swirl file containing the dependencies fingerprint of the given input.
 
  2. Display the content of a swirl file (flag -d). In this mode fingerprint
     will print to stdout a detailed description of the input swirl. The input
@@ -85,14 +86,13 @@ Basically there are four main actions fingerprint can do:
     also print to stdout more information regarding the query.
 
  4. Verify a swirl (flag -y). In this mode fingerprint scan the current system
-    for the dependencies listed in the input swirl and return 0 if they were 
-    all found or 1 if some of then are unavailable. If verbose flag is given 
-    it will print also a list of unmet dependencies.
-
- 5. Integrity check (flag -i). In this mode fingerprint scans the system were
-    it is invoked and checks if any of the dependencies listed in the input 
-    swirl have been modified since its creation (to this purpose it uses the 
-    checksums stored in the swirl). It return 0 upon success or 1 in case of 
+    for the dependencies listed in the input swirl and return 0 if they were
+    all found or 1 if some of then are unavailable. If verbose flag is given
+    it will print also a list of unmet dependencies. Above the verify it is also
+    possible to perform an integrity check. In this mode fingerprint scans the
+    system where invoked and checks if any of the dependencies listed in the
+    input swirl have been modified since its creation (to this purpose it uses
+    the checksums stored in the swirl). It return 0 upon success or 1 in case of
     failure, with the verbose flag it prints also a list of modified files.
 
 Examples
