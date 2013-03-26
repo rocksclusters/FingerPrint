@@ -36,18 +36,6 @@ class ElfPlugin(PluginManager):
     _RPM_FIND_DEPS=os.path.dirname( globals()["__file__"] ) + "/find-requires"
     _RPM_FIND_PROV=os.path.dirname( globals()["__file__"] ) + "/find-provides"
 
-
-    @classmethod
-    def isDepsatisfied(cls, dependency):
-        """verify that the dependency passed can be satified on this system
-        and return True if so
-        """
-        if cls.getPathToLibrary(dependency):
-            return True
-        else:
-            return False
-
-
     @classmethod
     def getPathToLibrary(cls, dependency):
         """ given a dependency it find the path of the library which provides 
@@ -82,7 +70,6 @@ class ElfPlugin(PluginManager):
                 return provider
         #the dependency could not be located
         return None
-
 
 
     @classmethod

@@ -120,7 +120,7 @@ class Sergeant:
         returnValue = True
         PluginManager.addSystemPaths(self.extraPath)
         for dep in self.swirl.getDependencies():
-            if not PluginManager.isDepsatisfied(dep):
+            if not PluginManager.getPathToLibrary(dep):
                 self.error.append(dep.getName())
                 returnValue = False
         return returnValue

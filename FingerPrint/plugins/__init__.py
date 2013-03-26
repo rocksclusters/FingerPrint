@@ -41,8 +41,8 @@ class PluginManager(object):
     attributes/methods:
 
     pluginName: this must be a unique string representing the plugin name
-    isDepsatisfied: a classmethod which return True if the dependency can be 
-                satisfied or False if it can not
+    getPathToLibrary: a classmethod which return a file name pointing to the 
+                file which can provide the given dependnecy
     getSwirl: a classmethod that given a path to a file it return None if the 
                 file can not be handled by the given plugin or a SwirlFile 
                 with the dependency set if the plugin can handle the file
@@ -58,16 +58,6 @@ class PluginManager(object):
         """add additional path to the search for dependency """
         if paths :
             self.systemPath += paths
-
-    @classmethod
-    def isDepsatisfied(self, dependency):
-        """verify that the dependency passed can be satified on this system
-        and return True if so
-        """
-        # let get the plugin
-        # TODO catch exception key not found
-        plugin = self.plugins[dependency.type]
-        return plugin.isDepsatisfied( dependency )
 
     @classmethod
     def getSwirl(self, fileName, swirl):
@@ -89,9 +79,6 @@ class PluginManager(object):
     def getPathToLibrary(cls, dependency):
         """ given a dependency it find the path of the library which provides 
         that dependency """
-        #TODO only for ELF file
-        if dependency.type != "ELF":
-            return None
         plugin = cls.plugins[dependency.type]
         return plugin.getPathToLibrary(dependency)
 
