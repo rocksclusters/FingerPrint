@@ -113,14 +113,18 @@ class Blotter:
                 if newSwirlFileDependency.path not in [x.path for x in swirlDependencies]:
                     swirlFile.dynamicDependencies.append(newSwirlFileDependency)
 
-        #let's see if it used some Data files
-        for binary in files:
-            swirlFile = self.swirl.createSwirlFile(binary)
-            allDependencies = self.swirl.getListSwirlFilesDependentStaticAndDynamic(swirlFile)
-            allFiles = [ x.getPaths() for x in allDependencies ]
-            for fileName in files[binary]:
-                if fileName not in allFiles:
-                    swirlFile.openedFiles.append(fileName)
+        # let's see if it used some Data files
+        # excludeFileName: file whcih should be ingored and not added to the swirl
+        excludeFileName = ['/etc/ld.so.cache']
+        for execFile in files:
+            swirlFile = self.swirl.createSwirlFile(execFile)
+            allFiles=[]
+            for deps in self.swirl.getListSwirlFilesDependentStaticAndDynamic(swirlFile):
+                allFiles += deps.getPaths()
+            for openedFile in files[execFile]:
+                if openedFile not in excludeFileName and openedFile not in allFiles:
+                    newFileSwirl = self.swirl.createSwirlFile(openedFile)
+                    swirlFile.openedFiles.append(newFileSwirl)
         #hash and get package name
         for i in self.swirl.swirlFiles:
             i.md5sum = sergeant.getHash(i.path, i.type)
