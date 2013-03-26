@@ -135,8 +135,8 @@ class SyscallTracer:
                                     #absolute path let's save it
                                     procName = processesStatus[pid].getProcessName()
                                     if procName not in files:
-                                        files[procName] = []
-                                    files[procName].append(openPath)
+                                        files[procName] = set()
+                                    files[procName].add(openPath)
                             # else don't do anything
                             # TODO use close to check for used files (easier to trace full path)
 
