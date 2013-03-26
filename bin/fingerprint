@@ -220,10 +220,7 @@ def main():
         except IOError, e:
             parser.error("Unable to create the swirl file: " + str(e) + runHelp)
         if options.verbose:
-            print "swirl structure:\n", blotter.getSwirl()
-            #self.assertEqual(self.seq, range(10))
-            print "list of global dependencies:\n", blotter.getSwirl().getDependencies()
-            print "list of global provides:\n", blotter.getSwirl().getProvides()
+            print "swirl structure:\n", blotter.getSwirl().printMinimal()
         if options.filename:
             #this should be always true
             outputfd = open(options.filename, 'w')
