@@ -185,25 +185,30 @@ class Sergeant:
         clusterLinker = []
         clusterPackage = []
         connections = ""
-        for swirlFile in self.swirl.swirlFiles:
-            clusterExec.append(getShortPath(swirlFile.path))
-            for soname, versions in swirlFile.getOrderedDependencies().iteritems():
-                for i in swirlFile.dependencies:
-                    if i.getName().startswith(soname):
-                        fileName = i.pathList[0]
-                        packageName = '"' + i.packageList[-1].strip("'") + '"'
+        for execedSwirlFile in self.swirl.execedFiles:
+            clusterExec.append( getShortPath( execedSwirlFile.path ) )
+            dependenciesDict = execedSwirlFile.getDependenciesDict()
+            for soname in dependenciesDict:
+                # get the dep which satisfy the soname
+                depSwf = self.swirl.getListSwirlFileProvide( [dependenciesDict[soname][0]] )[0]
+                fileName = getShortPath(depSwf.path)
+                packageName = '"' + depSwf.package + '"'
+                # depName is soname\nversion1\nversion2\nversion3 etc.
+                depNameStr = '"' + soname  + string.join(
+                        [ dep.minor for dep in dependenciesDict[soname] ], '\\n') + '"'
                 # swirlfile -> soname
-                depNameStr = '"' + soname + string.join(versions, '\\n') + '"'
-                connections += '  ' + getShortPath(swirlFile.path)
+                connections += '  ' + getShortPath(execedSwirlFile.path)
                 connections += ' -> ' + depNameStr + ';\n'
                 # soname -> Filename
                 newConnection = '  ' + depNameStr
-                newConnection += ' -> ' + getShortPath(fileName) + ';\n'
+                newConnection += ' -> ' + fileName + ';\n'
                 if newConnection not in connections:
                     connections += newConnection
                 # filename -> packagename
-                connections += '  ' + getShortPath(fileName)
-                connections += ' -> ' + packageName + ';\n'
+                newConnection = '  ' + fileName
+                newConnection += ' -> ' + packageName + ';\n'
+                if newConnection not in connections:
+                    connections += newConnection
                 # need to get the index of the color scheme for this package
                 # which is also the index of the clusterPackage list
                 colorIndex = 0
@@ -218,7 +223,7 @@ class Sergeant:
                     clusterPackage.append(packageName + " [color=\"%d\"]"
                             % colorIndex )
                 clusterLinker.append(depNameStr + " [color=\"%d\"]" % colorIndex)
-                clusterLinker.append(getShortPath(fileName) + \
+                clusterLinker.append(fileName + \
                         " [color=\"%d\"]" % colorIndex )
         # execution section
         retString += '  {\n'
