@@ -237,16 +237,12 @@ def main():
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)
             except IOError, e:
                 parser.error("The file %s could not be opened on this system: %s." %
-			(options.filename, e) + runHelp)
+                            (options.filename, e) + runHelp)
             print "File name: ", options.filename
             if options.verbose :
                 print serg.printVerbose()
             else:
                 print serg.printMinimal()
-            #print "Global Dependencies:  " , \
-            #        FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getDependencies() )
-            #print "Global Provides:  ", \
-            #        FingerPrint.swirl.Dependency.printListDependencies( serg.getSwirl().getProvides() )
             if options.graph :
                 print "Writing dot file ", options.graph
                 outfile = open(options.graph, 'w')
