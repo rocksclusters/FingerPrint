@@ -59,12 +59,12 @@ def main():
     group.add_option("-y", "--verify", action="store_true", dest="verify",
                     default=False,
                     help="Scan the current system to verify compatibility with given swirl")
-    group.add_option("-i", "--integrity", action="store_true", dest="integrity",
+
+    #various option
+    parser.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the "
                     "given swirl (using md5sum)")
-
-    #various option
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE instead of the default output.swirl",
                     metavar="FILE")
@@ -106,10 +106,10 @@ def main():
     #
     # switch based on user input
     #
-    if (options.query + options.verify + options.create + options.display + options.integrity) > 1:
+    if (options.query + options.verify + options.create + options.display) > 1:
         #too many or too few flags
         parser.error("Only one of the flags " + requiredFlags + " must be used at a time" + runHelp )
-    elif (options.query + options.verify + options.create + options.display + options.integrity) < 1:
+    elif (options.query + options.verify + options.create + options.display) < 1:
 	parser.error("You must select one (and only one) required flags " + requiredFlags + runHelp )
 
     if options.verify or options.integrity :
@@ -150,7 +150,7 @@ def main():
             if options.verify :
                 operation = 'Verify'
                 returnValue = serg.check()
-            else :
+            elif options.integrity :
                 operation = 'Integrity'
                 returnValue = serg.checkHash()
             error = serg.getError()
@@ -181,15 +181,15 @@ def main():
                     for i in serg.getError():
                         print "    ", i
                 sys.exit(1)
-        elif options.integrity :
-            if not serg.checkHash( True ):
-                #error let print some stuff
-                print "The file %s failed.\n" % options.filename
-                if options.verbose :
-                    print "Modified Dependecies:"
-                    for i in serg.getError():
-                        print "     ", i
-                sys.exit(1)
+            if options.integrity :
+                if not serg.checkHash( True ):
+                    #error let print some stuff
+                    print "The file %s failed.\n" % options.filename
+                    if options.verbose :
+                        print "Modified Dependecies:"
+                        for i in serg.getError():
+                            print "     ", i
+                    sys.exit(1)
         else:
             print "Swirl %s pass the test" % options.filename
             return 0
