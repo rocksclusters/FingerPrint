@@ -64,6 +64,8 @@ class Blotter:
         """give a file list and a name construct a swirl into memory """
         self._detectedPackageManager() 
         self.swirl = Swirl(name, datetime.now())
+        if execCmd :
+            self.swirl.cmdLine = execCmd
         # 
         # dependencies discovered with dinamic methods
         # dynamicDependencies = { 'binarypath' : [list of file it depends to],

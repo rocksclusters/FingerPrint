@@ -239,6 +239,8 @@ class Sergeant:
 
         retString = "digraph FingerPrint {\n  rankdir=LR;nodesep=0.15; ranksep=0.1; fontsize=26;label =\""
         retString += self.swirl.name + " " + self.swirl.getDateString()
+        if self.swirl.cmdLine :
+            retString += ' \\"' + self.swirl.cmdLine.replace('"','\\"') + '\\"'
         retString += "\";\n"
         retString += "  labelloc=top;\n"
         # execution section

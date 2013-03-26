@@ -161,6 +161,8 @@ class Swirl(object):
         #header
         retStr = self.name + " " + self.getDateString() + "\n"
         #file list
+        if self.cmdLine :
+            retStr += " Command line: " + self.cmdLine + "\n"
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += swF.printVerbose()
