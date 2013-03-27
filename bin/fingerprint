@@ -4,9 +4,7 @@
 #
 
 from time import gmtime, strftime
-import os
-import StringIO
-import sys
+import os, sys, string
 from optparse import OptionParser, OptionGroup
 
 
@@ -263,7 +261,7 @@ def main():
             files = serg.checkDependencyPath(options.query_file)
             if files :
                 if options.verbose :
-                    print files
+                    print string.join(files, '\n')
                 return 0
             else:
                 # given file is not required by this swirl
