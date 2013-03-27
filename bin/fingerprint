@@ -38,7 +38,7 @@ def main():
     #
 
     runHelp = "\nRun \"fingerprint -h\" for more help."
-    requiredFlags = "[-q|-c|-y|-d|-i]"
+    requiredFlags = "[-q|-c|-d|-y]"
     usage = "usage: %prog " + requiredFlags + " [options|-f file.swirl] [inputfile1 ... inputfileN]"
     parser = OptionParser(usage, version=FingerPrint.version)
 
