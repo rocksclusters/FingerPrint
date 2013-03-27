@@ -357,10 +357,10 @@ class Dependency(Arch):
         """
         tempList = re.split('\(|\)',string)
         major = tempList[0]
-        minor = None
+        minor = ""
         if len(tempList) > 1 :
             #we have soname
-            minor = string.split('(')[1].split(')')[0]
+            minor = tempList[1]
         newDep = cls(major, minor)
         if len(tempList) > 3:
             #set the 32/64 bits 
@@ -382,8 +382,14 @@ class Dependency(Arch):
         return self.minor
 
     def getName(self):
-        """return soname(minor_version) """
-        return "" + self.major + "(" + self.minor + ")"
+        """return soname(minor_version)(arch) accordingly with the
+        find-require find-provides syntax"""
+        retString = self.major
+        if self.minor or self.is64bits() :
+            retString += "(" + self.minor + ")"
+        if self.is64bits() :
+            retString += "(64bit)"
+        return retString
 
     def __hash__(self):
         return hash(str(self.arch) + str(self.major) + str(self.minor) + str(self.hwcap))
