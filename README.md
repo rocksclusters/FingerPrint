@@ -120,48 +120,17 @@ their hash and local package name (that's what the swirl file saves)
 ```
 clem@sirius:~/projects/FingerPrint/temp$ fingerprint -d
 File name:  output.swirl
-Global Dependencies:   [
-    libacl.so.1()(64bit)
-        /lib/x86_64-linux-gnu/libacl.so.1
-        /lib/x86_64-linux-gnu/libacl.so.1.1.0 -
-003978a0b6b08cd6eb82e95cdf1e199c ('libacl1 2.2.51-5ubuntu1 amd64'),
-    libc.so.6()(64bit)
-        /lib/x86_64-linux-gnu/libc.so.6
-        /lib/x86_64-linux-gnu/libc-2.15.so -
-242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
-    libc.so.6(GLIBC_2.14)(64bit)
-        /lib/x86_64-linux-gnu/libc.so.6
-        /lib/x86_64-linux-gnu/libc-2.15.so -
-242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
-    libc.so.6(GLIBC_2.2.5)(64bit)
-        /lib/x86_64-linux-gnu/libc.so.6
-        /lib/x86_64-linux-gnu/libc-2.15.so -
-242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
-    libc.so.6(GLIBC_2.3)(64bit)
-        /lib/x86_64-linux-gnu/libc.so.6
-        /lib/x86_64-linux-gnu/libc-2.15.so -
-242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
-    libc.so.6(GLIBC_2.3.4)(64bit)
-        /lib/x86_64-linux-gnu/libc.so.6
-        /lib/x86_64-linux-gnu/libc-2.15.so -
-242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
-    libc.so.6(GLIBC_2.4)(64bit)
-        /lib/x86_64-linux-gnu/libc.so.6
-        /lib/x86_64-linux-gnu/libc-2.15.so -
-242b7faced71bb5eb0e74487d06b7daa ('libc6 2.15-0ubuntu10.3 amd64'),
-    librt.so.1()(64bit)
-        /lib/x86_64-linux-gnu/librt.so.1
-        /lib/x86_64-linux-gnu/librt-2.15.so -
-43a85e435df106454dd1bbc4ba175c90 ('libc6 2.15-0ubuntu10.3 amd64'),
-    librt.so.1(GLIBC_2.2.5)(64bit)
-        /lib/x86_64-linux-gnu/librt.so.1
-        /lib/x86_64-linux-gnu/librt-2.15.so -
-43a85e435df106454dd1bbc4ba175c90 ('libc6 2.15-0ubuntu10.3 amd64'),
-    libselinux.so.1()(64bit)
-        /lib/x86_64-linux-gnu/libselinux.so.1 -
-317e633a53dec5f82142ffa45cbabf77 ('libselinux1 2.1.0-4.1ubuntu1
-amd64')]
-Global Provides:   []
+Swirl 2013-03-27 10:22
+ -- File List -- 
+  /bin/ls
+    /lib/x86_64-linux-gnu/ld-2.15.so
+    /lib/x86_64-linux-gnu/libacl.so.1.1.0
+    /lib/x86_64-linux-gnu/libc-2.15.so
+    /lib/x86_64-linux-gnu/librt-2.15.so
+    /lib/x86_64-linux-gnu/libselinux.so.1
+    /lib/x86_64-linux-gnu/libattr.so.1.1.0
+    /lib/x86_64-linux-gnu/libpthread-2.15.so
+    /lib/x86_64-linux-gnu/libdl-2.15.so
 ```
 
 Scan the current system to verify compatibility with given swirl
@@ -175,7 +144,7 @@ Verify that none of the dependencies have been modified
 (it uses md5sum to check for changes).
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -i
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -yi
 ```
 
 You can run the same query on the swirl
