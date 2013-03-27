@@ -324,8 +324,9 @@ class SwirlFile(Arch):
         if self.package:
             retString += " - " + self.package
         retString += "\n"
-        retString += separator + "    Deps: " + str(self.getDependenciesDict().keys()) + "\n"
-        retString += separator + "    Provs: " + str(self.getProvidesDict().keys()) + "\n"
+        if self.type not in "Data":
+            retString += separator + "    Deps: " + str(self.getDependenciesDict().keys()) + "\n"
+            retString += separator + "    Provs: " + str(self.getProvidesDict().keys()) + "\n"
         return retString
 
 
