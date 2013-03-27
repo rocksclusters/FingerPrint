@@ -7,7 +7,7 @@
 # 
 
 from datetime import datetime
-import StringIO, os, re
+import string, os, re
 
 
 """Swirl hold in memory the representation of a swirl.
@@ -325,8 +325,8 @@ class SwirlFile(Arch):
             retString += " - " + self.package
         retString += "\n"
         if self.type not in "Data":
-            retString += separator + "    Deps: " + str(self.getDependenciesDict().keys()) + "\n"
-            retString += separator + "    Provs: " + str(self.getProvidesDict().keys()) + "\n"
+            retString += separator + "    Deps: " + string.join(self.getDependenciesDict().keys(), ', ') + "\n"
+            retString += separator + "    Provs: " + string.join(self.getProvidesDict().keys(), ', ') + "\n"
         return retString
 
 
