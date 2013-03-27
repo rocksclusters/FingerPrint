@@ -48,7 +48,7 @@ if [ "$needed" -eq 0 ]; then
     }'
     # Clem
     # add dynamic loader dependency
-    ldd $f |  awk '$0 !~ /=>/ { n=split($1,path,"/"); print path[n] "()'$lib64'"}'
+    ldd $f |  awk '{ if ($0 !~ /=>/ && $1 ~ /^\//) { n=split($1,path,"/"); print path[n] "'$lib64'"}}'
   done | xargs -r -n 1 basename | sort -u
 
 #
@@ -97,7 +97,7 @@ for f in $liblist $exelist ; do
     '
     # Clem
     # add dynamic loader dependency
-    [ -x $f ] &&  ldd $f |  awk '$0 !~ /=>/ { n=split($1,path,"/"); print path[n] "()'$lib64'"}'
+    [ -x $f ] &&  ldd $f |  awk ' { if ($0 !~ /=>/ && $1 ~ /^\// ) { n=split($1,path,"/"); print path[n] "()'$lib64'"}}'
 done | sort -u
 
 
