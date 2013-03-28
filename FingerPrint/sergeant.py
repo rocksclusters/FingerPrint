@@ -201,8 +201,7 @@ class Sergeant:
                 newDependencies.append(depSwf)
                 fileName = getShortPath(depSwf.path)
                 # depName is soname\nversion1\nversion2\nversion3 etc.
-                depNameStr = '"' + soname  + string.join(
-                        [ dep.minor for dep in dependenciesDict[soname] ], '\\n') + '"'
+                depNameStr = '"' + soname  +  '"'
                 # swirlfile -> soname
                 connections += '  ' + getShortPath(execedSwirlFile.path)
                 connections += ' -> ' + depNameStr + ';\n'
