@@ -124,9 +124,10 @@ class Blotter:
             for deps in self.swirl.getListSwirlFilesDependentStaticAndDynamic(swirlFile):
                 allFiles += deps.getPaths()
             for openedFile in files[execFile]:
-                if openedFile not in excludeFileName and openedFile not in allFiles:
-                    newFileSwirl = self.swirl.createSwirlFile(openedFile)
-                    swirlFile.openedFiles.append(newFileSwirl)
+                if openedFile not in excludeFileName:
+                    swirlOpenedFile = self.swirl.createSwirlFile(openedFile)
+                    if swirlOpenedFile.path not in allFiles:
+                        swirlFile.openedFiles.append(swirlOpenedFile)
         #hash and get package name
         for i in self.swirl.swirlFiles:
             i.md5sum = sergeant.getHash(i.path, i.type)
