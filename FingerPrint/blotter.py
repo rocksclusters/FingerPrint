@@ -130,8 +130,10 @@ class Blotter:
                         swirlFile.openedFiles.append(swirlOpenedFile)
         #hash and get package name
         for i in self.swirl.swirlFiles:
-            i.md5sum = sergeant.getHash(i.path, i.type)
-            i.package = self._getPackage(i.path)
+            if os.path.exists(i.path):
+                i.md5sum = sergeant.getHash(i.path, i.type)
+                #TODO do not call getPackage on /tmp /sys /proc files
+                i.package = self._getPackage(i.path)
 
 
     def getSwirl(self):

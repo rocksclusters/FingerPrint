@@ -53,7 +53,8 @@ def getHash(fileName, fileType):
     of the file content. If we are running on a system which prelink
     binaries (aka RedHat based) the command prelink must be on the PATH"""
     # let's skip weird stuff
-    if fileName.startswith("/proc") or fileName.startswith("/sys/"):
+    if fileName.startswith("/proc/") or fileName.startswith("/sys/") \
+        or fileName.startswith("/tmp"):
         return ""
     if not stat.S_ISREG( os.stat(fileName).st_mode  ):
         # probably a socket, fifo, or similar
