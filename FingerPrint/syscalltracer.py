@@ -131,12 +131,15 @@ class SyscallTracer:
                             returnValue = ctypes.c_long(regs.rax).value
                             if returnValue >= 0:
                                 openPath = self.readCString(regs.rdi, pid)
-                                if openPath[0] == '/':
-                                    #absolute path let's save it
-                                    procName = processesStatus[pid].getProcessName()
-                                    if procName not in files:
-                                        files[procName] = set()
-                                    files[procName].add(openPath)
+                                if openPath[0] != '/':
+                                    #relative path we need to get the pwd
+                                    print "relative path"
+                                    openPath = processesStatus[pid].getProcessCWD() + openPath
+                                procName = processesStatus[pid].getProcessName()
+                                if procName not in files:
+                                    files[procName] = set()
+                                files[procName].add(openPath)
+
                             # else don't do anything
                             # TODO use close to check for used files (easier to trace full path)
 
@@ -203,11 +206,10 @@ class SyscallTracer:
 
 
 class TracerControlBlock:
-    """hold data for tracing multiple processes
+    """hold data needed for tracing a processes
 
     Insiperd by strace code (strct tcb)). This structure hold the data we need to trace
-    the status of a proce with the SyscallTracer
-    """
+    the status of a proce with the SyscallTracer """
 
     def __init__(self, pid):
         self.pid = pid
@@ -216,6 +218,9 @@ class TracerControlBlock:
 
     def getProcessName(self):
         return os.readlink('/proc/' + str(self.pid) + '/exe')
+
+    def getProcessCWD(self):
+        return os.readlink('/proc/' + str(self.pid) + '/cwd')
 
 
 
