@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from distutils.core import setup
+from distutils.core import setup, Extension
 
 #
 # courtesy of Darren
@@ -47,6 +47,15 @@ class TestCommand(Command):
             sys.exit(-1)
 
 
+
+
+module1 = Extension('FingerPrint.stacktracer',
+                    #include_dirs = ['/usr/local/include'],
+                    #libraries = ['tcl83'],
+                    #library_dirs = ['/usr/local/lib'],
+                    sources = ['FingerPrint/stacktracer.c'])
+
+
 # 
 # main configuration of distutils
 # 
@@ -67,6 +76,7 @@ setup(
     #package_dir = {'FingerPrint': 'FingerPrint'},
     #needs this for detecting file type
     #py_modules=['magic'],
+    ext_modules = [module1],
     #the command line called by users    
     scripts=['bin/fingerprint'],
     #additional command to build this distribution
