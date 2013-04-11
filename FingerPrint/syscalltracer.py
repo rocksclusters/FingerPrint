@@ -18,6 +18,16 @@ import FingerPrint.utils
 
 import os, signal, ctypes
 
+
+
+try:
+    from FingerPrint.stacktracer import tracer
+except :
+    # no tracer compiled fall back to binary name
+    def tracer(self):
+        return self.getProcessName()
+
+
 class SyscallTracer:
     """this class can spawn a process and trace its' execution to check 
     what are its dynamic dependency requirements
@@ -32,6 +42,7 @@ class SyscallTracer:
 
 
     """
+
 
     def main(self, command, dependencies, files):
         """start the trace
@@ -135,7 +146,7 @@ class SyscallTracer:
                                     #relative path we need to get the pwd
                                     print "relative path"
                                     openPath = processesStatus[pid].getProcessCWD() + openPath
-                                procName = processesStatus[pid].getProcessName()
+                                procName = processesStatus[pid].getFileOpener()
                                 if procName not in files:
                                     files[procName] = set()
                                 files[procName].add(openPath)
@@ -221,6 +232,50 @@ class TracerControlBlock:
 
     def getProcessCWD(self):
         return os.readlink('/proc/' + str(self.pid) + '/cwd')
+
+    def getFileOpener(self):
+        """ return the path to the object who initiate the current open syscall
+
+        if FingerPrint is compiled with the stacktracer module it will find the
+        file object who contains the code which instantiate the open if not it will
+        return the path to the current process """
+        return tracer(self)
+
+        #if libunwind :
+        #    if not hasattr(self, 'unw_addr_space_ptr') :
+        #        #we need to create an address space
+        #        self.unw_addr_space_ptr = libunwind._UPT_create(self.pid);
+
+        #    # libunwind-x86_64.h size(unw_cursor_t) = 8 * 127 = 1016
+        #    cursor = ctypes.byref(  ctypes.create_string_buffer(1016) )
+
+        #    libunwind.unw_init_remote(cursor, libunwind_as, self.unw_addr_space_ptr)
+
+
+
+        #  unw_word_t ip;
+        #  int n = 0, ret;
+        #  unw_cursor_t c;
+        #
+        #  extern unw_addr_space_t libunwind_as;
+        #  EXITIF(unw_init_remote(&c, libunwind_as, tcp->libunwind_ui) < 0);
+        #  do {
+        #    EXITIF(unw_get_reg(&c, UNW_REG_IP, &ip) < 0);
+        #
+        #    print_normalized_addr(tcp, ip);
+        #
+        #    ret = unw_step(&c);
+        #
+        #    if (++n > 255) {
+        #      /* guard against bad unwind info in old libraries... */
+        #      fprintf(stderr, "libunwind warning: too deeply nested---assuming bogus unwind\n");
+        #      break;
+        #    }
+        #  } while (ret > 0);
+        #}
+
+        #return None
+
 
 
 
