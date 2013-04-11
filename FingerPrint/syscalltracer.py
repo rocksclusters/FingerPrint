@@ -23,9 +23,8 @@ import os, signal, ctypes
 try:
     from FingerPrint.stacktracer import tracer
 except :
-    # no tracer compiled fall back to binary name
-    def tracer(self):
-        return self.getProcessName()
+    # no tracer compiled fall back to binary namea
+    pass
 
 
 class SyscallTracer:
@@ -239,7 +238,10 @@ class TracerControlBlock:
         if FingerPrint is compiled with the stacktracer module it will find the
         file object who contains the code which instantiate the open if not it will
         return the path to the current process """
-        return tracer(self)
+        try:
+            return tracer(self.pid)
+        except:
+            return self.getProcessCWD()
 
         #if libunwind :
         #    if not hasattr(self, 'unw_addr_space_ptr') :
