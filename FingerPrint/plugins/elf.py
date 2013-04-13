@@ -84,7 +84,7 @@ class ElfPlugin(PluginManager):
 
     @classmethod
     def _setDepsRequs(cls, swirlFile, swirl):
-        """given a SwirlFile object it add to it all the dependency and all 
+        """given a SwirlFile object add all the dependency and all 
         the provides to it """
 
         #find deps

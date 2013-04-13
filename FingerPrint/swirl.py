@@ -144,16 +144,26 @@ class Swirl(object):
         retStr = self.name + " " + self.getDateString() + "\n"
         #file list
         retStr += " -- File List -- \n"
+        #OMG this is so hugly need to be fixed
         for swF in self.execedFiles:
             retStr += str(swF) + '\n'
-            for provider in self.getListSwirlFilesDependentStatic(swF):
-                retStr += "  " + str(provider) + '\n'
-            for swFile in swF.dynamicDependencies:
-                retStr += "  " + str(swFile) + ' --(Dyn)--\n'
             if swF.openedFiles:
                 retStr += "    Opened files:\n"
                 for swFile in swF.openedFiles:
                     retStr += "    " + str(swFile) + '\n'
+            for provider in self.getListSwirlFilesDependentStatic(swF):
+                retStr += "  " + str(provider) + '\n'
+                if provider.openedFiles:
+                    retStr += "      Opened files:\n"
+                    for swFile in provider.openedFiles:
+                        retStr += "      " + str(swFile) + '\n'
+            for provider in swF.dynamicDependencies:
+                retStr += "  " + str(provider) + ' --(Dyn)--\n'
+                if provider.openedFiles:
+                    retStr += "      Opened files:\n"
+                    for swFile in provider.openedFiles:
+                        retStr += "      " + str(swFile) + '\n'
+
         return retStr
 
     def printVerbose(self):
@@ -247,6 +257,13 @@ class SwirlFile(Arch):
         self.type = "Data"
         # i386 X86_64 noarch
         self.arch = None
+
+    def isLoader(self):
+        """ """
+        for i in self.provides :
+            if i.isLoader():
+                return True
+        return False
 
     def getPaths(self):
         """ return a list of path used by this SwirlFile"""
@@ -380,6 +397,12 @@ class Dependency(Arch):
 
     def getMinor(self):
         return self.minor
+
+    def isLoader(self):
+        """ return true if this is the loader"""
+        if self.major.startswith("ld-"):
+            return True
+        return False
 
     def getName(self):
         """return soname(minor_version)(arch) accordingly with the

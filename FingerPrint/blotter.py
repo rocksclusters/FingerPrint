@@ -105,7 +105,6 @@ class Blotter:
             swirlFile = PluginManager.getSwirl(fileName, self.swirl)
             #let's add it to the execed file list
             if swirlFile not in self.swirl.execedFiles:
-                print "adding file ", swirlFile.path
                 self.swirl.execedFile.append(swirlFile)
             for dynamicDepFile in dynamicDependecies[fileName]:
                 newSwirlFileDependency = PluginManager.getSwirl(dynamicDepFile, self.swirl)
@@ -120,7 +119,10 @@ class Blotter:
         excludeFileName = ['/etc/ld.so.cache']
         for execFile in files:
             swirlFile = self.swirl.createSwirlFile(execFile)
+            if swirlFile.isLoader() :
+                continue
             allFiles=[]
+            #TODO take this for loop out of the for execFile loop
             for deps in self.swirl.getListSwirlFilesDependentStaticAndDynamic(swirlFile):
                 allFiles += deps.getPaths()
             for openedFile in files[execFile]:
@@ -141,7 +143,7 @@ class Blotter:
         return self.swirl 
 
 
-    # TODO add a way to detach from executed programm
+    #TODO add a way to detach from executed programm
     def _straceCmd(self, execcmd, dynamicDependecies, files):
         """it execute the execmd with execve and then it trace process running and
         it adds all the dependency to the dynamicDependecies dictionary
@@ -149,7 +151,7 @@ class Blotter:
         try:
             from FingerPrint.syscalltracer import SyscallTracer
         except ImportError, e:
-            raise IOError("Dynamic tracing is not supported on this platform")
+            raise IOError("Dynamic tracing is not supported on this platform: ", e)
         tracer = SyscallTracer()
         #TODO check for errors
         execcmd = shlex.split(execcmd)
