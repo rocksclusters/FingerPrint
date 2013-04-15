@@ -50,10 +50,11 @@ class TestCommand(Command):
 
 
 module1 = Extension('FingerPrint.stacktracer',
-                    #include_dirs = ['/usr/local/include'],
-                    #libraries = ['tcl83'],
-                    #library_dirs = ['/usr/local/lib'],
-                    sources = ['FingerPrint/stacktracer.c'])
+    #these are imported from setup.cfg
+    #include_dirs = [' ']
+    #library_dirs = [' ']
+    libraries = ['unwind-ptrace', 'unwind-x86_64', 'unwind'],
+    sources = ['FingerPrint/stacktracer.c'])
 
 
 # 

@@ -1,0 +1,7 @@
+
+
+[build_ext]     
+# libunwind inlcude 
+include-dirs=$HOME/projects/FingerPrint/libunwind/libunwind/include
+# libunwind shared libraryes paths
+library-dirs=$HOME/projects/FingerPrint/libunwind/libunwind/src/.libs/
