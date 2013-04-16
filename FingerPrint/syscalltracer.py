@@ -16,7 +16,7 @@ from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 import FingerPrint.blotter
 import FingerPrint.utils
 
-import os, signal, ctypes
+import os, signal, ctypes, re
 
 
 
@@ -146,7 +146,7 @@ class SyscallTracer:
                                 if openPath[0] != '/':
                                     #relative path we need to get the pwd
                                     print "relative path"
-                                    openPath = processesStatus[pid].getProcessCWD() + openPath
+                                    openPath = processesStatus[pid].getProcessCWD() + '/' + openPath
                                 procName = processesStatus[pid].getFileOpener()
                                 if procName not in files:
                                     files[procName] = set()
@@ -258,7 +258,9 @@ class TracerControlBlock:
                 else:
                     # that's it, we just got out of first lib in the stack, lets
                     # see if we have a open or not
-                    if isOpen(current_lib, splitline[1], splitline[2]) :
+                    if current_lib not in objectFiles:
+                        objectFiles[current_lib] = ObjectFile(current_lib)
+                    if isOpen(objectFiles[current_lib], splitline[1], splitline[2]) :
                         return current_lib
                     else :
                         return prev_lib
@@ -266,13 +268,97 @@ class TracerControlBlock:
         return current_lib
 
 
-def isOpen(filename, offset, ip):
+
+objectFiles = {}
+
+class ObjectFile:
+    """ class that wrap an elf object file """ 
+
+    def __init__(self, filename):
+        """ """
+        self.filename = filename
+        (outputs, returncode) = FingerPrint.utils.getOutputAsList(["objdump", "-x", "-D", filename])
+        if returncode != 0 :
+            raise RuntimeError("objdump failed for file " + filename)
+        self.assembler = outputs
+
+    def isDynamic(self):
+        """ return true if this is a dynamic object aka shared library """
+        #we just check the first lines no need to scan the whole thing
+        for line in self.assembler[0:10]:
+            if "EXEC_P" in line:
+                return False
+            if "DYNAMIC" in line:
+                return True
+        raise RuntimeError("Unable to determine VMA for file " + self.filename)
+
+
+    def getInstruction(self, vma):
+        for line in self.assembler:
+            if re.match(" *" + vma + ":", line):
+                return self._decodeLine(line)
+        raise RuntimeError("Unable to determine VMA for file " + self.filename)
+
+
+    def getPrevInstruction(self, vma):
+        """ """
+        for line in self.assembler:
+            if re.match(" *" + vma + ":", line):
+                return self._decodeLine(prevLine)
+            prevLine = line
+        raise RuntimeError("Unable to determine VMA for file " + self.filename)
+
+
+    def _decodeLine(self, line):
+        # take out the address part
+        line = line[line.find(':') + 1:].lstrip()
+        while True:
+            if not re.match("[a-z0-9][a-z0-9] ", line[0:3]):
+                break
+            line = line[3:]
+        #we removed all the hex opcodes
+        line = line.lstrip()
+        tokens = line.split()
+        istr = tokens[0]
+        if len(tokens) > 0:
+            addr = line.split()[1]
+        else:
+            addr = ""
+        if len(tokens) > 1:
+            sym = line.split()[2]
+            sym = sym.rstrip('>')
+            sym = sym.lstrip('<')
+        else:
+            sym = ""
+        return (istr, addr, sym)
+
+
+
+
+def isOpen(objectFile, offset, ip):
     """TODO implement this with objdump
     """
-    return True
-
-
-
-
-
+    if objectFile.isDynamic():
+        vma=offset[2:]
+    else:
+        vma=ip[2:]
+    instruction = objectFile.getPrevInstruction(vma)
+    print "instruction ", instruction
+    if '@' in instruction[2]:
+        #it's point to the plt just remove the @plt
+        callname = instruction[2].split('@')[0]
+    elif len(instruction[3])>0 :
+        #we have a function call but it's not yet the external one
+        called_instruction = objectFile.getInstruction(instruction[2])
+        if 'jmp' in called_instruction[0]:
+            # we have a jump let's hope it goes to the plt
+            if '@' in instruction[2]:
+                callname = called_instruction[2].split('@')[0]
+        else:
+            return False
+    else:
+        # we don't know how to decode this situation
+        return False
+    if callname in ['fopen', '_IO_fopen', 'fopen64']:
+        return True
 
