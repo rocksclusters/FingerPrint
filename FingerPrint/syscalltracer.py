@@ -20,14 +20,13 @@ import os, signal, ctypes, re
 
 
 
-from FingerPrint.stacktracer import trace
-#try:
-#    from FingerPrint.stacktracer import tracer
-#except :
-#    # no tracer compiled fall back to binary namea
-#    print "unable to load tracer"
-#    pass
-#
+try:
+    from FingerPrint.stacktracer import trace
+except :
+    # no tracer compiled fall back to binary namea
+    print "unable to load tracer"
+    pass
+
 
 class SyscallTracer:
     """this class can spawn a process and trace its' execution to check 
@@ -259,7 +258,7 @@ class TracerControlBlock:
                     # see if we have a open or not
                     if current_lib not in objectFiles:
                         objectFiles[current_lib] = ObjectFile(current_lib)
-                    if isOpen(objectFiles[current_lib], splitline[1], splitline[2]) :
+                    if self._isOpen(objectFiles[current_lib], splitline[1], splitline[2]) :
                         return current_lib
                     else :
                         return prev_lib
@@ -267,11 +266,47 @@ class TracerControlBlock:
         return current_lib
 
 
+    def _isOpen(self, objectFile, offset, ip):
+        """return true if ip/offset are pointing to a open syscall for this 
+        objectfile
+        """
+        if objectFile.isDynamic():
+            # offset and ip are in the form of 0x45a3f2
+            vma=offset[2:]
+        else:
+            vma=ip[2:]
+        instruction = objectFile.getPrevInstruction(vma)
+        #print "instruction ", instruction, " file ", objectFile.filename, " ", offset, ip
+        if len(instruction[2]) == 0:
+            # we don't know how to decode this situation
+            return False
+        if '@' in instruction[2]:
+            #it's point to the plt just remove the @plt
+            callname = instruction[2].split('@')[0]
+        else :
+            #we have a function call but it's not pointing to the plt table yet
+            #so let's try to follow the code flow to see where it leads
+            called_instruction = objectFile.getInstruction(instruction[1])
+            if 'jmp' in called_instruction[0]:
+                # we have a jump let's hope it goes to the plt
+                if '@' in called_instruction[2]:
+                    callname = called_instruction[2].split('@')[0]
+                else:
+                    return False
+            else:
+                return False
+        # these are the system call that we trace for the moment
+        if callname in ['fopen', '_IO_fopen', 'fopen64', 'open64', 'open', '__open', 'open64', '__open64']:
+            return True
+        else:
+            return False
+
+
 
 objectFiles = {}
 
 class ObjectFile:
-    """ class that wrap an elf object file """ 
+    """class that wrap an elf object file and its assembler code""" 
 
     def __init__(self, filename):
         """ """
@@ -336,37 +371,3 @@ class ObjectFile:
 
 
 
-def isOpen(objectFile, offset, ip):
-    """return true if ip/offset are pointing to a open syscall for this 
-    objectfile
-    """
-    if objectFile.isDynamic():
-        # offset and ip are in the form of 0x45a3f2
-        vma=offset[2:]
-    else:
-        vma=ip[2:]
-    instruction = objectFile.getPrevInstruction(vma)
-    #print "instruction ", instruction, " file ", objectFile.filename, " ", offset, ip
-    if len(instruction[2]) == 0:
-        # we don't know how to decode this situation
-        return False
-    if '@' in instruction[2]:
-        #it's point to the plt just remove the @plt
-        callname = instruction[2].split('@')[0]
-    else :
-        #we have a function call but it's not pointing to the plt table yet
-        #so let's try to follow the code flow to see where it leads
-        called_instruction = objectFile.getInstruction(instruction[1])
-        if 'jmp' in called_instruction[0]:
-            # we have a jump let's hope it goes to the plt
-            if '@' in called_instruction[2]:
-                callname = called_instruction[2].split('@')[0]
-            else:
-                return False
-        else:
-            return False
-    # these are the system call that we trace for the moment
-    if callname in ['fopen', '_IO_fopen', 'fopen64', 'open64', 'open', '__open', 'open64', '__open64']:
-        return True
-    else:
-        return False
