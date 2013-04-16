@@ -145,7 +145,6 @@ class SyscallTracer:
                                 openPath = self.readCString(regs.rdi, pid)
                                 if openPath[0] != '/':
                                     #relative path we need to get the pwd
-                                    print "relative path"
                                     openPath = processesStatus[pid].getProcessCWD() + '/' + openPath
                                 procName = processesStatus[pid].getFileOpener()
                                 if procName not in files:
@@ -320,12 +319,14 @@ class ObjectFile:
         line = line.lstrip()
         tokens = line.split()
         istr = tokens[0]
-        if len(tokens) > 0:
-            addr = line.split()[1]
+        if len(tokens) > 1:
+            # we have an address
+            addr = tokens[1]
         else:
             addr = ""
-        if len(tokens) > 1:
-            sym = line.split()[2]
+        if len(tokens) > 2:
+            # we have a symbol
+            sym = tokens[2]
             sym = sym.rstrip('>')
             sym = sym.lstrip('<')
         else:
@@ -336,29 +337,36 @@ class ObjectFile:
 
 
 def isOpen(objectFile, offset, ip):
-    """TODO implement this with objdump
+    """return true if ip/offset are pointing to a open syscall for this 
+    objectfile
     """
     if objectFile.isDynamic():
+        # offset and ip are in the form of 0x45a3f2
         vma=offset[2:]
     else:
         vma=ip[2:]
     instruction = objectFile.getPrevInstruction(vma)
-    print "instruction ", instruction
+    #print "instruction ", instruction, " file ", objectFile.filename, " ", offset, ip
+    if len(instruction[2]) == 0:
+        # we don't know how to decode this situation
+        return False
     if '@' in instruction[2]:
         #it's point to the plt just remove the @plt
         callname = instruction[2].split('@')[0]
-    elif len(instruction[3])>0 :
-        #we have a function call but it's not yet the external one
-        called_instruction = objectFile.getInstruction(instruction[2])
+    else :
+        #we have a function call but it's not pointing to the plt table yet
+        #so let's try to follow the code flow to see where it leads
+        called_instruction = objectFile.getInstruction(instruction[1])
         if 'jmp' in called_instruction[0]:
             # we have a jump let's hope it goes to the plt
-            if '@' in instruction[2]:
+            if '@' in called_instruction[2]:
                 callname = called_instruction[2].split('@')[0]
+            else:
+                return False
         else:
             return False
-    else:
-        # we don't know how to decode this situation
-        return False
-    if callname in ['fopen', '_IO_fopen', 'fopen64']:
+    # these are the system call that we trace for the moment
+    if callname in ['fopen', '_IO_fopen', 'fopen64', 'open64', 'open', '__open', 'open64', '__open64']:
         return True
-
+    else:
+        return False
