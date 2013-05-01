@@ -22,10 +22,11 @@ import os, signal, ctypes, re
 
 try:
     from FingerPrint.stacktracer import trace
+    tracing = True
 except :
     # no tracer compiled fall back to binary namea
     print "unable to load tracer"
-    pass
+    tracing = False
 
 
 class SyscallTracer:
@@ -238,7 +239,7 @@ class TracerControlBlock:
         if FingerPrint is compiled with the stacktracer module it will find the
         file object who contains the code which instantiate the open if not it will
         return the path to the current process """
-        if 'trace' not in dir():
+        if not tracing:
             return self.getProcessName()
         libname = trace(self.pid)
         prev_lib = ""
