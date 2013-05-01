@@ -165,14 +165,13 @@ class Swirl(object):
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += swF.printVerbose()
+            retStr += swF.printOpenedFiles()
             for provider in self.getListSwirlFilesDependentStatic(swF):
                 retStr += provider.printVerbose("  ")
+                retStr += provider.printOpenedFiles("  ")
             for swFile in swF.dynamicDependencies:
                 retStr += swFile.printVerbose("  ", "--(Dyn)--")
-            if swF.openedFiles:
-                retStr += "    Opened files:\n"
-                for swFile in swF.openedFiles:
-                    retStr += swFile.printVerbose("    ")
+                retStr += swFile.printOpenedFiles("  ")
         return retStr
 
 
