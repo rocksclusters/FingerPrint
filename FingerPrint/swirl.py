@@ -144,26 +144,15 @@ class Swirl(object):
         retStr = self.name + " " + self.getDateString() + "\n"
         #file list
         retStr += " -- File List -- \n"
-        #OMG this is so hugly need to be fixed
         for swF in self.execedFiles:
             retStr += str(swF) + '\n'
-            if swF.openedFiles:
-                retStr += "    Opened files:\n"
-                for swFile in swF.openedFiles:
-                    retStr += "    " + str(swFile) + '\n'
+            retStr += swF.printOpenedFiles()
             for provider in self.getListSwirlFilesDependentStatic(swF):
                 retStr += "  " + str(provider) + '\n'
-                if provider.openedFiles:
-                    retStr += "      Opened files:\n"
-                    for swFile in provider.openedFiles:
-                        retStr += "      " + str(swFile) + '\n'
+                retStr += provider.printOpenedFiles("  ")
             for provider in swF.dynamicDependencies:
                 retStr += "  " + str(provider) + ' --(Dyn)--\n'
-                if provider.openedFiles:
-                    retStr += "      Opened files:\n"
-                    for swFile in provider.openedFiles:
-                        retStr += "      " + str(swFile) + '\n'
-
+                retStr += provider.printOpenedFiles("  ")
         return retStr
 
     def printVerbose(self):
@@ -345,6 +334,17 @@ class SwirlFile(Arch):
             retString += separator + "    Deps: " + string.join(self.getDependenciesDict().keys(), ', ') + "\n"
             retString += separator + "    Provs: " + string.join(self.getProvidesDict().keys(), ', ') + "\n"
         return retString
+
+
+    def printOpenedFiles(self, tabs=""):
+        """ return a string of opened file"""
+        retStr = ""
+        if self.openedFiles:
+            retStr += tabs + "    Opened files:\n"
+            for swFile in self.openedFiles:
+                retStr += tabs + "    " + str(swFile) + '\n'
+        return retStr
+
 
 
 
