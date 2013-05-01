@@ -48,13 +48,16 @@ def getShortPath(path):
 #this variable is use by getHash
 _isPrelink = None
 
+#let's skip proc sys tmp 
+specialFolders = ["/proc/","/sys/","/tmp"]
+
+
 def getHash(fileName, fileType):
     """Given a valid fileName it returns a string containing a md5sum
     of the file content. If we are running on a system which prelink
     binaries (aka RedHat based) the command prelink must be on the PATH"""
     # let's skip weird stuff
-    if fileName.startswith("/proc/") or fileName.startswith("/sys/") \
-        or fileName.startswith("/tmp"):
+    if any([ fileName.startswith(i) for i in specialFolders ]):
         return ""
     if not stat.S_ISREG( os.stat(fileName).st_mode  ):
         # probably a socket, fifo, or similar
