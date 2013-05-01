@@ -131,11 +131,14 @@ class Blotter:
                     if swirlOpenedFile.path not in allFiles:
                         swirlFile.openedFiles.append(swirlOpenedFile)
         #hash and get package name
-        for i in self.swirl.swirlFiles:
-            if os.path.exists(i.path):
-                i.md5sum = sergeant.getHash(i.path, i.type)
-                #TODO do not call getPackage on /tmp /sys /proc files
-                i.package = self._getPackage(i.path)
+        for swf in self.swirl.swirlFiles:
+            if os.path.exists(swf.path):
+                swf.md5sum = sergeant.getHash(swf.path, swf.type)
+                #TODO make this code nicer
+                if any([ swf.path.startswith(a) for a in sergeant.specialFolders ]):
+                    swf.package = None
+                else:
+                    swf.package = self._getPackage(swf.path)
 
 
     def getSwirl(self):
