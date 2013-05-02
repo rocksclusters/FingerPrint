@@ -139,7 +139,9 @@ class Swirl(object):
 
 
     def printMinimal(self):
-        """ """
+        """return a string representation of this swirl
+
+        this method is called by the -d flags"""
         #header
         retStr = self.name + " " + self.getDateString() + "\n"
         #file list
@@ -156,7 +158,9 @@ class Swirl(object):
         return retStr
 
     def printVerbose(self):
-        """ """
+        """return a verbose string representation of this swirl
+
+        this method is called by the -d -v flags"""
         #header
         retStr = self.name + " " + self.getDateString() + "\n"
         #file list
