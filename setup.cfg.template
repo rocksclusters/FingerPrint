@@ -1,7 +1,8 @@
 
 
 [build_ext]     
+# do not use shell variable they are not expanded :-(
 # libunwind inlcude 
-include-dirs=$HOME/projects/FingerPrint/libunwind/libunwind/include
+include-dirs=/home/clem/projects/FingerPrint/libunwind/libunwind/include
 # libunwind shared libraryes paths
-library-dirs=$HOME/projects/FingerPrint/libunwind/libunwind/src/.libs/
+library-dirs=/home/clem/projects/FingerPrint/libunwind/libunwind/src/.libs/
