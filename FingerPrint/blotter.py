@@ -117,19 +117,24 @@ class Blotter:
         # let's see if it used some Data files
         # excludeFileName: file whcih should be ingored and not added to the swirl
         excludeFileName = ['/etc/ld.so.cache']
-        for execFile in files:
-            swirlFile = self.swirl.createSwirlFile(execFile)
+        for lib_swFile in files:
+            swirlFile = self.swirl.createSwirlFile(lib_swFile)
             if swirlFile.isLoader() :
                 continue
-            allFiles=[]
-            #TODO take this for loop out of the for execFile loop
+            all_dependencies_files=[]
+            #TODO take this for loop out of the for lib_swFile loop
             for deps in self.swirl.getListSwirlFilesDependentStaticAndDynamic(swirlFile):
-                allFiles += deps.getPaths()
-            for openedFile in files[execFile]:
-                if openedFile not in excludeFileName:
-                    swirlOpenedFile = self.swirl.createSwirlFile(openedFile)
-                    if swirlOpenedFile.path not in allFiles:
-                        swirlFile.openedFiles.append(swirlOpenedFile)
+                all_dependencies_files += deps.getPaths()
+            for execFile in files[lib_swFile]:
+                for openedFile in files[lib_swFile][execFile]:
+                    # we need to remove some useless files from the opened list
+                    # if not depenedencies will be listed as opned files
+                    if openedFile not in excludeFileName:
+                        swirlOpenedFile = self.swirl.createSwirlFile(openedFile)
+                        if swirlOpenedFile.path not in all_dependencies_files:
+                            if execFile not in swirlFile.openedFiles:
+                                swirlFile.openedFiles[execFile] = []
+                            swirlFile.openedFiles[execFile].append(swirlOpenedFile)
         #hash and get package name
         for swf in self.swirl.swirlFiles:
             if os.path.exists(swf.path):

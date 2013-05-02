@@ -148,13 +148,13 @@ class Swirl(object):
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += str(swF) + '\n'
-            retStr += swF.printOpenedFiles()
+            retStr += swF.printOpenedFiles(swF.path)
             for provider in self.getListSwirlFilesDependentStatic(swF):
                 retStr += "  " + str(provider) + '\n'
-                retStr += provider.printOpenedFiles("  ")
+                retStr += provider.printOpenedFiles(swF.path, "  ")
             for provider in swF.dynamicDependencies:
                 retStr += "  " + str(provider) + ' --(Dyn)--\n'
-                retStr += provider.printOpenedFiles("  ")
+                retStr += provider.printOpenedFiles(swF.path, "  ")
         return retStr
 
     def printVerbose(self):
@@ -169,13 +169,13 @@ class Swirl(object):
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += swF.printVerbose()
-            retStr += swF.printOpenedFiles()
+            retStr += swF.printOpenedFiles(swF.path)
             for provider in self.getListSwirlFilesDependentStatic(swF):
                 retStr += provider.printVerbose("  ")
-                retStr += provider.printOpenedFiles("  ")
+                retStr += provider.printOpenedFiles(swF.path, "  ")
             for swFile in swF.dynamicDependencies:
                 retStr += swFile.printVerbose("  ", "--(Dyn)--")
-                retStr += swFile.printOpenedFiles("  ")
+                retStr += swFile.printOpenedFiles(swF.path, "  ")
         return retStr
 
 
@@ -227,7 +227,11 @@ class Arch:
 class SwirlFile(Arch):
     """
     describe a file which is tracked by this swirl
+
     at the moment only ELF aka binary file are really supported
+
+    1 swirlFile instance for each file in a given swirl for example if libabc is
+    used by /bin/ls and /bin/ps they will both point to the same instance of libabc
     """
     def __init__(self, path, links):
         """create a swirl file starting from a file name"""
@@ -242,7 +246,10 @@ class SwirlFile(Arch):
         self.provides=[]
         # list of Swirl files
         self.dynamicDependencies=[]
-        self.openedFiles=[]
+        # opened files is a dictionary composed of binFile -> list of opened file
+        # in this way we can track different opened file for each binFile with
+        # shared libs
+        self.openedFiles={}
         self.md5sum = None
         self.package = None
         # by default all files are data files (aka unknown type)
@@ -339,12 +346,12 @@ class SwirlFile(Arch):
         return retString
 
 
-    def printOpenedFiles(self, tabs=""):
-        """ return a string of opened file"""
+    def printOpenedFiles(self, execFile, tabs=""):
+        """ return a string of opened file by the given executable path execFile"""
         retStr = ""
-        if self.openedFiles:
+        if execFile in self.openedFiles:
             retStr += tabs + "    Opened files:\n"
-            for swFile in self.openedFiles:
+            for swFile in self.openedFiles[execFile]:
                 retStr += tabs + "    " + str(swFile) + '\n'
         return retStr
 

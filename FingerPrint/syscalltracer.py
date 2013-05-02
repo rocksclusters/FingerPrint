@@ -54,7 +54,10 @@ class SyscallTracer:
             processes e.g.: { 'binarypath' : [list of file it depends to],
             '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
             '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
-            `files' is a dictionary of opened files by the various processes
+            `files' is a dictionary of dictionary of opened files by the various processes
+             for example files[libraryA][executableB] and files[libraryA][executableC]
+             return respectively the list of opened file by the libraryA when run under
+             executableB and when run under executableC
 
         return false if something went wrong
         """
@@ -146,10 +149,12 @@ class SyscallTracer:
                                 if openPath[0] != '/':
                                     #relative path we need to get the pwd
                                     openPath = processesStatus[pid].getProcessCWD() + '/' + openPath
-                                procName = processesStatus[pid].getFileOpener()
-                                if procName not in files:
-                                    files[procName] = set()
-                                files[procName].add(openPath)
+                                libName = processesStatus[pid].getFileOpener()
+                                if libName not in files:
+                                    files[libName] = {}
+                                if processesStatus[pid].getProcessName() not in files[libName]:
+                                    files[libName][processesStatus[pid].getProcessName()] = set()
+                                files[libName][processesStatus[pid].getProcessName()].add(openPath)
 
                             # else don't do anything
                             # TODO use close to check for used files (easier to trace full path)
