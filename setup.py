@@ -47,14 +47,16 @@ class TestCommand(Command):
             sys.exit(-1)
 
 
-
-
-module1 = Extension('FingerPrint.stacktracer',
-    #these are imported from setup.cfg
-    #include_dirs = [' ']
-    #library_dirs = [' ']
-    libraries = ['unwind-ptrace', 'unwind-x86_64', 'unwind'],
-    sources = ['FingerPrint/stacktracer.c'])
+if os.path.exists("setup.cfg"):
+    module = [Extension('FingerPrint.stacktracer',
+        #these are imported from setup.cfg
+        #include_dirs = [' ']
+        #library_dirs = [' ']
+        libraries = ['unwind-ptrace', 'unwind-x86_64', 'unwind'],
+        sources = ['FingerPrint/stacktracer.c']
+        )]
+else:
+    module = []
 
 
 # 
@@ -77,7 +79,7 @@ setup(
     #package_dir = {'FingerPrint': 'FingerPrint'},
     #needs this for detecting file type
     #py_modules=['magic'],
-    ext_modules = [module1],
+    ext_modules = module,
     #the command line called by users    
     scripts=['bin/fingerprint'],
     #additional command to build this distribution
