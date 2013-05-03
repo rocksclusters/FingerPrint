@@ -45,8 +45,10 @@ def getShortPath(path):
     return returnValue + '/../' + os.path.basename(path) + '"'
 
 
-#this variable is use by getHash
-_isPrelink = None
+# do we have a prelinker? 
+# this variable is use by getHash and by the syscaltracer
+prelink = utils.which("prelink")
+
 
 #let's skip proc sys tmp 
 specialFolders = ["/proc/","/sys/","/tmp"]
@@ -63,18 +65,10 @@ def getHash(fileName, fileType):
         # probably a socket, fifo, or similar
         return ""
 
-    global _isPrelink
-    if _isPrelink == None:
-        #first execution let's check for prelink
-        _isPrelink = utils.which("prelink")
-        if _isPrelink == None:
-            _isPrelink = ""
-        else:
-            print "Using: ", _isPrelink
-    if fileType == 'ELF' and len(_isPrelink) > 0:
+    if fileType == 'ELF' and len(prelink) > 0:
         #let's use prelink for the md5sum
         #TODO what if isPrelink fails
-        (temp, returncode) = utils.getOutputAsList([_isPrelink, '-y', '--md5', fileName])
+        (temp, returncode) = utils.getOutputAsList([prelink, '-y', '--md5', fileName])
         if returncode == 0:
             return temp[0].split()[0]
         else:
