@@ -13,13 +13,20 @@ from swirl import Swirl
 import utils
 from FingerPrint.plugins import PluginManager
 from FingerPrint.serializer import PickleSerializer
-#compatibility with python2.4
+
+#
+# compatibility with python2.4
+#
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
 
-
+#
+# compatibility with python2.4
+#
+if "any" not in dir(__builtins__):
+    from FingerPrint.utils import any
 
 
 def readFromPickle(fileName):
