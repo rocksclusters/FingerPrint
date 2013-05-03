@@ -25,7 +25,7 @@ try:
     tracing = True
 except :
     # no tracer compiled fall back to binary namea
-    print "unable to load tracer"
+    print " - Unable to load stacktracer - "
     tracing = False
 
 
