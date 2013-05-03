@@ -10,14 +10,14 @@
 from FingerPrint.ptrace import func as ptrace_func
 import FingerPrint.ptrace.cpu_info
 import FingerPrint.ptrace.signames
-
-from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
-
 import FingerPrint.blotter
 import FingerPrint.utils
+import FingerPrint.sergeant
 
+import tempfile
 import os, signal, ctypes, re
-
+#TODO add logger
+from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
 
 try:
@@ -319,9 +319,19 @@ class ObjectFile:
     def __init__(self, filename):
         """ """
         self.filename = filename
+        if FingerPrint.sergeant.prelink :
+            # we need to undo the prelink
+            (fd, filename) = tempfile.mkstemp()
+            returncode = FingerPrint.utils.getOutputAsList(["prelink", "-u", "-o", \
+                                                              filename, self.filename])[1]
+            if returncode != 0 :
+                raise RuntimeError("unable to undo the prelink on " + self.filename)
         (outputs, returncode) = FingerPrint.utils.getOutputAsList(["objdump", "-x", "-D", filename])
         if returncode != 0 :
-            raise RuntimeError("objdump failed for file " + filename)
+            raise RuntimeError("objdump failed for file " + self.filename)
+        if FingerPrint.sergeant.prelink :
+            os.close(fd)
+            os.remove(filename)
         self.assembler = outputs
 
     def isDynamic(self):
