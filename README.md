@@ -159,6 +159,63 @@ clem@sirius:~/projects/FingerPrint/temp$ fingerprint -q -v -S
 libcrypt is not used
 ```
 
+Dynamic tracing
+---------------
+FingerPrint can dynamically trace a running process to properly detect dynamic
+dependencies.  To this extent it uses the posix ptrace system call and it can
+trace spwaned processes as well.
+
+Dynamic tracing can trace dynamically loaded shared libraries and opened files.
+If FingerPrint is compiled with stacktracer support (see blelow, TODO write doc)
+it can also detect which shared library initiated the open syscall. To dynamically
+trace a program run fingperprint with the '-c -x' flags:
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -c -x xeyes
+The fingerprint process 16131 going to trace 16134
+The process  16134  exited
+Tracing terminated successfully
+File output.swirl saved
+```
+
+When disaplying a Swirl created with the dynamics tracing it include information
+regarding open files and dynamically loaded libraries.
+
+```
+clem@sirius:~/projects/FingerPrint/temp$ fingerprint -d
+File name:  output.swirl
+Swirl 2013-05-03 12:00
+ -- File List --
+  /usr/bin/xeyes
+    /lib/x86_64-linux-gnu/ld-2.15.so
+    /lib/x86_64-linux-gnu/libc-2.15.so
+      Opened files:
+        /proc/meminfo
+        /usr/lib/locale/locale-archive
+    /lib/x86_64-linux-gnu/libm-2.15.so
+    /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+      Opened files:
+        /usr/share/X11/locale/C/XLC_LOCALE
+        /usr/share/X11/locale/locale.dir
+        /usr/share/X11/locale/locale.alias
+        /usr/share/X11/locale/en_US.UTF-8/XLC_LOCALE
+    /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
+    /usr/lib/x86_64-linux-gnu/libXmu.so.6.2.0
+    /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
+    /usr/lib/x86_64-linux-gnu/libXt.so.6.0.0
+    /lib/x86_64-linux-gnu/libdl-2.15.so
+    /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+    /usr/lib/x86_64-linux-gnu/libICE.so.6.3.0
+    /usr/lib/x86_64-linux-gnu/libSM.so.6.0.1
+    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+      Opened files:
+        /home/clem/.Xauthority
+    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+    /lib/x86_64-linux-gnu/libuuid.so.1.3.0
+    /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2 --(Dyn)--
+    /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0 --(Dyn)--
+
+```
 
 
 Authors and Contributors
