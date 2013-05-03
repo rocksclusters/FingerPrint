@@ -65,7 +65,7 @@ def getHash(fileName, fileType):
         # probably a socket, fifo, or similar
         return ""
 
-    if fileType == 'ELF' and len(prelink) > 0:
+    if fileType == 'ELF' and prelink:
         #let's use prelink for the md5sum
         #TODO what if isPrelink fails
         (temp, returncode) = utils.getOutputAsList([prelink, '-y', '--md5', fileName])
