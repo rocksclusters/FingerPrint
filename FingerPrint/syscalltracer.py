@@ -321,6 +321,9 @@ class ObjectFile:
         self.filename = filename
         if FingerPrint.sergeant.prelink :
             # we need to undo the prelink
+            # we could use also the IP instead of the offset in the _isOpen function
+            # instead of undoing the prelinking but then it would not work with prelinked
+            # and it would fail with non prelinked libraries (this way always works but is slower)
             (fd, filename) = tempfile.mkstemp()
             returncode = FingerPrint.utils.getOutputAsList(["prelink", "-u", "-o", \
                                                               filename, self.filename])[1]
