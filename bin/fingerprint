@@ -59,6 +59,10 @@ def main():
                     help="Scan the current system to verify compatibility with given swirl")
 
     #various option
+    parser.add_option("-a", "--search", action="store_true", dest="search",
+                    default=False,
+                    help="Use the \'module\' command line to search and display a "
+                    "list of modules able to sattisfy missing dependencies")
     parser.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the "
@@ -178,6 +182,10 @@ def main():
                     print "Missing Dependecies:"
                     for i in serg.getError():
                         print "    ", i
+                if options.search :
+                    #we have to search
+                    output = serg.search()
+                    print output
                 sys.exit(1)
             if options.integrity :
                 if not serg.checkHash( True ):

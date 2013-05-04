@@ -166,6 +166,13 @@ class Sergeant:
                     returnValue = False
         return returnValue
 
+    def search(self):
+        """search for missing dependencies using the 'module' command line
+
+        return a human readable string with a list of module which can sattisfy 
+        missing dependencies
+        """
+        return "test"
 
 
     def printVerbose(self):
