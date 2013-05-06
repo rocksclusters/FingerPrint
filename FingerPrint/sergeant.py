@@ -126,7 +126,7 @@ class Sergeant:
         PluginManager.addSystemPaths(self.extraPath)
         for dep in self.swirl.getDependencies():
             if not PluginManager.getPathToLibrary(dep):
-                self.error.append(dep.getName())
+                self.error.append(dep)
                 returnValue = False
         return returnValue
 
@@ -323,7 +323,7 @@ class Sergeant:
         """after running check or checkHash if they returned False this 
         function return a list with the dependencies name that failed
         """
-        return sorted(self.error)
+        return sorted([ i.getName() for i in self.error])
 
        
     def getSwirl(self):
