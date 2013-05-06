@@ -108,6 +108,7 @@ class Sergeant:
         self.swirl = swirl
         self.extraPath = extraPath
         self.error = []
+        self.missingDeps = []
 
     def setExtraPath(self, path):
         """path is a string containing a list of path separtated by :
@@ -120,13 +121,13 @@ class Sergeant:
         """actually perform the check on the system and return True if all 
         the dependencies can be satisfied on the current system
         """
-        self.error = []
+        self.missingDeps = []
         #remove duplicates
         returnValue = True
         PluginManager.addSystemPaths(self.extraPath)
         for dep in self.swirl.getDependencies():
             if not PluginManager.getPathToLibrary(dep):
-                self.error.append(dep)
+                self.missingDeps.append(dep)
                 returnValue = False
         return returnValue
 
@@ -323,7 +324,7 @@ class Sergeant:
         """after running check or checkHash if they returned False this 
         function return a list with the dependencies name that failed
         """
-        return sorted([ i.getName() for i in self.error])
+        return [ i.getName() for i in self.missingDeps] + self.error
 
        
     def getSwirl(self):
