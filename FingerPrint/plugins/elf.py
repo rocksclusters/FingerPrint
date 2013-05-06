@@ -57,7 +57,7 @@ class ElfPlugin(PluginManager):
                     if cls._checkMinor(provider, dependency.getName()):
                         cls._pathCache[dependency.getName()] = provider
                         return provider
-        pathToScan = cls.systemPath
+        pathToScan = cls.systemPath[:]
         if "LD_LIBRARY_PATH" in os.environ:
             #we need to scan the LD_LIBRARY_PATH too
             pathToScan += os.environ["LD_LIBRARY_PATH"].split(':')
