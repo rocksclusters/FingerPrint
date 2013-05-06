@@ -206,7 +206,12 @@ class Sergeant:
                             retDict[module].append(dep.getName())
         retStr = ""
         for mod in retDict:
-            retStr += "  " + mod + " satisfies:\n"
+            retStr += "  " + mod + " satisfies "
+            num_deps = len(retDict[mod])
+            if num_deps == len(self.missingDeps):
+                retStr += "all "
+            retStr += "" + str(num_deps) + " dependencies:\n"
+            # print the deps
             retStr += "    " + "\n    ".join(retDict[mod]) + "\n"
         return retStr
 
