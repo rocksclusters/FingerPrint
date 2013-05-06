@@ -170,10 +170,45 @@ class Sergeant:
     def search(self):
         """search for missing dependencies using the 'module' command line
 
-        return a human readable string with a list of module which can sattisfy 
+        return a human readable string with a list of module which can satisfy
         missing dependencies
+        self.check() must be called before this
         """
-        return "test"
+        # loop through all the modules
+        retDict = {}
+        (output, retval) = utils.getOutputAsList(["bash", "-c", "module -t avail 2>&1"])
+        if retval:
+            print "Unable to run module command, verify it\'s in the path."
+            return ""
+        for module in output :
+            # in the output there are some paths! remove them e.g. "/opt/module/blabla:"
+            if ':' in module:
+                continue
+            # remove (default)
+            module = module.rstrip("(default)")
+            (output, retval) = utils.getOutputAsList(["bash", "-c",
+                                                "module show " + module + " 2>&1"])
+            if retval:
+                #print "Unable to fetch module information: \'module show " + module + "\'"
+                # all module which depend on another module return 1
+                pass
+            for line in output:
+                if 'LD_LIBRARY_PATH' in line:
+                    # we found another path to scan
+                    path = line.split('LD_LIBRARY_PATH')[1]
+                    path = [i.strip() for i in path.split(":")] #strip
+                    PluginManager.systemPath = path # update path
+                    for dep in self.missingDeps:
+                        if PluginManager.getPathToLibrary(dep, False):
+                            #we found a candidate for this missing dependency
+                            if module not in retDict:
+                                retDict[module] = []
+                            retDict[module].append(dep.getName())
+        retStr = ""
+        for mod in retDict:
+            retStr += "  " + mod + " satisfies:\n"
+            retStr += "    " + "\n    ".join(retDict[mod]) + "\n"
+        return retStr
 
 
     def printVerbose(self):
