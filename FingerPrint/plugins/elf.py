@@ -37,11 +37,11 @@ class ElfPlugin(PluginManager):
     _RPM_FIND_PROV=os.path.dirname( globals()["__file__"] ) + "/find-provides"
 
     @classmethod
-    def getPathToLibrary(cls, dependency):
+    def getPathToLibrary(cls, dependency, useCache = True):
         """ given a dependency it find the path of the library which provides 
         that dependency """
         soname = dependency.getMajor()
-        if dependency.getName() in cls._pathCache :
+        if useCache and dependency.getName() in cls._pathCache :
             return cls._pathCache[dependency.getName()]
         #for each library we have in the system
         for line in getOutputAsList(["/sbin/ldconfig","-p"])[0]:
