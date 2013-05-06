@@ -185,7 +185,7 @@ def main():
                 if options.search :
                     #we have to search
                     output = serg.search()
-                    print output
+                    print "\nModule search:\n" + output
                 sys.exit(1)
             if options.integrity :
                 if not serg.checkHash( True ):
