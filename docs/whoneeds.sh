@@ -5,6 +5,8 @@
 # this script tell which one of the "declared" required shared libraries
 # (NEEDED entry in the elf dynamic section) is really necessary or not
 #
+# For an explanation of this problem: http://wiki.debian.org/ToolChain/DSOLinking
+#
 
 
 file=$1
