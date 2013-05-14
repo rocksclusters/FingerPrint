@@ -103,7 +103,7 @@ else:
             init_py = os.path.join(pth, mod_path)
             if mod_path.endswith('.py') and mod_path != '__init__.py' \
                 and os.path.isfile(init_py): 
-                nm = "FingerPrint.plugins.%s" % mod_path.rstrip('.py')
+                nm = "FingerPrint.plugins.%s" % mod_path.split('.py')[0]
                 try:
                     __import__(nm)
                 except:

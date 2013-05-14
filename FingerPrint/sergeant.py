@@ -185,7 +185,7 @@ class Sergeant:
             if ':' in module:
                 continue
             # remove (default)
-            module = module.rstrip("(default)")
+            module = module.split("(default)")[0]
             (output, retval) = utils.getOutputAsList(["bash", "-c",
                                                 "module show " + module + " 2>&1"])
             if retval:
