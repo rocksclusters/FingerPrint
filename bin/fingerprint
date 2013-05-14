@@ -207,9 +207,10 @@ def main():
                         for i in serg.getError():
                             print "     ", i
                     sys.exit(1)
-        else:
-            print "Swirl %s pass the test" % options.filename
-            return 0
+            if options.verbose:
+                print "Swirl %s pass the test" % options.filename
+            # return successful
+            return
 
 
     elif options.create :
