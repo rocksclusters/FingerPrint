@@ -186,8 +186,8 @@ def main():
                     for i in serg.getError():
                         print "    ", i
                 if options.search :
-                    #we have to search
-                    output = serg.search()
+                    # we have to search
+                    output = serg.searchModules()
                     print "\nModule search:\n" + output
                 sys.exit(1)
             if options.integrity :
