@@ -117,7 +117,7 @@ def main():
     elif (options.query + options.verify + options.create + options.display) < 1:
 	parser.error("You must select one (and only one) required flags " + requiredFlags + runHelp )
 
-    if options.verify or options.integrity :
+    if options.verify or options.integrity or (options.archive and options.create) :
         #verify the current swirl
         try:
             serg = FingerPrint.sergeant.readFromPickle(options.filename)
@@ -126,7 +126,15 @@ def main():
             sys.exit(1)
         if options.paths :
             serg.setExtraPath(options.paths)
-        if options.csvfile :
+        if options.archive :
+            archive_name = options.filename.split(".swirl")[0] + ".tar.gz"
+            comp = FingerPrint.composer.Archiver(serg, archive_name)
+            if not comp.archive() :
+                parser.error("Error creating the archive: " + comp.getError())
+                sys.exit(1)
+            print "Archive ", archive_name, " created."
+            return
+        elif options.csvfile :
             swirl = serg.getSwirl()
             if not os.path.isfile(options.csvfile):
                 # new file
@@ -179,7 +187,7 @@ def main():
         elif options.verify :
             #verify swirl
             if not serg.check():
-                #error let print some stuff
+                # error lets print some stuff
                 print "The file %s failed.\n" % options.filename
                 if options.verbose :
                     print "Missing Dependecies:"
@@ -192,7 +200,7 @@ def main():
                 sys.exit(1)
             if options.integrity :
                 if not serg.checkHash( True ):
-                    #error let print some stuff
+                    # error let print some stuff
                     print "The file %s failed.\n" % options.filename
                     if options.verbose :
                         print "Modified Dependecies:"
@@ -205,14 +213,6 @@ def main():
 
 
     elif options.create :
-        if options.archive :
-            archive_name = options.filename.rstrip(".swirl") + ".tar.gz"
-            comp = FingerPrint.composer.Archiver(options.filename, archive_name)
-            if not comp.archive() :
-                parser.error("Error creating the archive: " + comp.getError())
-                sys.exit(1)
-            print "Archive ", archive_name, " created."
-            return
         #create a swirl
         filenameList = []
         if options.filelist :
