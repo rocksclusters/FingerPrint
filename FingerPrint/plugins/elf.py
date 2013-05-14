@@ -129,7 +129,15 @@ class ElfPlugin(PluginManager):
             swirlFile.set32bits()
         elif bitness == '\x02':
             swirlFile.set64bits()
+        fd.seek(11, 1)
+        execness = fd.read(2)
+        if execness == '\x02\x00':
+            # it is an executable
+            swirlFile.executable = True
+        else:
+            swirlFile.executable = False
         swirlFile.type = 'ELF'
+        fd.close()
         cls._setDepsRequs(swirlFile, swirl)
         return swirlFile
 
