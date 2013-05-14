@@ -28,6 +28,7 @@ if "any" not in dir(__builtins__):
 from FingerPrint.swirl import Swirl
 from FingerPrint.blotter import Blotter
 from FingerPrint.serializer import PickleSerializer
+import FingerPrint.composer
 
 
 def main():
@@ -63,6 +64,8 @@ def main():
                     default=False,
                     help="Use the \'module\' command line to search and display a "
                     "list of modules able to sattisfy missing dependencies")
+    parser.add_option("-r", "--archive", action="store_true", dest="archive",
+                    help="Use Archive to create an archive with all the dependency included")
     parser.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the "
@@ -202,6 +205,14 @@ def main():
 
 
     elif options.create :
+        if options.archive :
+            archive_name = options.filename.rstrip(".swirl") + ".tar.gz"
+            comp = FingerPrint.composer.Archiver(options.filename, archive_name)
+            if not comp.archive() :
+                parser.error("Error creating the archive: " + comp.getError())
+                sys.exit(1)
+            print "Archive ", archive_name, " created."
+            return
         #create a swirl
         filenameList = []
         if options.filelist :
