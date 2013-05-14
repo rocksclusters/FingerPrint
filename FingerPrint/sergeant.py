@@ -35,7 +35,9 @@ def readFromPickle(fileName):
     pickle = PickleSerializer( inputfd )
     swirl = pickle.load()
     inputfd.close()
-    return Sergeant(swirl)
+    serg = Sergeant(swirl)
+    serg.setFilename(fileName)
+    return serg
 
 def getShortPath(path):
     """given a full path it shorten it leaving only
@@ -109,6 +111,10 @@ class Sergeant:
         self.extraPath = extraPath
         self.error = []
         self.missingDeps = []
+
+    def setFilename(self, filename):
+        """ """
+        self.filename = filename
 
     def setExtraPath(self, path):
         """path is a string containing a list of path separtated by :
