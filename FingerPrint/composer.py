@@ -46,15 +46,19 @@ class Archiver:
         base_dir = os.path.join(base_tar, self.archive_filename.split(".tar.gz")[0])
         exec_dir = os.path.join(base_dir, "bin")
         lib_dir = os.path.join(base_dir, "lib")
+        data_dir = os.path.join(base_dir, "data")
         os.mkdir(base_dir)
         os.mkdir(exec_dir)
+        os.mkdir(data_dir)
         os.mkdir(lib_dir)
         # copy all the files referenced by this swirl
         for swf in self.sergeant.swirl.swirlFiles:
-            if swf.executable:
+            if 'ELF' in swf.type and swf.executable:
                 temp_path = exec_dir
-            else:
+            elif 'ELF' in swf.type and not swf.executable:
                 temp_path = lib_dir
+            else:
+                temp_path = data_dir
             shutil.copy2(swf.path, temp_path)
             for i in swf.links:
                 #os.symlink(os.path.join(temp_path, os.path.basename(swf.path))
