@@ -11,13 +11,7 @@ import tempfile
 import shutil
 import tarfile
 
-
-#
-# compatibility with python2.4
-#
-if "any" not in dir(__builtins__):
-    from FingerPrint.utils import any
-
+import sergeant
 
 
 class Archiver:
@@ -57,6 +51,9 @@ class Archiver:
                 temp_path = exec_dir
             elif 'ELF' in swf.type and not swf.executable:
                 temp_path = lib_dir
+            elif any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
+                # this file belongs to the special folders let's skip it
+                continue
             else:
                 temp_path = data_dir
             shutil.copy2(swf.path, temp_path)
