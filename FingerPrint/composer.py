@@ -74,6 +74,29 @@ class Archiver:
         return True
 
 
+
+    def getError(self):
+        """        """
+        return self.errors
+
+
+class Roller:
+    """ this class make a roll out of an fingerprint archive"""
+
+    def __init__(self, archive_filename, roll_name):
+        """ """
+        self.archive_filename = archive_filename
+        self.roll_name = roll_name
+        self.errors = None
+
+
+
+    def makeRoll(self):
+        """ rocks create package /root/methanol/test/ testpackage prefix=/"""
+        print "making rolls"
+        return True
+
+
     def getError(self):
         """        """
         return self.errors

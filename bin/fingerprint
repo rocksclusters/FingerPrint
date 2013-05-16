@@ -66,6 +66,10 @@ def main():
                     "list of modules able to sattisfy missing dependencies")
     parser.add_option("-r", "--archive", action="store_true", dest="archive",
                     help="Use Archive to create an archive with all the dependency included")
+    parser.add_option("-m", "--makeroll", action="store_true", dest="roll",
+                    help="Make a roll which can run the software contained in the archive. "
+                    "You can specify the archive file name with the -f flag otherwise it "
+                    "will be output.tar.gz")
     parser.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the "
@@ -117,7 +121,18 @@ def main():
     elif (options.query + options.verify + options.create + options.display) < 1:
 	parser.error("You must select one (and only one) required flags " + requiredFlags + runHelp )
 
-    if options.verify or options.integrity or (options.archive and options.create) :
+    if options.create and options.roll:
+        # creata a roll
+        archive_name = "output.tar.gz"
+        if options.filename :
+            archive_name = options.filename
+        roller = FingerPrint.composer.Roller(archive_name, None)
+	if not roller.makeRoll() :
+            parser.error("Error creating the roll: " + roller.getError())
+            sys.exit(1)
+        print "Roll successfully created "
+        return
+    elif options.verify or options.integrity or (options.archive and options.create) :
         #verify the current swirl
         try:
             serg = FingerPrint.sergeant.readFromPickle(options.filename)
