@@ -129,7 +129,7 @@ class Blotter:
                 for openedFile in files[lib_swFile][execFile]:
                     # we need to remove some useless files from the opened list
                     # if not depenedencies will be listed as opned files
-                    if openedFile not in excludeFileName:
+                    if openedFile not in excludeFileName and not os.path.isdir(openedFile):
                         swirlOpenedFile = self.swirl.createSwirlFile(openedFile)
                         if swirlOpenedFile.path not in all_dependencies_files:
                             if execFile not in swirlFile.openedFiles:
