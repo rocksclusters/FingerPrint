@@ -13,6 +13,12 @@ import tarfile
 
 import sergeant
 
+#
+# compatibility with python2.4
+#
+if "any" not in dir(__builtins__):
+    from FingerPrint.utils import any
+
 
 class Archiver:
     """It reads an already created swirl and:
@@ -33,7 +39,7 @@ class Archiver:
         #we need a valid swirl
         if not self.sergeant.check():
             self.errors = "The given fingerprint fails:\n  " + \
-                '\n  '.join(self.sergeant.getErrors())
+                '\n  '.join(self.sergeant.getError())
             return False
         # prepare the folders for the tar
         base_tar = tempfile.mkdtemp()
