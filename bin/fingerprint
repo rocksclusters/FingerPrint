@@ -65,7 +65,8 @@ def main():
                     help="Use the \'module\' command line to search and display a "
                     "list of modules able to sattisfy missing dependencies")
     parser.add_option("-r", "--archive", action="store_true", dest="archive",
-                    help="Use Archive to create an archive with all the dependency included")
+                    help="Create an archive with all the dependency included. "
+                    "The archive will be named with the name of the swirl but with tar.gz appended")
     parser.add_option("-m", "--makeroll", action="store_true", dest="roll",
                     help="Make a roll which can run the software contained in the archive. "
                     "You can specify the archive file name with the -f flag otherwise it "
@@ -122,9 +123,11 @@ def main():
 	parser.error("You must select one (and only one) required flags " + requiredFlags + runHelp )
 
     if options.create and options.roll:
+        # 
         # creata a roll
+        #
         archive_name = "output.tar.gz"
-        if options.filename :
+        if 'output.swirl' not in options.filename :
             archive_name = options.filename
         roller = FingerPrint.composer.Roller(archive_name, None)
 	if not roller.makeRoll() :
@@ -133,7 +136,6 @@ def main():
         print "Roll successfully created "
         return
     elif options.verify or options.integrity or (options.archive and options.create) :
-        #verify the current swirl
         try:
             serg = FingerPrint.sergeant.readFromPickle(options.filename)
         except IOError, e:
@@ -142,6 +144,9 @@ def main():
         if options.paths :
             serg.setExtraPath(options.paths)
         if options.archive :
+            #
+            # archive the current swirl
+            #
             archive_name = options.filename.split(".swirl")[0] + ".tar.gz"
             comp = FingerPrint.composer.Archiver(serg, archive_name)
             if not comp.archive() :
@@ -150,6 +155,9 @@ def main():
             print "Archive ", archive_name, " created."
             return
         elif options.csvfile :
+            #
+            # verify with csv file
+            #
             swirl = serg.getSwirl()
             if not os.path.isfile(options.csvfile):
                 # new file
@@ -163,9 +171,7 @@ def main():
             csvfilein = open(options.csvfile, 'r')
             csvfileout = open(options.csvfile + '.tmp', 'w')
             fileline = csvfilein.readline().strip().split(',')
-            #
             # let's verify that this csv and this swirl file match
-            #
             if fileline[0] != swirl.name or \
                 fileline[1] != swirl.getDateString():
                 print "The file %s does not correspond with the swirl %s" % \
@@ -200,7 +206,9 @@ def main():
             else:
                 sys.exit(1)
         elif options.verify :
-            #verify swirl
+            #
+            # just verify swirl (no CSV)
+            #
             if not serg.check():
                 # error lets print some stuff
                 print "The file %s failed.\n" % options.filename
@@ -229,7 +237,9 @@ def main():
 
 
     elif options.create :
-        #create a swirl
+        #
+        # create a swirl
+        #
         filenameList = []
         if options.filelist :
             #read the input filelist from file
@@ -266,7 +276,9 @@ def main():
         # success
         return 0
     elif options.display :
+        #
         # display the swirl
+        #
         if options.filename :
             try:
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)
@@ -286,7 +298,9 @@ def main():
                 print "To get a image run:\ndot -Tpng -o %s.png %s" % (options.graph, options.graph)
         return 0
     elif options.query :
+        #
         # query the swirl file
+        #
         if options.filename :
             try:
                 serg = FingerPrint.sergeant.readFromPickle(options.filename)

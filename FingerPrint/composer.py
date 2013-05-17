@@ -20,6 +20,11 @@ if "any" not in dir(__builtins__):
     from FingerPrint.utils import any
 
 
+def_exec_dir = "bin"
+def_lib_dir = "lib"
+def_data_dir = "data"
+
+
 class Archiver:
     """It reads an already created swirl and:
       - it detects if it can run on this system
@@ -44,9 +49,9 @@ class Archiver:
         # prepare the folders for the tar
         base_tar = tempfile.mkdtemp()
         base_dir = os.path.join(base_tar, self.archive_filename.split(".tar.gz")[0])
-        exec_dir = os.path.join(base_dir, "bin")
-        lib_dir = os.path.join(base_dir, "lib")
-        data_dir = os.path.join(base_dir, "data")
+        exec_dir = os.path.join(base_dir, def_exec_dir)
+        lib_dir = os.path.join(base_dir, def_lib_dir)
+        data_dir = os.path.join(base_dir, def_data_dir)
         os.mkdir(base_dir)
         os.mkdir(exec_dir)
         os.mkdir(data_dir)
@@ -104,7 +109,60 @@ class Roller:
 
     def makeRoll(self):
         """ rocks create package /root/methanol/test/ testpackage prefix=/"""
-        print "making rolls"
+        if not os.path.exists(self.archive_filename) :
+            self.errors = "" + self.archive_filename + " does not exist"
+            return False
+        base_dir = self.archive_filename.split(".tar.gz")[0]
+
+        # make the output directory
+        destination_base_dir = "/opt"
+        dest_dir = os.path.join(destination_base_dir, base_dir)
+        if os.path.exists(dest_dir) : 
+            self.errors = "Destiation dir " + dest_dir + " already exists. Please remove it."
+            return False
+        os.mkdir(dest_dir)
+        virtual_root = os.path.join(dest_dir, 'cde-root')
+
+        # extract archive
+        temp_workdir = tempfile.mkdtemp()
+        tempbase_dir = os.path.join(temp_workdir, base_dir)
+        archive_file = tarfile.open(self.archive_filename, 'r:gz')
+        archive_file.extractall(temp_workdir)
+        archive_file.close()
+
+        # open swirl
+        serg = sergeant.readFromPickle(os.path.join(tempbase_dir, base_dir) \
+                                        + ".swirl" )
+        outfiles = open("out_files.sh", 'w')
+        # copy all the files referenced by this swirl
+        for swf in serg.swirl.swirlFiles:
+            if 'ELF' in swf.type and swf.executable:
+                # its executable let's just place it where it belongs
+                source_path = os.path.join(tempbase_dir, def_exec_dir, os.path.basename(swf.path))
+            elif 'ELF' in swf.type and not swf.executable:
+                source_path = os.path.join(tempbase_dir, def_lib_dir, os.path.basename(swf.path))
+            elif any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
+                # this file belongs to the special folders let's skip it
+                continue
+            else:
+                source_path = os.path.join(tempbase_dir, def_data_dir, os.path.basename(swf.path))
+
+            #dest_path = wirtual_root + swf.path
+            dest_path = swf.path
+            if os.path.exists(dest_path) :
+                print "skipping file ", dest_path
+                continue
+            if not os.path.exists( os.path.dirname(dest_path) ) :
+                os.makedirs( os.path.dirname(dest_path) )
+            shutil.copy2(source_path, dest_path)
+            outfiles.write("rm -fr " + dest_path + '\n')
+            for i in swf.links:
+                if os.path.exists(i) :
+                    print "skipping link ", i
+                    continue
+                os.symlink( dest_path, i)
+                outfiles.write("rm -fr " + i + '\n')
+        outfiles.close()
         return True
 
 
