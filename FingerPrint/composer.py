@@ -62,7 +62,9 @@ class Archiver:
                 continue
             else:
                 temp_path = data_dir
-            shutil.copy2(swf.path, temp_path)
+            if not os.path.exists(os.path.join(temp_path, os.path.basename(swf.path))):
+                # do not copy twice the same file
+                shutil.copy2(swf.path, temp_path)
             for i in swf.links:
                 new_link = os.path.join(temp_path, os.path.basename(i))
                 if not os.path.exists( new_link ):
