@@ -251,6 +251,8 @@ def main():
         try:
             blotter = Blotter(options.name, filenameList, options.process, options.execCmd)
         except IOError, e:
+            #import traceback
+            #traceback.print_exc()
             parser.error("Unable to create the swirl file: " + str(e) + runHelp)
         if options.verbose:
             print "swirl structure:\n", blotter.getSwirl().printMinimal()
