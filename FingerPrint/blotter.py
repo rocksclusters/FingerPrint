@@ -137,7 +137,8 @@ class Blotter:
                             swirlFile.openedFiles[execFile].append(swirlOpenedFile)
         #hash and get package name
         for swf in self.swirl.swirlFiles:
-            if os.path.exists(swf.path):
+            #let's skip relative path
+            if swf.path[0] != '$' and os.path.exists(swf.path):
                 swf.md5sum = sergeant.getHash(swf.path, swf.type)
                 #TODO make this code nicer
                 if any([ swf.path.startswith(a) for a in sergeant.specialFolders ]):

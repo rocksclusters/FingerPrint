@@ -148,7 +148,7 @@ class SyscallTracer:
                                 openPath = self.readCString(regs.rdi, pid)
                                 if openPath[0] != '/':
                                     #relative path we need to get the pwd
-                                    openPath = processesStatus[pid].getProcessCWD() + '/' + openPath
+                                    openPath = "$" + processesStatus[pid].getProcessCWD() + "$" + openPath
                                 libName = processesStatus[pid].getFileOpener()
                                 if libName not in files:
                                     files[libName] = {}

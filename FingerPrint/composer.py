@@ -57,7 +57,9 @@ class Archiver:
                 temp_path = exec_dir
             elif 'ELF' in swf.type and not swf.executable:
                 temp_path = lib_dir
-            elif any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
+            elif swf.path[0] == '$' or \
+                any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
+                #TODO maybe we could keep user data into a special folder?
                 # this file belongs to the special folders let's skip it
                 continue
             else:
