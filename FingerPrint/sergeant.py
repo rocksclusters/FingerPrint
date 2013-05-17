@@ -128,9 +128,13 @@ class Sergeant:
         the dependencies can be satisfied on the current system
         """
         self.missingDeps = []
-        #remove duplicates
         returnValue = True
-        PluginManager.addSystemPaths(self.extraPath)
+        # this method of using rpath is not totaly correct but it's faster
+        # so for the moment we have to live with this
+        rpath = self.swirl.get_all_rpaths()
+        if self.extraPath :
+            rpath.update(self.extraPath)
+        PluginManager.addSystemPaths(rpath)
         for dep in self.swirl.getDependencies():
             if not PluginManager.getPathToLibrary(dep):
                 self.missingDeps.append(dep)
