@@ -5,6 +5,7 @@
 # base class for the fingerprint plugin classes
 #
 
+import os
 from FingerPrint.swirl import SwirlFile
 
 """This is the base class that implement the interface that all the plugins subclasses 
@@ -66,11 +67,14 @@ class PluginManager(object):
         return None
         ATT: only one plugin should return a SwirlFile for a given file
         """
-        #we call all the getSwirl method of all the plugin
-        for key, plugin in self.plugins.iteritems():
-            temp = plugin.getSwirl(fileName, swirl)
-            if temp != None:
-                return temp
+        # if the file does not exist anymore (possible with temporary file and
+        # dynamic tracing) just set it to Data
+        if os.path.exists(fileName) :
+            #we call all the getSwirl method of all the plugin
+            for key, plugin in self.plugins.iteritems():
+                temp = plugin.getSwirl(fileName, swirl)
+                if temp != None:
+                    return temp
         #nobady claimed the file let's make it a Data file
         swirlFile = swirl.createSwirlFile(fileName)
         return swirlFile
