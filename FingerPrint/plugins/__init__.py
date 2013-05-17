@@ -80,11 +80,11 @@ class PluginManager(object):
         return swirlFile
 
     @classmethod
-    def getPathToLibrary(cls, dependency, useCache = True):
+    def getPathToLibrary(cls, dependency, useCache = True, rpath = []):
         """ given a dependency it find the path of the library which provides 
         that dependency """
         plugin = cls.plugins[dependency.type]
-        return plugin.getPathToLibrary(dependency, useCache)
+        return plugin.getPathToLibrary(dependency, useCache, rpath)
 
 
 #

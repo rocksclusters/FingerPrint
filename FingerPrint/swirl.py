@@ -62,6 +62,13 @@ class Swirl(object):
                 return swF
         return None
 
+    def get_all_rpaths(self):
+        """    """
+        # use a list to keep unique elements
+        return_list = set()
+        for swf in self.swirlFiles:
+            return_list.update(swf.rpaths)
+        return return_list
 
     def getListSwirlFilesDependentStaticAndDynamic(self, swirlFile):
         """given a swirlFile it returns a list of all its required swirlfiles
@@ -250,6 +257,7 @@ class SwirlFile(Arch):
         # in this way we can track different opened file for each binFile with
         # shared libs
         self.openedFiles={}
+        self.rpaths = []
         self.md5sum = None
         self.package = None
         # by default all files are data files (aka unknown type)

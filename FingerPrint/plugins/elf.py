@@ -37,7 +37,7 @@ class ElfPlugin(PluginManager):
     _RPM_FIND_PROV=os.path.dirname( globals()["__file__"] ) + "/find-provides"
 
     @classmethod
-    def getPathToLibrary(cls, dependency, useCache = True):
+    def getPathToLibrary(cls, dependency, useCache = True, rpath = []):
         """ given a dependency it find the path of the library which provides 
         that dependency """
         soname = dependency.getMajor()
@@ -57,10 +57,12 @@ class ElfPlugin(PluginManager):
                     if cls._checkMinor(provider, dependency.getName()):
                         cls._pathCache[dependency.getName()] = provider
                         return provider
-        pathToScan = cls.systemPath[:]
+        pathToScan = cls.systemPath[:] + rpath
         if "LD_LIBRARY_PATH" in os.environ:
             #we need to scan the LD_LIBRARY_PATH too
             pathToScan += os.environ["LD_LIBRARY_PATH"].split(':')
+        # remove duplicate
+        pathToScan = list(set(pathToScan))
         for path in pathToScan:
             provider = path + '/' + soname
             if os.path.isfile(provider) and \
@@ -87,12 +89,16 @@ class ElfPlugin(PluginManager):
         """given a SwirlFile object add all the dependency and all 
         the provides to it """
 
+        # find rpath first
+        rpath = getOutputAsList(["bash","-c", "objdump -x %s |grep RPATH|awk '{print $2}'" % swirlFile.path ])[0]
+        if len( rpath ) > 0:
+            swirlFile.rpaths = rpath[0].split(":")
         #find deps
         for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path)[0]:
             if len(line) > 0:
                 newDep = Dependency.fromString( line )
                 swirlFile.addDependency( newDep )
-                p = cls.getPathToLibrary( newDep )
+                p = cls.getPathToLibrary( newDep , useCache = True, rpath = swirlFile.rpaths)
                 if p and not swirl.isFileTracked(p):
                     # p not null and p is not already in swirl
                     cls.getSwirl(p, swirl)
