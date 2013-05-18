@@ -246,7 +246,6 @@ class SwirlFile(Arch):
         self.path=path
         #symbolic links
         self.links=links
-        self.type=None
         # list of Dependency this file depend on
         self.staticDependencies=[]
         # list of Dependency that this file provides
