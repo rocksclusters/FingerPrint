@@ -261,8 +261,6 @@ class SwirlFile(Arch):
         self.package = None
         # by default all files are data files (aka unknown type)
         self.type = "Data"
-        # i386 X86_64 noarch
-        self.arch = None
 
     def isLoader(self):
         """ """
