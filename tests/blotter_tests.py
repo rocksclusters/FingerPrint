@@ -61,17 +61,17 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_calltracer(self):
         print "\n     -----------------------     Running fingerprint syscall tracer   -------------------------\n"
         testProgram = ["bash","-c","find /tmp &> /dev/null "]
-        deps = {}
-        files = {}
         try:
             from FingerPrint.syscalltracer import SyscallTracer
         except ImportError, e:
             print "SyscallTracer is not support on this python version: ", str(e)
             return
         tracer = SyscallTracer()
-        self.assertTrue(tracer.main(testProgram, deps, files), 
+        self.assertTrue(tracer.main(testProgram), 
                 msg="fingerprint-calltracer: failed tracing: " + str(testProgram))
-        self.assertEqual(len(deps.keys()),2, 
+        deps =  FingerPrint.syscalltracer.TracerControlBlock.dependencies
+        print "deps ", deps
+        self.assertEqual(len(deps.keys()),2,
                 msg="fingerprint-calltracer: failed: traced more than two binaries")
         print "Executed: ", testProgram, "\nFound dependencies: ", deps
         #lets create a command wtih input file on the command line with default output filename
