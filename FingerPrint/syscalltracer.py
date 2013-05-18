@@ -239,16 +239,20 @@ class TracerControlBlock:
 
     def __init__(self, pid):
         self.pid = pid
-        self.processName = os.readlink('/proc/' + str(self.pid) + '/exe')
         self.enterCall = True
         self.firstArg = None
+        self.updateProcessInfo()
+
+
+    def updateProcessInfo(self):
+        processName = self.getProcessName()
         #read the cmdline
         f = open('/proc/' + str(self.pid) + '/cmdline')
-        TracerControlBlock.cmdline[self.processName] = f.read().split('\x00')
+        TracerControlBlock.cmdline[processName] = f.read().split('\x00')
         f.close()
         #read the env
         f = open('/proc/' + str(self.pid) + '/environ')
-        TracerControlBlock.env[self.processName] = f.read().split('\x00')
+        TracerControlBlock.env[processName] = f.read().split('\x00')
         f.close()
 
     def updateSharedLibraries(self):
@@ -273,7 +277,7 @@ class TracerControlBlock:
 
 
     def getProcessName(self):
-        return self.processName
+        return os.readlink('/proc/' + str(self.pid) + '/exe')
 
     def getProcessCWD(self):
         return os.readlink('/proc/' + str(self.pid) + '/cwd')
