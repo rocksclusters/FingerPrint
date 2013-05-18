@@ -173,6 +173,7 @@ class SyscallTracer:
                         print "The process %d cloned a new process %d" % (pid, subChild)
                     elif event == ptrace_func.PTRACE_EVENT_EXEC :
                         print "The process %d run exec" % (pid)
+                        processesStatus[pid].updateProcessInfo()
                     elif event == ptrace_func.PTRACE_EVENT_EXIT:
                         pass
                         #print "the process %d is in a event exit %d" % (pid, subChild)
