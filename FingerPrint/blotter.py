@@ -31,25 +31,8 @@ import sergeant
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
 
+import FingerPrint.syscalltracer
 
-def getDependecyFromPID(pid, dynamicDependecies):
-    """ given a pid it scan the procfs to find its loaded dependencies
-    and places the output in dynamic depenedencies"""
-    binaryFile = os.readlink('/proc/' + pid + '/exe')
-    if binaryFile not in dynamicDependecies:
-        # new binary file let's add it to the dyctionary
-        dynamicDependecies[binaryFile] = []
-    f=open('/proc/' + pid + '/maps')
-    maps = f.read()
-    f.close()
-    for i in maps.split('\n'):
-        tokens = i.split()
-        if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
-            # assumption: if we have a memory mapped area to a file and it is
-            # executable then it is a shared library
-            libPath = tokens[5].strip()
-            if libPath not in dynamicDependecies[binaryFile] and libPath != binaryFile:
-                dynamicDependecies[binaryFile].append( libPath )
 
 
 class Blotter:
@@ -71,20 +54,21 @@ class Blotter:
         # dynamicDependencies = { 'binarypath' : [list of file it depends to],
         # '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
         # '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
-        dynamicDependecies = {}
-        files = {}
 
         if execCmd :
-            self._straceCmd(execCmd, dynamicDependecies, files)
+            self._straceCmd(execCmd)
 
         # let's see if we have proecss ID we might need to scan for dynamic dependecies
         # with the help of the /proc FS
         elif processIDs :
+
             for proc in processIDs.split(','):
                 pid = proc.strip()
                 # add the binary
-                getDependecyFromPID(pid, dynamicDependecies)
+                tcb = FingerPrint.syscalltracer.TracerControlBlock(pid)
+                tcb.updateSharedLibraries()
 
+        dynamicDependecies = FingerPrint.syscalltracer.TracerControlBlock.dependencies
         # set up the fileList for the static dependency detection
         if not fileList :
             fileList = []
@@ -115,6 +99,8 @@ class Blotter:
                     swirlFile.dynamicDependencies.append(newSwirlFileDependency)
 
         # let's see if it used some Data files
+        # files is a double dictionary see TraceContrlBlock for its structure
+        files = FingerPrint.syscalltracer.TracerControlBlock.files
         # excludeFileName: file whcih should be ingored and not added to the swirl
         excludeFileName = ['/etc/ld.so.cache']
         for lib_swFile in files:
@@ -153,18 +139,14 @@ class Blotter:
 
 
     #TODO add a way to detach from executed programm
-    def _straceCmd(self, execcmd, dynamicDependecies, files):
+    def _straceCmd(self, execcmd):
         """it execute the execmd with execve and then it trace process running and
         it adds all the dependency to the dynamicDependecies dictionary
         """
-        try:
-            from FingerPrint.syscalltracer import SyscallTracer
-        except ImportError, e:
-            raise IOError("Dynamic tracing is not supported on this platform: ", e)
-        tracer = SyscallTracer()
+        tracer = FingerPrint.syscalltracer.SyscallTracer()
         #TODO check for errors
         execcmd = shlex.split(execcmd)
-        if not tracer.main(execcmd, dynamicDependecies, files):
+        if not tracer.main(execcmd):
             raise IOError("Unable to trace the process")
 
 

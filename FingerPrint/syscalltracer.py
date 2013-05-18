@@ -29,38 +29,29 @@ except :
     tracing = False
 
 
+
 class SyscallTracer:
-    """this class can spawn a process and trace its' execution to check 
+    """this class can spawn a process and trace its' execution to record 
     what are its dynamic dependency requirements
 
     Usage:
 
-        file = {}
-        dynamicDependecies = {}
         tracer = SyscallTracer()
         execcmd = shlex.split(execcmd)
-        tracer.main(execcmd, dynamicDependecies, files)
-
-
+        tracer.main(execcmd)
+        # output will in the TracerControlBlock static variables
+        TracerControlBlock.[files|dependencies|env|cmdline]
     """
 
-
-    def main(self, command, dependencies, files):
-        """start the trace
+    def main(self, command): 
+        """start the trace with the given command
 
         The input parameters are:
             `command' command line to trace passed through shlex.split
-            `dynamicDependencies' is a dictionary of shared libraries used by the various 
-            processes e.g.: { 'binarypath' : [list of file it depends to],
-            '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
-            '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
-            `files' is a dictionary of dictionary of opened files by the various processes
-             for example files[libraryA][executableB] and files[libraryA][executableC]
-             return respectively the list of opened file by the libraryA when run under
-             executableB and when run under executableC
 
         return false if something went wrong
         """
+        files={}
         #
         # main function to launch a process and trace it
         #
@@ -92,7 +83,7 @@ class SyscallTracer:
             
             ptrace_func.ptrace_setoptions(child, options);
             ptrace_func.ptrace_syscall(child);
-            
+            files = TracerControlBlock.files
             while True: 
                 # main loop tracer
                 # 1. wait for syscall from the children
@@ -111,9 +102,6 @@ class SyscallTracer:
                 event = status >> 16;
                 signalValue = os.WSTOPSIG(status)
                 deliverSignal = 0
-                #print "the child process %d stops. status: %d, signal? %d, exit? %d, continue? %d, stop? %d\n" % \
-                #    (child, status , os.WIFSIGNALED(status) ,
-                #    os.WIFEXITED(status), os.WIFCONTINUED(status), os.WIFSTOPPED(status))
                 if os.WIFEXITED(status):
                     # a process died, report it and go back to wait for syscall
                     print "The process ", pid, " exited"
@@ -129,7 +117,8 @@ class SyscallTracer:
                     regs = ptrace_func.ptrace_getregs(pid)
                     if pid not in processesStatus :
                         #new pid
-                        processesStatus[pid] = TracerControlBlock( pid )
+                        tcb = TracerControlBlock( pid )
+                        processesStatus[pid] = tcb
                     if (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 2):# or regs.orig_rax == 257):
                         #
                         # handle open (orig_rax == 2 on 64bit)
@@ -172,7 +161,7 @@ class SyscallTracer:
                         else:
                             # we are returning from mmap
                             processesStatus[pid].enterCall = True
-                            FingerPrint.blotter.getDependecyFromPID(str(pid), dependencies)
+                            processesStatus[pid].updateSharedLibraries()
                 elif os.WIFSTOPPED(status) and (signalValue == signal.SIGTRAP) and event != 0:
                     # this is just to print some output to the users
                     subChild = ptrace_func.ptrace_geteventmsg(pid)
@@ -221,19 +210,70 @@ class SyscallTracer:
         print "dict: ", a
 
 
-class TracerControlBlock:
-    """hold data needed for tracing a processes
 
-    Insiperd by strace code (strct tcb)). This structure hold the data we need to trace
-    the status of a proce with the SyscallTracer """
+class TracerControlBlock:
+    """This class hold data needed for tracing a processes
+
+    Insiperd by strace code (strct tcb)).
+    """
+
+    """
+    `env' dictionary that keeps track of process environment variables
+    `cmdline' dictionary that keeps track of the executed cmdline
+    `dynamicDependencies' is a dictionary of shared libraries used by the various
+       processes e.g.: { 'binarypath' : [list of file it depends to],
+       '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
+       '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
+    `files' is a dictionary of dictionary of opened files by the various processes
+       for example files[libraryA][executableB] and files[libraryA][executableC]
+       return respectively the list of opened file by the libraryA when run under
+       executableB and when run under executable
+
+    PS: I don't really like this solution of static variable but for the moment ti does its job
+    """
+    dependencies = {}
+    files = {}
+    env = {}
+    cmdline = {}
+
 
     def __init__(self, pid):
         self.pid = pid
+        self.processName = os.readlink('/proc/' + str(self.pid) + '/exe')
         self.enterCall = True
         self.firstArg = None
+        #read the cmdline
+        f = open('/proc/' + str(self.pid) + '/cmdline')
+        TracerControlBlock.cmdline[self.processName] = f.read().split('\x00')
+        f.close()
+        #read the env
+        f = open('/proc/' + str(self.pid) + '/environ')
+        TracerControlBlock.env[self.processName] = f.read().split('\x00')
+        f.close()
+
+    def updateSharedLibraries(self):
+        """ it scans the procfs to find the process loaded shared libraries
+
+        results are stored in the class variable called dependencies"""
+        binaryFile = self.getProcessName()
+        if binaryFile not in TracerControlBlock.dependencies:
+            # new binary file let's add it to the dyctionary
+            TracerControlBlock.dependencies[binaryFile] = []
+        f=open('/proc/' + str(self.pid) + '/maps')
+        maps = f.read()
+        f.close()
+        for i in maps.split('\n'):
+            tokens = i.split()
+            if len(tokens) > 5 and 'x' in tokens[1] and os.path.isfile(tokens[5]):
+                # assumption: if we have a memory mapped area to a file and it is
+                # executable then it is a shared library
+                libPath = tokens[5].strip()
+                if libPath not in TracerControlBlock.dependencies[binaryFile] and libPath != binaryFile:
+                    TracerControlBlock.dependencies[binaryFile].append( libPath )
+
 
     def getProcessName(self):
-        return os.readlink('/proc/' + str(self.pid) + '/exe')
+        return self.processName
 
     def getProcessCWD(self):
         return os.readlink('/proc/' + str(self.pid) + '/cwd')
