@@ -114,14 +114,14 @@ class Roller:
             return False
         base_dir = self.archive_filename.split(".tar.gz")[0]
 
-        # make the output directory
-        destination_base_dir = "/opt"
-        dest_dir = os.path.join(destination_base_dir, base_dir)
-        if os.path.exists(dest_dir) : 
-            self.errors = "Destiation dir " + dest_dir + " already exists. Please remove it."
-            return False
-        os.mkdir(dest_dir)
-        virtual_root = os.path.join(dest_dir, 'cde-root')
+        ## make the output directory
+        #destination_base_dir = "/opt"
+        #dest_dir = os.path.join(destination_base_dir, base_dir)
+        #if os.path.exists(dest_dir) :
+        #    self.errors = "Destiation dir " + dest_dir + " already exists. Please remove it."
+        #    return False
+        #os.mkdir(dest_dir)
+        #virtual_root = os.path.join(dest_dir, 'cde-root')
 
         # extract archive
         temp_workdir = tempfile.mkdtemp()
