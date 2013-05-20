@@ -96,7 +96,7 @@ class Blotter:
             swirlFile = PluginManager.getSwirl(fileName, self.swirl)
             #let's add it to the execed file list
             if swirlFile not in self.swirl.execedFiles:
-                self.swirl.execedFile.append(swirlFile)
+                self.swirl.execedFiles.append(swirlFile)
             for dynamicDepFile in dynamicDependecies[fileName]:
                 newSwirlFileDependency = PluginManager.getSwirl(dynamicDepFile, self.swirl)
                 #I need to verify it if is static dep or dynamic dep
