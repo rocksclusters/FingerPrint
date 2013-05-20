@@ -7,15 +7,12 @@
 # libraries it depends on
 #
 
-from FingerPrint.ptrace import func as ptrace_func
-import FingerPrint.ptrace.cpu_info
-import FingerPrint.ptrace.signames
 import FingerPrint.blotter
 import FingerPrint.utils
 import FingerPrint.sergeant
 
 import tempfile
-import os, signal, ctypes, re
+import os, signal, re
 #TODO add logger
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
@@ -51,6 +48,11 @@ class SyscallTracer:
 
         return false if something went wrong
         """
+
+        import ctypes
+        from FingerPrint.ptrace import func as ptrace_func
+        import FingerPrint.ptrace.cpu_info
+        import FingerPrint.ptrace.signames
         files={}
         #
         # main function to launch a process and trace it

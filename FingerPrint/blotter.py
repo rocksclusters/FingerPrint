@@ -153,8 +153,13 @@ class Blotter:
         tracer = FingerPrint.syscalltracer.SyscallTracer()
         #TODO check for errors
         execcmd = shlex.split(execcmd)
-        if not tracer.main(execcmd):
-            raise IOError("Unable to trace the process")
+        try:
+            if not tracer.main(execcmd):
+                raise IOError("Unable to trace the process")
+        except ImportError, e:
+            raise IOError("Dynamic tracing is not supported on this platform (you need "
+                    "python2.7 or ctype for dynamic tracing): ", e)
+
 
 
 
