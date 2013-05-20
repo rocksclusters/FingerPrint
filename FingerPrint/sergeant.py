@@ -103,7 +103,7 @@ class Sergeant:
     """
 
 
-    def __init__(self, swirl, extraPath=None):
+    def __init__(self, swirl, extraPath=[]):
         """ swirl is a valid Swirl object
         extraPath is a list of string containing system path which should 
         be included in the search of dependencies"""
@@ -131,18 +131,21 @@ class Sergeant:
         returnValue = True
         # this method of using rpath is not totaly correct but it's faster
         # so for the moment we have to live with this
-        rpath = self.swirl.get_all_rpaths()
-        if self.extraPath :
-            rpath.update(self.extraPath)
-        PluginManager.addSystemPaths(rpath)
-        for dep in self.swirl.getDependencies():
-            if not PluginManager.getPathToLibrary(dep):
-                self.missingDeps.append(dep)
-                returnValue = False
+        for swF in self.swirl.execedFiles:
+            ld_library = []
+            for i in swF.env :
+                if i.startswith('LD_LIBRARY_PATH') :
+                    ld_library = i.split('=')[1].split(':')
+                    break
+            rpath = swF.rpaths + self.extraPath + ld_library
+            for dep in swF.staticDependencies:
+                if not PluginManager.getPathToLibrary(dep, rpath = rpath):
+                    self.missingDeps.append(dep)
+                    returnValue = False
         return returnValue
 
     def checkHash(self, verbose=False):
-        """check if any dep was modified since the swirl file creation 
+        """check if any dep was modified since the swirl file creation
         (using checksuming) """
         self.error = []
         pathCache = []
