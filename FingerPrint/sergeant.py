@@ -147,34 +147,33 @@ class Sergeant:
         self.error = []
         pathCache = []
         returnValue = True
-        for swF in self.swirl.execedFiles:
-            for dep in swF.staticDependencies:
-                path = PluginManager.getPathToLibrary(dep)
-                if not path:
-                    # error `
-                    tmpStr = str(dep)
-                    if verbose:
-                        tmpStr += " unable to find its file"
-                    self.error.append(tmpStr)
-                    returnValue = False
-                    continue
-                if path in pathCache:
-                    #we already did this file
-                    continue
-                hash = getHash(path, dep.type)
-                pathCache.append(path)
-                swirlProvider = self.swirl.getSwirlFileByProv(dep)
-                if not swirlProvider:
-                    self.error.append("SwirlFile has unresolved dependency " + str(dep) \
-                            + " the hash can not be verified")
-                    returnValue = False
-                if hash != swirlProvider.md5sum :
-                    tmpStr = str(dep)
-                    if verbose:
-                        tmpStr += " wrong hash (computed " + hash + " originals " + \
-                                swirlProvider.md5sum + ")"
-                    self.error.append(tmpStr)
-                    returnValue = False
+        for dep in self.swirl.getDependencies():
+            path = PluginManager.getPathToLibrary(dep)
+            if not path:
+                # error `
+                tmpStr = str(dep)
+                if verbose:
+                    tmpStr += " unable to find its file"
+                self.error.append(tmpStr)
+                returnValue = False
+                continue
+            if path in pathCache:
+                #we already did this file
+                continue
+            hash = getHash(path, dep.type)
+            pathCache.append(path)
+            swirlProvider = self.swirl.getSwirlFileByProv(dep)
+            if not swirlProvider:
+                self.error.append("SwirlFile has unresolved dependency " + str(dep) \
+                        + " the hash can not be verified")
+                returnValue = False
+            if hash != swirlProvider.md5sum :
+                tmpStr = str(dep)
+                if verbose:
+                    tmpStr += " wrong hash (computed " + hash + " originals " + \
+                            swirlProvider.md5sum + ")"
+                self.error.append(tmpStr)
+                returnValue = False
         return returnValue
 
     def searchModules(self):
