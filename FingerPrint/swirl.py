@@ -259,6 +259,8 @@ class SwirlFile(Arch):
         self.rpaths = []
         self.md5sum = None
         self.package = None
+        # a reduced set of environment variables
+        self.env = []
         # by default all files are data files (aka unknown type)
         self.type = "Data"
 

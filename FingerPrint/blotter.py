@@ -83,6 +83,13 @@ class Blotter:
                     if cmd :
                         i = cmd
                 swirlFile = PluginManager.getSwirl(i, self.swirl)
+                # add the env
+                if i in FingerPrint.syscalltracer.TracerControlBlock.env:
+                    process_env = FingerPrint.syscalltracer.TracerControlBlock.env[i]
+                    for i in process_env:
+                        if  i.startswith('PATH') or i.startswith('LD_LIBRARY_PATH') or \
+                            i.startswith('LD_PRELOAD'):
+                            swirlFile.env.append(i)
                 self.swirl.execedFiles.append(swirlFile)
 
             elif os.path.isdir(i):
