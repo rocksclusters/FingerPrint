@@ -3,6 +3,8 @@
 
 #TODO testing remove this
 cat /etc/issue
+python --version
+
 
 cd FingerPrint/
 python setup.py test 2>&1
