@@ -3,7 +3,7 @@
 
 #TODO testing remove this
 cat /etc/issue
-python --version
+python -V
 
 
 cd FingerPrint/

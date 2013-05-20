@@ -2,9 +2,12 @@
 #
 # LC 
 #
-# cron job which monitor the git 
-# repo and if there are updates
+# cron job which monitor the git repo and if there are updates
 # submit a new batlab job
+#
+# 0 1-23/2 * * * ~/FingerPrint/FingerPrint/batlab/crontab.sh
+#
+
 
 . /etc/profile
 
