@@ -150,7 +150,10 @@ class Roller:
             #dest_path = wirtual_root + swf.path
             dest_path = swf.path
             if os.path.exists(dest_path) :
-                print "skipping file ", dest_path
+                print "file ", dest_path, " is already present on the system"
+                continue
+            if not os.path.exists(source_path) :
+                print "file ", source_path, " is not present in the archive"
                 continue
             if not os.path.exists( os.path.dirname(dest_path) ) :
                 os.makedirs( os.path.dirname(dest_path) )
