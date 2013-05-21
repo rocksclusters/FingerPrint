@@ -182,7 +182,7 @@ class Blotter:
         #dpkg based OSes
         dpkgOSs = ["debian",  "ubuntu"]
 
-        f=open('/etc/issue')
+        f=open('/etc/issue.net')
         issues=f.read()
         f.close()
         if any(os in issues.lower() for os in rpmOSs):
