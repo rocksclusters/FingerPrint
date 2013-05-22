@@ -133,6 +133,11 @@ class Roller:
         # open swirl
         serg = sergeant.readFromPickle(os.path.join(tempbase_dir, base_dir) \
                                         + ".swirl" )
+
+        # 1. check package
+        # 2. check links
+        # 3. copy files over with wrapper scripts
+
         outfiles = open("out_files.sh", 'w')
         # copy all the files referenced by this swirl
         for swf in serg.swirl.swirlFiles:
@@ -163,6 +168,7 @@ class Roller:
                 if os.path.exists(i) :
                     print "skipping link ", i
                     continue
+                print "making a link ", i
                 os.symlink( dest_path, i)
                 outfiles.write("rm -fr " + i + '\n')
         outfiles.close()
@@ -173,3 +179,50 @@ class Roller:
         """        """
         return self.errors
 
+
+    def useRPMPackage(self, package_name):
+        """ return true if the package_name is available in the current yum database
+        and package_name is the same version as the one available in the local yum DB
+        """
+        #this whole thing will run only on REDHAT system
+        import yum
+        #remove versioning from the name
+        s = package_name
+        #remove arch
+        i = s.rsplit(".", 1)
+        if len(i) > 0 :
+                arch = i[1]
+        else:
+                arch = ""
+        s = i[0]
+        #remove rpm version
+        i = s.rsplit("-", 1)
+        if len(i) > 0 :
+                rpm_ver = i[1]
+        else:
+                rpm_ver = ""
+        s = i[0]
+        #remove software version
+        i = s.rsplit("-", 1)
+        if len(i) > 0 :
+                soft_ver = i[1]
+        else:
+                sorf_ver = ""
+        package_short_name = i[0]
+        # force arch while searching for packages
+        package_short_name += "." + arch
+        yb = yum.YumBase()
+        pl = yb.doPackageLists('all')
+        exactmatch, matched, unmatched = yum.packages.parsePackages(pl.available + pl.installed, ["list", package_short_name])
+        #exactmatch = yum.misc.unique(exactmatch)
+        #for i in exactmatch:
+        #    print "p: ", i
+        if len(exactmatch) > 0 :
+            big_pkg = exactmatch[0]
+            for pkg in exactmatch:
+                if pkg.verGT(big_pkg):
+                    big_pkg = pkg
+        if str(big_pkg) == package_name:
+            return True
+        else:
+            return False
