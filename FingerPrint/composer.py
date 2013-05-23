@@ -269,6 +269,22 @@ class Roller:
         """        """
         return self.errors
 
+    def get_package_from_dep(self, package_name):
+        """ given a list of requires it return a list of packages name which can satisfy them
+        and they are available in the currently enabled yum repository """
+        import yum
+        yb = yum.YumBase()
+        matched = []
+        for dep in package_name:
+            matches = yb.searchPackageProvides( [dep] )
+            if len(matches) > 0:
+                matched += matches
+            else:
+                # we can't satisfy this dep so let's fail
+                return []
+        # I need to exclude the installed RPM from the return list
+        return [pkg.name for pkg in yum.misc.unique(matched) if 'installed' not in pkg.repo.name ]
+
 
     def useRPMPackage(self, package_name):
         """ return true if the package_name is available in the current yum database
