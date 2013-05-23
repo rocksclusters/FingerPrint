@@ -106,8 +106,98 @@ class Roller:
         self.errors = None
 
 
+    def make_roll(self):
+        """ """
+        if not os.path.exists(self.archive_filename) :
+            self.errors = "" + self.archive_filename + " does not exist"
+            return False
+        base_dir = self.archive_filename.split(".tar.gz")[0]
+        # this is the list of package we will have to hadd
+        self.packages = []
+        # this is a list of swirlFile which will need to be installed
+        # the additional self.files[0].source_path attribute has been added
+        self.files = []
 
-    def makeRoll(self):
+        # extract archive
+        temp_workdir = tempfile.mkdtemp()
+        self.tempbase_dir = os.path.join(temp_workdir, base_dir)
+        archive_file = tarfile.open(self.archive_filename, 'r:gz')
+        archive_file.extractall(temp_workdir)
+        archive_file.close()
+
+        # open swirl
+        self.swirl = sergeant.readFromPickle(os.path.join(self.tempbase_dir, base_dir) \
+                                        + ".swirl" ).swirl
+
+
+        # for each swirl_file in exec
+        # 1. check if swirl_file.package is present in the local yum repo
+        #    if so add package it and stop
+        # 2. check if for each dependency swirl_file can be found int the local yum repo
+        # 2. check links
+        # 3. copy files over with wrapper scripts
+
+        # recursively resolve all depednencies of the execFile
+        for swf in self.swirl.swirlFiles:
+            self.resolve_file(swf)
+
+        #print self.packages
+        for swf in self.files:
+            print "including file ", swf.path, " source ", swf.source_path
+        return True
+
+
+    def resolve_file(self, swirl_file):
+        """ this function recursively try to resolve the swirlFile"""
+        # if swirl_file.path in yum db add rpm
+        # else add swirl_file to self.files
+        if 'ELF' in swirl_file.type and swirl_file.executable:
+            # executable
+            swirl_file.source_path = os.path.join(self.tempbase_dir, def_exec_dir,
+                                                os.path.basename(swirl_file.path))
+        elif 'ELF' in swirl_file.type and not swirl_file.executable:
+            # library
+            swirl_file.source_path = os.path.join(self.tempbase_dir, def_lib_dir,
+                                                os.path.basename(swirl_file.path))
+        elif any([ swirl_file.path.startswith(i) for i in sergeant.specialFolders ]):
+            # this file belongs to the special folders let's skip it
+            return
+        else:
+            #data
+            swirl_file.source_path = os.path.join(self.tempbase_dir, def_data_dir,
+                                                os.path.basename(swirl_file.path))
+        self.files.append(swirl_file)
+        #
+        # for each dep in swirlFile:
+        dependency_dict = swirl_file.getDependenciesDict()
+        for soname in dependency_dict:
+        #    if soname solve with rpm add rpm and return
+        #    if soname is already soved in self.files return
+        #    else find swirlFile add it to self.files and call resolve_file
+            if all([ self.get_swirl_file_by_prov(dep) for dep in dependency_dict[soname]]):
+                #this soname is already resolved we can go to the next one
+                continue
+            else:
+                #we need to resolve this dependency
+                newSwirls = set([ self.swirl.getSwirlFileByProv(dep) for dep in dependency_dict[soname]])
+                if len(newSwirls) != 1:
+                    print "  --  nasty!!  --  ", swirl_file.path
+                    for i in newSwirls:
+                        print "    file ", i
+                    return
+                self.resolve_file(newSwirls.pop())
+
+    def get_swirl_file_by_prov(self, dependency):
+        """find the swirl file which provides the given dependency"""
+        #TODO replicated code from swirl.py remove this!!
+        for swF in self.files:
+            if dependency in swF.provides :
+                return swF
+        return None
+
+
+
+    def make_roll_devel(self):
         """ rocks create package /root/methanol/test/ testpackage prefix=/"""
         if not os.path.exists(self.archive_filename) :
             self.errors = "" + self.archive_filename + " does not exist"
@@ -226,3 +316,8 @@ class Roller:
             return True
         else:
             return False
+
+
+        def findWhoProvides(self, dependencies):
+            """ """
+            matches = yum.YumBase.searchPackageProvides(self, [str(depstring)])

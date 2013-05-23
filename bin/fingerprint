@@ -130,7 +130,7 @@ def main():
         if 'output.swirl' not in options.filename :
             archive_name = options.filename
         roller = FingerPrint.composer.Roller(archive_name, None)
-	if not roller.makeRoll() :
+	if not roller.make_roll() :
             parser.error("Error creating the roll: " + roller.getError())
             sys.exit(1)
         print "Roll successfully created "
