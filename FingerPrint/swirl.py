@@ -362,7 +362,11 @@ class SwirlFile(Arch):
                 retStr += tabs + "    " + str(swFile) + '\n'
         return retStr
 
+    def __hash__(self):
+        """ so I can build sets of SwirlFile
 
+        so far the SwirlFile.path are unique among a swirl so let's use them for the hash """
+        return hash(tuple(self.path) + tuple(self.links))
 
 
 class Dependency(Arch):
