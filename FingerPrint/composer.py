@@ -138,12 +138,14 @@ class Roller:
         # 3. copy files over with wrapper scripts
 
         # recursively resolve all depednencies of the execFile
-        for swf in self.swirl.swirlFiles:
+        for swf in self.swirl.execedFiles:
             self.resolve_file(swf)
 
         #print self.packages
         for swf in self.files:
             print "including file ", swf.path, " source ", swf.source_path
+        for pkg in self.packages:
+            print "including pakcage ", pkg
         return True
 
 
@@ -151,8 +153,10 @@ class Roller:
         """ this function recursively try to resolve the swirlFile"""
         # if swirl_file.path in yum db add rpm
         # else add swirl_file to self.files
+        packages = []
         if 'ELF' in swirl_file.type and swirl_file.executable:
             # executable
+            packages = self.get_package_from_dep([swirl_file.path])
             swirl_file.source_path = os.path.join(self.tempbase_dir, def_exec_dir,
                                                 os.path.basename(swirl_file.path))
         elif 'ELF' in swirl_file.type and not swirl_file.executable:
@@ -164,8 +168,16 @@ class Roller:
             return
         else:
             #data
+            packages = self.get_package_from_dep(swirl_file.path)
             swirl_file.source_path = os.path.join(self.tempbase_dir, def_data_dir,
                                                 os.path.basename(swirl_file.path))
+        if packages :
+            if len(packages) > 1 :
+                print "swirl_file ", swirl_file.path, " has two rpm ", packages
+            # data files and executable files don't have provides so we need to check for them
+            # in the yum DB using full path
+            self.packages.append( packages[0] )
+            return
         self.files.append(swirl_file)
         #
         # for each dep in swirlFile:
@@ -187,6 +199,7 @@ class Roller:
                     return
                 self.resolve_file(newSwirls.pop())
 
+
     def get_swirl_file_by_prov(self, dependency):
         """find the swirl file which provides the given dependency"""
         #TODO replicated code from swirl.py remove this!!
@@ -194,7 +207,6 @@ class Roller:
             if dependency in swF.provides :
                 return swF
         return None
-
 
 
     def make_roll_devel(self):
