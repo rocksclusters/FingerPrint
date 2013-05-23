@@ -17,14 +17,6 @@ import os, signal, re
 from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
 
 
-try:
-    from FingerPrint.stacktracer import trace
-    tracing = True
-except :
-    # no tracer compiled fall back to binary namea
-    print " - Unable to load stacktracer - "
-    tracing = False
-
 
 
 class SyscallTracer:
@@ -86,6 +78,7 @@ class SyscallTracer:
             ptrace_func.ptrace_setoptions(child, options);
             ptrace_func.ptrace_syscall(child);
             files = TracerControlBlock.files
+            TracerControlBlock.set_trace_function()
             while True: 
                 # main loop tracer
                 # 1. wait for syscall from the children
@@ -278,6 +271,17 @@ class TracerControlBlock:
                 if libPath not in TracerControlBlock.dependencies[binaryFile] and libPath != binaryFile:
                     TracerControlBlock.dependencies[binaryFile].append( libPath )
 
+    @classmethod
+    def set_trace_function(cls):
+        """method function need to set up the trace function which needs C binding"""
+        try:
+            from FingerPrint.stacktracer import trace
+            cls.trace = trace
+            cls.tracing = True
+        except :
+            # no tracer compiled fall back to binary name
+            print " - Unable to load stacktracer - "
+            cls.tracing = False
 
     def getProcessName(self):
         return os.readlink('/proc/' + str(self.pid) + '/exe')
@@ -291,9 +295,9 @@ class TracerControlBlock:
         if FingerPrint is compiled with the stacktracer module it will find the
         file object who contains the code which instantiate the open if not it will
         return the path to the current process """
-        if not tracing:
+        if not self.tracing:
             return self.getProcessName()
-        libname = trace(self.pid)
+        libname = self.trace(self.pid)
         prev_lib = ""
         for line in libname.split('\n'):
             splitline = line.split(':')
