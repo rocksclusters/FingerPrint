@@ -165,8 +165,9 @@ class Roller:
             # library
             swirl_file.source_path = os.path.join(self.tempbase_dir, def_lib_dir,
                                                 os.path.basename(swirl_file.path))
-        elif any([ swirl_file.path.startswith(i) for i in sergeant.specialFolders ]):
-            # this file belongs to the special folders let's skip it
+        elif swirl_file.path[0] == '$' or
+            any([ swirl_file.path.startswith(i) for i in sergeant.specialFolders ]):
+            # this file belongs to the special folders or it's a relative path
             return
         else:
             #data
