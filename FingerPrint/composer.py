@@ -6,12 +6,12 @@
 # 
 #
 
-import os, string
+import os, string, stat
 import tempfile
 import shutil
 import tarfile
 
-import sergeant
+import sergeant, utils
 
 #
 # compatibility with python2.4
@@ -141,9 +141,43 @@ class Roller:
         for swf in self.swirl.execedFiles:
             self.resolve_file(swf)
 
-        #print self.packages
+        # make an rpm with all the files
+        rpm_tmp_dir = tempfile.mkdtemp()
+        # laydown the file
         for swf in self.files:
-            print "including file ", swf.path, " source ", swf.source_path
+            dest_path = rpm_tmp_dir + swf.path
+            if not os.path.exists(swf.source_path) :
+                print "file ", swf.source_path, " is not present in the archive"
+                continue
+            if not os.path.exists( os.path.dirname(dest_path) ):
+                os.makedirs( os.path.dirname(dest_path) )
+            if 'ELF' in swf.type and swf.executable:
+                # we need a wrapper script to set the env
+                shutil.copy2(swf.source_path, dest_path + ".orig")
+                f=open(dest_path, 'w')
+                f.write("#!/bin/bash\n\n")
+                for i in swf.env:
+                    f.write("export " + i + "\n")
+                f.write(swf.path + ".orig $@\n")
+                f.close()
+                os.chmod(dest_path, 0755)
+            else:
+                shutil.copy2(swf.source_path, dest_path)
+            for i in swf.links:
+                dest_link = rpm_tmp_dir + i
+                # source link must be without the rpm_tmp_dir part
+                os.symlink( swf.path, dest_link)
+        # rocks create package "/tmp/tmpAFDASDF/*" pakcagename prefix=/
+        (output, retcode) = utils.getOutputAsList(
+                ["rocks", "create", "package", rpm_tmp_dir + "/*", base_dir, "prefix=/"])
+        if any([i for i in output if 'RPM build errors' in i ]):
+            self.errors = '\n'.join(output)
+            self.errors += "Error building base RPM package\n"
+            return False
+
+        #TODO need to run ldconfig
+        self.packages.add(base_dir)
+
         for pkg in self.packages:
             print "including pakcage ", pkg
         return True
