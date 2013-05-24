@@ -347,6 +347,8 @@ class SwirlFile(Arch):
         if self.package:
             retString += " - " + self.package
         retString += "\n"
+        for path in self.links:
+            retString += separator + "  -> " + path + "\n"
         if self.type not in "Data":
             retString += separator + "    Deps: " + string.join(self.getDependenciesDict().keys(), ', ') + "\n"
             retString += separator + "    Provs: " + string.join(self.getProvidesDict().keys(), ', ') + "\n"
