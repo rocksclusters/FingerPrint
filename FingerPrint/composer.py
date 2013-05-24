@@ -151,6 +151,8 @@ class Roller:
 
     def resolve_file(self, swirl_file):
         """ this function recursively try to resolve the swirlFile"""
+        if swirl_file in self.files:
+            return
         # if swirl_file.path in yum db add rpm
         # else add swirl_file to self.files
         packages = []
@@ -198,6 +200,13 @@ class Roller:
                         print "    file ", i
                     return
                 self.resolve_file(newSwirls.pop())
+		#TODO scan openFiles and dynamic dependencies
+		for swf_dyn in swirl_file.dynamicDependencies:
+			self.resolve_file(swf_dyn)
+		for exec_file in swirl_file.openedFiles:
+			for open_file in swirl_file.openedFiles[exec_file]:
+			    self.resolve_file(open_file)
+
 
 
     def get_swirl_file_by_prov(self, dependency):
