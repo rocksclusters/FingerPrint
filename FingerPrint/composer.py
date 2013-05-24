@@ -150,7 +150,11 @@ class Roller:
 
 
     def resolve_file(self, swirl_file):
-        """ this function recursively try to resolve the swirlFile"""
+        """ this function recursively try to resolve the swirlFile
+
+        this function will add the package name to self.packages if it can find
+        an rpm which can sattisfy it if not it will add this swirlf_file to the
+        self.files """
         if swirl_file in self.files:
             return
         # if swirl_file.path in yum db add rpm
@@ -176,6 +180,7 @@ class Roller:
                                                 os.path.basename(swirl_file.path))
         if packages :
             if len(packages) > 1 :
+                #TODO remove print statment
                 print "swirl_file ", swirl_file.path, " has two rpm ", packages
             # data files and executable files don't have provides so we need to check for them
             # in the yum DB using full path
@@ -188,7 +193,7 @@ class Roller:
         for soname in dependency_dict:
         #    if soname solve with rpm add rpm and return
         #    if soname is already soved in self.files return
-        #    else find swirlFile add it to self.files and call resolve_file
+        #    else find swirlFile which satisfy soname and call resolve_file
             if all([ self.get_swirl_file_by_prov(dep) for dep in dependency_dict[soname]]):
                 #this soname is already resolved we can go to the next one
                 continue
@@ -196,12 +201,12 @@ class Roller:
                 #we need to resolve this dependency
                 newSwirls = set([ self.swirl.getSwirlFileByProv(dep) for dep in dependency_dict[soname]])
                 if len(newSwirls) != 1:
+                    #TODO remove print statment
                     print "  --  nasty!!  --  ", swirl_file.path
                     for i in newSwirls:
                         print "    file ", i
                     return
                 self.resolve_file(newSwirls.pop())
-		#TODO scan openFiles and dynamic dependencies
 		for swf_dyn in swirl_file.dynamicDependencies:
 			self.resolve_file(swf_dyn)
 		for exec_file in swirl_file.openedFiles:
