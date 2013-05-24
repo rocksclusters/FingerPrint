@@ -113,7 +113,7 @@ class Roller:
             return False
         base_dir = self.archive_filename.split(".tar.gz")[0]
         # this is the list of package we will have to hadd
-        self.packages = []
+        self.packages = set()
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
@@ -179,7 +179,7 @@ class Roller:
                 print "swirl_file ", swirl_file.path, " has two rpm ", packages
             # data files and executable files don't have provides so we need to check for them
             # in the yum DB using full path
-            self.packages.append( packages[0] )
+            self.packages.add( packages[0] )
             return
         self.files.append(swirl_file)
         #
