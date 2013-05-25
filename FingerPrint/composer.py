@@ -6,7 +6,7 @@
 # 
 #
 
-import os, string, stat
+import os, string, stat, logging
 import tempfile
 import shutil
 import tarfile
@@ -23,6 +23,7 @@ if "any" not in dir(__builtins__):
 def_exec_dir = "bin"
 def_lib_dir = "lib"
 def_data_dir = "data"
+logger = logging.getLogger('fingerprint')
 
 
 class Archiver:
@@ -37,14 +38,13 @@ class Archiver:
         """ """
         self.sergeant = sergeant
         self.archive_filename = archive_filename
-        self.errors = None
 
     def archive(self):
         """        """
         #we need a valid swirl
         if not self.sergeant.check():
-            self.errors = "The given fingerprint fails:\n  " + \
-                '\n  '.join(self.sergeant.getError())
+            logger.error("The fingerprint " + self.sergeant.filename + " fails:\n  " +
+                "\n  ".join(self.sergeant.getError()) + "\n\nThe archive creation failed.\n")
             return False
         # prepare the folders for the tar
         base_tar = tempfile.mkdtemp()
@@ -90,12 +90,6 @@ class Archiver:
         return True
 
 
-
-    def getError(self):
-        """        """
-        return self.errors
-
-
 class Roller:
     """ this class make a roll out of an fingerprint archive"""
 
@@ -103,13 +97,13 @@ class Roller:
         """ """
         self.archive_filename = archive_filename
         self.roll_name = roll_name
-        self.errors = None
 
 
     def make_roll(self):
         """ """
         if not os.path.exists(self.archive_filename) :
-            self.errors = "" + self.archive_filename + " does not exist"
+            logger.error("The file " + self.archive_filename + " does not exist" +
+                " (specify a different one with -f option)")
             return False
         base_dir = self.archive_filename.split(".tar.gz")[0]
         # this is the list of package we will have to hadd
@@ -171,8 +165,8 @@ class Roller:
         (output, retcode) = utils.getOutputAsList(
                 ["rocks", "create", "package", rpm_tmp_dir + "/*", base_dir, "prefix=/"])
         if any([i for i in output if 'RPM build errors' in i ]):
-            self.errors = '\n'.join(output)
-            self.errors += "Error building base RPM package\n"
+            logger.error('\n'.join(output))
+            logger.error("Error building base RPM package\n")
             return False
 
         #TODO need to run ldconfig
@@ -325,10 +319,6 @@ class Roller:
         outfiles.close()
         return True
 
-
-    def getError(self):
-        """        """
-        return self.errors
 
     def get_package_from_dep(self, package_name):
         """ given a list of requires it return a list of packages name which can satisfy them

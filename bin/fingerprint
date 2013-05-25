@@ -7,6 +7,9 @@ from time import gmtime, strftime
 import os, sys, string
 from optparse import OptionParser, OptionGroup
 
+import logging
+
+
 
 try:
     import FingerPrint, FingerPrint.sergeant
@@ -122,6 +125,19 @@ def main():
     elif (options.query + options.verify + options.create + options.display) < 1:
 	parser.error("You must select one (and only one) required flags " + requiredFlags + runHelp )
 
+
+    # create logger
+    logger = logging.getLogger('fingerprint')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('spam.log')
+    fh.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
+    # create console handler and set level to debug
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    logger.addHandler(ch)
+
     if options.create and options.roll:
         # 
         # creata a roll
@@ -131,7 +147,6 @@ def main():
             archive_name = options.filename
         roller = FingerPrint.composer.Roller(archive_name, None)
 	if not roller.make_roll() :
-            parser.error("Error creating the roll: " + roller.getError())
             sys.exit(1)
         print "Roll successfully created "
         return
@@ -150,7 +165,6 @@ def main():
             archive_name = options.filename.split(".swirl")[0] + ".tar.gz"
             comp = FingerPrint.composer.Archiver(serg, archive_name)
             if not comp.archive() :
-                parser.error("Error creating the archive: " + comp.getError())
                 sys.exit(1)
             print "Archive ", archive_name, " created."
             return
