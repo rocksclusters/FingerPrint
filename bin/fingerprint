@@ -130,7 +130,7 @@ def main():
     logger = logging.getLogger('fingerprint')
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
-    fh = logging.FileHandler('spam.log')
+    fh = logging.FileHandler('fingerprint.log')
     fh.setLevel(logging.DEBUG)
     logger.addHandler(fh)
     # create console handler and set level to debug
