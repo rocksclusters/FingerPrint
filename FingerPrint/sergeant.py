@@ -61,7 +61,8 @@ prelink = utils.which("prelink")
 
 #let's skip proc sys tmp 
 specialFolders = ["/proc/","/sys/","/tmp", "/dev/",
-                "/etc/shadow", "/etc/passwd", "/etc/group"]
+                "/etc/shadow", "/etc/passwd", "/etc/group",
+                "/etc/nsswitch.conf", "/etc/localtime", "/etc/hosts"]
 
 
 def getHash(fileName, fileType):
