@@ -76,13 +76,14 @@ class Blotter:
         # add all the fileList to the swirl and figure out all their static libraries
         for i in fileList:
             if os.path.isfile(i):
+                cmd = i
                 if i in FingerPrint.syscalltracer.TracerControlBlock.cmdline:
                     # the user cmdline could be a symlink so we want to keep track
                     cmd = FingerPrint.syscalltracer.TracerControlBlock.cmdline[i][0]
                     cmd = utils.which(cmd)
-                    if cmd :
-                        i = cmd
-                swirlFile = PluginManager.getSwirl(i, self.swirl)
+                    if not cmd :
+                        cmd = i
+                swirlFile = PluginManager.getSwirl(cmd, self.swirl)
                 # add the env
                 if i in FingerPrint.syscalltracer.TracerControlBlock.env:
                     process_env = FingerPrint.syscalltracer.TracerControlBlock.env[i]
