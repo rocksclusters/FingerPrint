@@ -158,9 +158,12 @@ class Roller:
                     os.chmod(dest_path, 0755)
                 else:
                     shutil.copy2(swf.source_path, dest_path)
+                # and the symlinks
                 for i in swf.links:
                     dest_link = rpm_tmp_dir + i
                     # source link must be without the rpm_tmp_dir part
+                    if not os.path.isdir(os.path.dirname(dest_link)):
+                        os.makedirs(os.path.dirname(dest_link))
                     os.symlink( swf.path, dest_link)
             # rocks create package "/tmp/tmpAFDASDF/*" pakcagename prefix=/
             logger.info("RPM root dir " + rpm_tmp_dir)
