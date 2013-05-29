@@ -136,6 +136,7 @@ class Blotter:
                             if execFile not in swirlFile.openedFiles:
                                 swirlFile.openedFiles[execFile] = []
                             swirlFile.openedFiles[execFile].append(swirlOpenedFile)
+        self.swirl.ldconf_paths = self._get_ldconf_paths()
         #hash and get package name
         for swf in self.swirl.swirlFiles:
             #let's skip relative path
@@ -169,6 +170,22 @@ class Blotter:
                     "python2.7 or ctype for dynamic tracing): ", e)
 
 
+    def _get_ldconf_paths(self):
+        """return a the list of path used by the dynamic loader
+
+        this list is gathered from what you have in /etc/ld.so.conf"""
+        return_paths = []
+        (output, retcode) = utils.getOutputAsList(["ldconfig", "-v"])
+        default_paths = ["/lib", "/usr/lib"]
+
+        # if run as a user it will fail so we don't care for retcode
+        for line in output:
+            if line and line[0] == '/':
+                line = line.split(":")[0]
+                if line not in default_paths:
+                    #it's a path
+                    return_paths.append(line.split(":")[0])
+        return return_paths
 
 
     #
