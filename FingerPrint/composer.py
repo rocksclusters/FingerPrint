@@ -151,13 +151,19 @@ class Roller:
                     shutil.copy2(swf.source_path, dest_path + ".orig")
                     f=open(dest_path, 'w')
                     f.write("#!/bin/bash\n\n")
+                    ldconf_written = False
                     for i in swf.env:
                         if self.swirl.ldconf_paths and i.startswith('LD_LIBRARY_PATH'):
                             #we need to prepend the ldconf_paths
-                            i = i.split('=')[0] + ':'.join( self.swirl.ldconf_paths )
+                            prefix = 'LD_LIBRARY_PATH=' + ':'.join( self.swirl.ldconf_paths )
+                            ldconf_written = True
                             if i.split('=')[1] :
-                                i += ':' + i.split('=')[1]
+                                prefix += ':' + i.split('=')[1]
+                            i = prefix
                         f.write("export " + i + "\n")
+                    if not ldconf_written:
+                        f.write("export LD_LIBRARY_PATH=" +
+                                ':'.join( self.swirl.ldconf_paths ) + '\n')
                     f.write(swf.path + ".orig $@\n")
                     f.close()
                     os.chmod(dest_path, 0755)
