@@ -108,6 +108,8 @@ class Roller:
         base_dir = self.archive_filename.split(".tar.gz")[0]
         # this is the list of package we will have to hadd
         self.packages = set()
+        # this is the one we have to exclude
+        self.disablePckgs = set()
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
@@ -193,6 +195,7 @@ class Roller:
         #for pkg in self.packages:
         #    print "including pakcage ", pkg
         print "yum install ", ' '.join(self.packages)
+        print "rpm -e ", ' '.join(self.disablePckgs)
         return True
 
 
@@ -247,27 +250,29 @@ class Roller:
             packages = self.get_package_from_dep([i.getName() for i in dependency_dict[soname]])
             logger.debug("dep " + str([str(i) for i in dependency_dict[soname]]) +
                         " resolves to " + str(packages))
-            if packages :
-                if len(packages) > 1:
-                    logger.error("Swirl file " + str(swirl_file.path) + " dependencies " +
-                        str(dependency_dict[soname]) + " resolve with two RPMs " + str(packages))
+            if packages and len(packages) == 1:
                 self.packages.add( packages[0] )
                 continue
-            else:
-                #we need to resolve this dependency
-                newSwirls = set([ self.swirl.getSwirlFileByProv(dep) for dep in dependency_dict[soname]])
-                if len(newSwirls) != 1:
-                    #TODO remove print statment
-                    print "  --  nasty!!  --  ", swirl_file.path
-                    for i in newSwirls:
-                        print "    file ", i
-                    return
-                self.resolve_file(newSwirls.pop())
-		for swf_dyn in swirl_file.dynamicDependencies:
-			self.resolve_file(swf_dyn)
-		for exec_file in swirl_file.openedFiles:
-			for open_file in swirl_file.openedFiles[exec_file]:
-			    self.resolve_file(open_file)
+            elif packages and len(packages) > 1:
+                logger.error("Swirl file " + str(swirl_file.path) + " dependencies " +
+                        str(dependency_dict[soname]) + " resolve with two RPMs " + str(packages))
+                #more than one dependencies let's ban them and add the file to the rpm
+                self.disablePckgs = self.disablePckgs.union(packages)
+            # else: we don't have a package or we have multiple packages
+            # so we need to resolve this dependency
+            newSwirls = set([ self.swirl.getSwirlFileByProv(dep) for dep in dependency_dict[soname]])
+            if len(newSwirls) != 1:
+                #TODO remove print statment
+                print "  --  nasty!!  --  ", swirl_file.path
+                for i in newSwirls:
+                    print "    file ", i
+                return
+            self.resolve_file(newSwirls.pop())
+	    for swf_dyn in swirl_file.dynamicDependencies:
+	        self.resolve_file(swf_dyn)
+	    for exec_file in swirl_file.openedFiles:
+	        for open_file in swirl_file.openedFiles[exec_file]:
+	            self.resolve_file(open_file)
 
 
 
