@@ -44,19 +44,6 @@ class ElfPlugin(PluginManager):
         if useCache and dependency.getName() in cls._pathCache :
             return cls._pathCache[dependency.getName()]
         #for each library we have in the system
-        for line in getOutputAsList(["/sbin/ldconfig","-p"])[0]:
-            # TODO it needs to handle in a better way the hwcap field
-            # if dependency is 64 and library is 64 or
-            # dependency is 32 and library is 32:
-            if len(line) > 0 and soname in line and 'hwcap' not in line and \
-                ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
-                (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
-                temp = line.split('=>')
-                if len(temp) == 2:
-                    provider=temp[1].strip()
-                    if cls._checkMinor(provider, dependency.getName()):
-                        cls._pathCache[dependency.getName()] = provider
-                        return provider
         pathToScan = cls.systemPath[:] + rpath
         if "LD_LIBRARY_PATH" in os.environ:
             #we need to scan the LD_LIBRARY_PATH too
@@ -70,6 +57,19 @@ class ElfPlugin(PluginManager):
                 #we found the soname and minor are there return true
                 cls._pathCache[dependency.getName()] = provider
                 return provider
+        for line in getOutputAsList(["/sbin/ldconfig","-p"])[0]:
+            # TODO it needs to handle in a better way the hwcap field
+            # if dependency is 64 and library is 64 or
+            # dependency is 32 and library is 32:
+            if len(line) > 0 and soname in line and 'hwcap' not in line and \
+                ( (dependency.is64bits() and cls._ldconfig_64bits in line) or \
+                (dependency.is32bits() and not cls._ldconfig_64bits in line) ):
+                temp = line.split('=>')
+                if len(temp) == 2:
+                    provider=temp[1].strip()
+                    if cls._checkMinor(provider, dependency.getName()):
+                        cls._pathCache[dependency.getName()] = provider
+                        return provider
         #the dependency could not be located
         return None
 
