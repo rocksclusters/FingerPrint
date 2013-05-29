@@ -353,6 +353,7 @@ class Roller:
         and they are available in the currently enabled yum repository """
         import yum
         yb = yum.YumBase()
+        excludeRPMs = ["foundation-", "rocks-ekv", "condor"]
         matched = []
         for dep in package_name:
             if '(GLIBC_PRIVATE)' in dep:
@@ -360,12 +361,16 @@ class Roller:
                 continue
             matches = yb.searchPackageProvides( [dep] )
             if len(matches) > 0:
-                matched += matches
+                for rpm in matches:
+                    if all([ i not in rpm.name for i in excludeRPMs ]):
+                        matched.append(rpm)
+                #matched += [ rpm for rpm in matches for i in excludeRPMs if i not in rpm.name ]
             else:
                 # we can't satisfy this dep so let's fail
                 return []
-        # I need to exclude the installed RPM from the return list
-        return list(set([pkg.name for pkg in yum.misc.unique(matched)])) #if 'installed' not in pkg.repo.name ]
+        # do I need to exclude the installed RPM from the return list?
+        # if 'installed' not in pkg.repo.name ]
+        return list(set([pkg.name for pkg in yum.misc.unique(matched)]))
 
 
     def useRPMPackage(self, package_name):
