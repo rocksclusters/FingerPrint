@@ -26,6 +26,7 @@ class Swirl(object):
         self.execedFiles = []
         # command line used for dynamic tracing
         self.cmdLine = None
+        self.ldconf_paths = []
 
 
     def isFileTracked(self, fileName):
@@ -173,6 +174,8 @@ class Swirl(object):
         #file list
         if self.cmdLine :
             retStr += " Command line: " + self.cmdLine + "\n"
+        if self.ldconf_paths :
+            retStr += " ls.so.conf path list:\n  " + '\n  '.join(self.ldconf_paths) + '\n'
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += swF.printVerbose()
