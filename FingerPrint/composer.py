@@ -345,6 +345,9 @@ class Roller:
         yb = yum.YumBase()
         matched = []
         for dep in package_name:
+            if '(GLIBC_PRIVATE)' in dep:
+                # glibc_private is not tracked in the rpm database so skip it
+                continue
             matches = yb.searchPackageProvides( [dep] )
             if len(matches) > 0:
                 matched += matches
