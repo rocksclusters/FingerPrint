@@ -152,6 +152,11 @@ class Roller:
                     f=open(dest_path, 'w')
                     f.write("#!/bin/bash\n\n")
                     for i in swf.env:
+                        if self.swirl.ldconf_paths and i.startswith('LD_LIBRARY_PATH'):
+                            #we need to prepend the ldconf_paths
+                            i = i.split('=')[0] + ':'.join( self.swirl.ldconf_paths )
+                            if i.split('=')[1] :
+                                i += ':' + i.split('=')[1]
                         f.write("export " + i + "\n")
                     f.write(swf.path + ".orig $@\n")
                     f.close()
