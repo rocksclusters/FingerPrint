@@ -190,8 +190,9 @@ class Roller:
         else:
             logger.info("No files to include in the roll")
 
-        for pkg in self.packages:
-            print "including pakcage ", pkg
+        #for pkg in self.packages:
+        #    print "including pakcage ", pkg
+        print "yum install ", ' '.join(self.packages)
         return True
 
 
