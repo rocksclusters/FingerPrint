@@ -244,6 +244,15 @@ class Roller:
             if all([ self.get_swirl_file_by_prov(dep) for dep in dependency_dict[soname]]):
                 #this soname is already resolved we can go to the next one
                 continue
+            packages = self.get_package_from_dep([i.getName() for i in dependency_dict[soname]])
+            logger.debug("dep " + str([str(i) for i in dependency_dict[soname]]) +
+                        " resolves to " + str(packages))
+            if packages :
+                if len(packages) > 1:
+                    logger.error("Swirl file " + str(swirl_file.path) + " dependencies " +
+                        str(dependency_dict[soname]) + " resolve with two RPMs " + str(packages))
+                self.packages.add( packages[0] )
+                continue
             else:
                 #we need to resolve this dependency
                 newSwirls = set([ self.swirl.getSwirlFileByProv(dep) for dep in dependency_dict[soname]])
