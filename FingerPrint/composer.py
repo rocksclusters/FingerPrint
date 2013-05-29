@@ -73,10 +73,10 @@ class Archiver:
                 os.path.exists(swf.path):
                 # do not copy twice the same file
                 shutil.copy2(swf.path, temp_path)
-            for i in swf.links:
-                new_link = os.path.join(temp_path, os.path.basename(i))
-                if not os.path.exists( new_link ):
-                    os.symlink( os.path.basename(swf.path), new_link)
+            #for i in swf.links:
+            #    new_link = os.path.join(temp_path, os.path.basename(i))
+            #    if not os.path.exists( new_link ):
+            #        os.symlink( os.path.basename(swf.path), new_link)
         # copy the swirl itself
         shutil.copy2(self.sergeant.filename, base_dir)
         # let's do the tar
