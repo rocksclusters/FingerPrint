@@ -215,6 +215,7 @@ class Roller:
                                                 os.path.basename(swirl_file.path))
         elif 'ELF' in swirl_file.type and not swirl_file.executable:
             # library
+            packages = self.get_package_from_dep(swirl_file.getPaths(), False)
             swirl_file.source_path = os.path.join(self.tempbase_dir, def_lib_dir,
                                                 os.path.basename(swirl_file.path))
         elif swirl_file.path[0] == '$' or \
@@ -267,6 +268,9 @@ class Roller:
                 return
             self.resolve_file(newSwirls.pop())
 	    for swf_dyn in swirl_file.dynamicDependencies:
+                # dynamic libs can be accessed both by soname and be full path for this
+                # reason we don't want to search them only by soname (since their full
+                # path could be different)
 	        self.resolve_file(swf_dyn)
 	    for exec_file in swirl_file.openedFiles:
 	        for open_file in swirl_file.openedFiles[exec_file]:
@@ -283,7 +287,7 @@ class Roller:
         return None
 
 
-    def get_package_from_dep(self, package_name):
+    def get_package_from_dep(self, package_name, match_all = True):
         """ given a list of requires it return a list of packages name which can satisfy them
         and they are available in the currently enabled yum repository """
         import yum
@@ -299,9 +303,11 @@ class Roller:
                 for rpm in matches:
                     if all([ i not in rpm.name for i in excludeRPMs ]):
                         matched.append(rpm)
-            else:
+            elif match_all:
                 # we can't satisfy this dep so let's fail
                 return []
+            else:
+                pass
         # do I need to exclude the installed RPM from the return list?
         # if 'installed' not in pkg.repo.name ]
         return list(set([pkg.name for pkg in yum.misc.unique(matched)]))
