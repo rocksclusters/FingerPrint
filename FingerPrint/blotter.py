@@ -7,7 +7,7 @@
 #
 
 from datetime import datetime
-import subprocess
+import subprocess, logging
 import os
 #TODO remove shlex for python 2.4
 import shlex
@@ -33,6 +33,8 @@ from FingerPrint.utils import getOutputAsList
 
 import FingerPrint.syscalltracer
 
+
+logger = logging.getLogger('fingerprint')
 
 
 class Blotter:
@@ -175,7 +177,12 @@ class Blotter:
 
         this list is gathered from what you have in /etc/ld.so.conf"""
         return_paths = []
-        (output, retcode) = utils.getOutputAsList(["ldconfig", "-v"])
+	ldconf_cmd = "ldconfig"
+	if not utils.which(ldconf_cmd) :
+            ldconf_cmd = "/sbin/ldconfig"
+	if not utils.which(ldconf_cmd) :
+	    logger.error("Unable to find ldconfig. You need ldconfig in you PATH to properly run fingerprint.")
+        (output, retcode) = utils.getOutputAsList([ldconf_cmd, "-v"])
         default_paths = ["/lib", "/usr/lib"]
 
         # if run as a user it will fail so we don't care for retcode
