@@ -114,7 +114,9 @@ class Roller:
         # the additional self.files[0].source_path attribute has been added
         self.files = []
 
-        # extract archive
+        #
+        # read the content of the archive
+        #
         temp_workdir = tempfile.mkdtemp()
         self.tempbase_dir = os.path.join(temp_workdir, base_dir)
         archive_file = tarfile.open(self.archive_filename, 'r:gz')
@@ -125,20 +127,16 @@ class Roller:
         self.swirl = sergeant.readFromPickle(os.path.join(self.tempbase_dir, base_dir) \
                                         + ".swirl" ).swirl
 
-
-        # for each swirl_file in exec
-        # 1. check if swirl_file.package is present in the local yum repo
-        #    if so add package it and stop
-        # 2. check if for each dependency swirl_file can be found int the local yum repo
-        # 2. check links
-        # 3. copy files over with wrapper scripts
-
-        # recursively resolve all depednencies of the execFile
+        #
+        # recursively resolve all dependencies of the execedFile
+        #
         for swf in self.swirl.execedFiles:
             self.resolve_file(swf)
 
         if self.files:
+            #
             # make an rpm with all the files
+            #
             rpm_tmp_dir = tempfile.mkdtemp()
             # laydown the file
             for swf in self.files:
@@ -186,11 +184,10 @@ class Roller:
                 logger.error('\n'.join(output))
                 logger.error("Error building base RPM package\n")
                 return False
-
             #TODO need to run ldconfig
             self.packages.add(base_dir)
         else:
-            logger.info("No files to include in the roll")
+            logger.info("No files to include in the custom RPM")
 
         #for pkg in self.packages:
         #    print "including pakcage ", pkg
@@ -285,74 +282,6 @@ class Roller:
         return None
 
 
-    def make_roll_devel(self):
-        """ rocks create package /root/methanol/test/ testpackage prefix=/"""
-        if not os.path.exists(self.archive_filename) :
-            self.errors = "" + self.archive_filename + " does not exist"
-            return False
-        base_dir = self.archive_filename.split(".tar.gz")[0]
-
-        ## make the output directory
-        #destination_base_dir = "/opt"
-        #dest_dir = os.path.join(destination_base_dir, base_dir)
-        #if os.path.exists(dest_dir) :
-        #    self.errors = "Destiation dir " + dest_dir + " already exists. Please remove it."
-        #    return False
-        #os.mkdir(dest_dir)
-        #virtual_root = os.path.join(dest_dir, 'cde-root')
-
-        # extract archive
-        temp_workdir = tempfile.mkdtemp()
-        tempbase_dir = os.path.join(temp_workdir, base_dir)
-        archive_file = tarfile.open(self.archive_filename, 'r:gz')
-        archive_file.extractall(temp_workdir)
-        archive_file.close()
-
-        # open swirl
-        serg = sergeant.readFromPickle(os.path.join(tempbase_dir, base_dir) \
-                                        + ".swirl" )
-
-        # 1. check package
-        # 2. check links
-        # 3. copy files over with wrapper scripts
-
-        outfiles = open("out_files.sh", 'w')
-        # copy all the files referenced by this swirl
-        for swf in serg.swirl.swirlFiles:
-            if 'ELF' in swf.type and swf.executable:
-                # its executable let's just place it where it belongs
-                source_path = os.path.join(tempbase_dir, def_exec_dir, os.path.basename(swf.path))
-            elif 'ELF' in swf.type and not swf.executable:
-                source_path = os.path.join(tempbase_dir, def_lib_dir, os.path.basename(swf.path))
-            elif any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
-                # this file belongs to the special folders let's skip it
-                continue
-            else:
-                source_path = os.path.join(tempbase_dir, def_data_dir, os.path.basename(swf.path))
-
-            #dest_path = wirtual_root + swf.path
-            dest_path = swf.path
-            if os.path.exists(dest_path) :
-                print "file ", dest_path, " is already present on the system"
-                continue
-            if not os.path.exists(source_path) :
-                print "file ", source_path, " is not present in the archive"
-                continue
-            if not os.path.exists( os.path.dirname(dest_path) ) :
-                os.makedirs( os.path.dirname(dest_path) )
-            shutil.copy2(source_path, dest_path)
-            outfiles.write("rm -fr " + dest_path + '\n')
-            for i in swf.links:
-                if os.path.exists(i) :
-                    print "skipping link ", i
-                    continue
-                print "making a link ", i
-                os.symlink( dest_path, i)
-                outfiles.write("rm -fr " + i + '\n')
-        outfiles.close()
-        return True
-
-
     def get_package_from_dep(self, package_name):
         """ given a list of requires it return a list of packages name which can satisfy them
         and they are available in the currently enabled yum repository """
@@ -369,7 +298,6 @@ class Roller:
                 for rpm in matches:
                     if all([ i not in rpm.name for i in excludeRPMs ]):
                         matched.append(rpm)
-                #matched += [ rpm for rpm in matches for i in excludeRPMs if i not in rpm.name ]
             else:
                 # we can't satisfy this dep so let's fail
                 return []
