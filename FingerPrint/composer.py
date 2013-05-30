@@ -160,10 +160,11 @@ class Roller:
                             if i.split('=')[1] :
                                 prefix += ':' + i.split('=')[1]
                             i = prefix
-                        f.write("export " + i + "\n")
+                        f.write("export " + i + ":$" + i.split("=")[0] + "\n")
                     if not ldconf_written:
                         f.write("export LD_LIBRARY_PATH=" +
-                                ':'.join( self.swirl.ldconf_paths ) + '\n')
+                                ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\n')
+                    f.write("\n")
                     f.write(swf.path + ".orig $@\n")
                     f.close()
                     os.chmod(dest_path, 0755)
