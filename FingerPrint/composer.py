@@ -223,7 +223,7 @@ class Roller:
             return
         else:
             #data
-            packages = self.get_package_from_dep(swirl_file.path)
+            packages = self.get_package_from_dep([swirl_file.path])
             swirl_file.source_path = os.path.join(self.tempbase_dir, def_data_dir,
                                                 os.path.basename(swirl_file.path))
         if packages :
