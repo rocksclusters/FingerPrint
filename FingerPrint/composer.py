@@ -72,6 +72,9 @@ class Archiver:
             if not os.path.exists(os.path.join(temp_path, os.path.basename(swf.path))) and \
                 os.path.exists(swf.path):
                 # do not copy twice the same file
+                if sergeant.prelink :
+                    utils.getOutputAsList([sergeant.prelink, "-u",
+                        os.path.join(temp_path, os.path.basename(swf.path))])
                 shutil.copy2(swf.path, temp_path)
             #for i in swf.links:
             #    new_link = os.path.join(temp_path, os.path.basename(i))
