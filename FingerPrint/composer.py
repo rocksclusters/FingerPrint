@@ -96,6 +96,9 @@ class Archiver:
 class Roller:
     """ this class make a roll out of an fingerprint archive"""
 
+    # this is a list of rpm packages which are broken or known to cause problem
+    excluded_packages = ["fftw"] # fftw rocks rpm is compiled only statically
+
     def __init__(self, archive_filename, roll_name):
         """ """
         self.archive_filename = archive_filename
@@ -115,7 +118,11 @@ class Roller:
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
+        # internal swirl package we want to include in the final rpm
         self.wanted_pcks = set()
+        # list of rpm pakcage we have to exclude
+        self.disable_pcks = set()
+
 
         #
         # read the content of the archive
@@ -195,6 +202,7 @@ class Roller:
             logger.info("No files to include in the custom RPM")
 
         print "yum install ", ' '.join(self.packages)
+        print "yum remove ", ' '.join(self.disable_pcks)
         print "Skipped swirl Files:\n", '\n'.join([i.path for i in self.skipped_swfs])
         return True
 
@@ -233,12 +241,13 @@ class Roller:
             if len(packages) > 1 :
                 #TODO remove print statment
                 print "swirl_file ", swirl_file.path, " has two rpm ", packages
-            if swirl_file.package not in self.wanted_pcks:
+            if swirl_file.package not in self.wanted_pcks and \
+                packages[0] not in self.excluded_packages:
                 self.skipped_swfs.add( swirl_file  )
                 self.packages.add( packages[0] )
                 return
             else:
-                print "Unwanted: ", packages
+                self.disable_pcks |= set(packages)
         self.wanted_pcks.add(swirl_file.package)
         self.files.append(swirl_file)
         #
