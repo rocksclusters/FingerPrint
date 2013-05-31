@@ -115,6 +115,7 @@ class Roller:
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
+        self.wanted_pcks = set()
 
         #
         # read the content of the archive
@@ -232,9 +233,13 @@ class Roller:
             if len(packages) > 1 :
                 #TODO remove print statment
                 print "swirl_file ", swirl_file.path, " has two rpm ", packages
-            self.skipped_swfs.add( swirl_file  )
-            self.packages.add( packages[0] )
-            return
+            if swirl_file.package not in self.wanted_pcks:
+                self.skipped_swfs.add( swirl_file  )
+                self.packages.add( packages[0] )
+                return
+            else:
+                print "Unwanted: ", packages
+        self.wanted_pcks.add(swirl_file.package)
         self.files.append(swirl_file)
         #
         # for each swf in swirlFile.all_dependencies
