@@ -111,8 +111,7 @@ class Roller:
         base_dir = self.archive_filename.split(".tar.gz")[0]
         # this is the list of package we will have to hadd
         self.packages = set()
-        # this is the one we have to exclude
-        self.disablePckgs = set()
+        self.skipped_swfs = set()
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
@@ -188,13 +187,14 @@ class Roller:
                 logger.error('\n'.join(output))
                 logger.error("Error building base RPM package\n")
                 return False
+            logger.info('\n'.join(output))
             #TODO need to run ldconfig
             self.packages.add(base_dir)
         else:
             logger.info("No files to include in the custom RPM")
 
         print "yum install ", ' '.join(self.packages)
-        print "rpm -e ", ' '.join(self.disablePckgs)
+        print "Skipped swirl Files:\n", '\n'.join([i.path for i in self.skipped_swfs])
         return True
 
 
@@ -232,6 +232,7 @@ class Roller:
             if len(packages) > 1 :
                 #TODO remove print statment
                 print "swirl_file ", swirl_file.path, " has two rpm ", packages
+            self.skipped_swfs.add( swirl_file  )
             self.packages.add( packages[0] )
             return
         self.files.append(swirl_file)
