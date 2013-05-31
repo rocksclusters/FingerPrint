@@ -193,8 +193,6 @@ class Roller:
         else:
             logger.info("No files to include in the custom RPM")
 
-        #for pkg in self.packages:
-        #    print "including pakcage ", pkg
         print "yum install ", ' '.join(self.packages)
         print "rpm -e ", ' '.join(self.disablePckgs)
         return True
@@ -204,11 +202,11 @@ class Roller:
         """ this function recursively try to resolve the swirlFile
 
         this function will add the package name to self.packages if it can find
-        an rpm which can sattisfy it if not it will add this swirlf_file to the
+        an rpm which can sattisfy it, if not, it will add this swirlf_file to the
         self.files """
         if swirl_file in self.files:
             return
-        # if swirl_file.path in yum db add rpm
+        # if swirl_file.path in yum db add rpm to self.packages
         # else add swirl_file to self.files
         packages = []
         if 'ELF' in swirl_file.type and swirl_file.executable:
@@ -234,50 +232,23 @@ class Roller:
             if len(packages) > 1 :
                 #TODO remove print statment
                 print "swirl_file ", swirl_file.path, " has two rpm ", packages
-            # data files and executable files don't have provides so we need to check for them
-            # in the yum DB using full path
             self.packages.add( packages[0] )
             return
         self.files.append(swirl_file)
         #
-        # for each dep in swirlFile:
-        dependency_dict = swirl_file.getDependenciesDict()
-        for soname in dependency_dict:
-        #    if soname solve with rpm add rpm and return
-        #    if soname is already soved in self.files return
-        #    else find swirlFile which satisfy soname and call resolve_file
-            if all([ self.get_swirl_file_by_prov(dep) for dep in dependency_dict[soname]]):
-                #this soname is already resolved we can go to the next one
-                continue
-            packages = self.get_package_from_dep([i.getName() for i in dependency_dict[soname]])
-            logger.debug("dep " + str([str(i) for i in dependency_dict[soname]]) +
-                        " resolves to " + str(packages))
-            if packages and len(packages) == 1:
-                self.packages.add( packages[0] )
-                continue
-            elif packages and len(packages) > 1:
-                logger.error("Swirl file " + str(swirl_file.path) + " dependencies " +
-                        str(dependency_dict[soname]) + " resolve with two RPMs " + str(packages))
-                #more than one dependencies let's ban them and add the file to the rpm
-                self.disablePckgs = self.disablePckgs.union(packages)
-            # else: we don't have a package or we have multiple packages
-            # so we need to resolve this dependency
-            newSwirls = set([ self.swirl.getSwirlFileByProv(dep) for dep in dependency_dict[soname]])
-            if len(newSwirls) != 1:
-                #TODO remove print statment
-                print "  --  nasty!!  --  ", swirl_file.path
-                for i in newSwirls:
-                    print "    file ", i
-                return
-            self.resolve_file(newSwirls.pop())
-	    for swf_dyn in swirl_file.dynamicDependencies:
-                # dynamic libs can be accessed both by soname and be full path for this
-                # reason we don't want to search them only by soname (since their full
-                # path could be different)
-	        self.resolve_file(swf_dyn)
-	    for exec_file in swirl_file.openedFiles:
-	        for open_file in swirl_file.openedFiles[exec_file]:
-	            self.resolve_file(open_file)
+        # for each swf in swirlFile.all_dependencies
+        #   if not already in self.files resolve_file(swf)
+        deps = self.swirl.getListSwirlFileProvide( swirl_file.staticDependencies )+\
+                                swirl_file.dynamicDependencies
+        for new_swf in deps:
+            if new_swf not in self.files:
+                #this file is already in the included files
+                self.resolve_file(new_swf)
+        # scan the open files too
+        for exec_file in swirl_file.openedFiles:
+            for open_file in swirl_file.openedFiles[exec_file]:
+                if open_file not in self.files:
+                    self.resolve_file(open_file)
 
 
 
