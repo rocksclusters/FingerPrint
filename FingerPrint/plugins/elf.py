@@ -51,6 +51,7 @@ class ElfPlugin(PluginManager):
         # remove duplicate
         pathToScan = list(set(pathToScan))
         for path in pathToScan:
+            path = os.path.normpath(path)
             provider = path + '/' + soname
             if os.path.isfile(provider) and \
                 cls._checkMinor(provider, dependency.getName()):
