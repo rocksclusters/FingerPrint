@@ -121,7 +121,7 @@ class Blotter:
         # excludeFileName: file whcih should be ingored and not added to the swirl
         excludeFileName = ['/etc/ld.so.cache']
         for lib_swFile in files:
-            swirlFile = self.swirl.createSwirlFile(lib_swFile)
+            swirlFile = PluginManager.getSwirl(lib_swFile, self.swirl)
             if swirlFile.isLoader() :
                 continue
             all_dependencies_files=[]
@@ -133,7 +133,7 @@ class Blotter:
                     # we need to remove some useless files from the opened list
                     # if not depenedencies will be listed as opned files
                     if openedFile not in excludeFileName and not os.path.isdir(openedFile):
-                        swirlOpenedFile = self.swirl.createSwirlFile(openedFile)
+                        swirlOpenedFile = PluginManager.getSwirl(openedFile, self.swirl)
                         if swirlOpenedFile.path not in all_dependencies_files:
                             if execFile not in swirlFile.openedFiles:
                                 swirlFile.openedFiles[execFile] = []
