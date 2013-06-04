@@ -103,6 +103,8 @@ class Roller:
         """ """
         self.archive_filename = archive_filename
         self.roll_name = roll_name
+        import yum
+        self.yb = yum.YumBase()
 
 
     def make_roll(self):
@@ -280,14 +282,13 @@ class Roller:
         """ given a list of requires it return a list of packages name which can satisfy them
         and they are available in the currently enabled yum repository """
         import yum
-        yb = yum.YumBase()
         excludeRPMs = ["foundation-", "rocks-ekv", "condor"]
         matched = []
         for dep in package_name:
             if '(GLIBC_PRIVATE)' in dep:
                 # glibc_private is not tracked in the rpm database so skip it
                 continue
-            matches = yb.searchPackageProvides( [dep] )
+            matches = self.yb.searchPackageProvides( [dep] )
             if len(matches) > 0:
                 for rpm in matches:
                     if all([ i not in rpm.name for i in excludeRPMs ]):
@@ -305,6 +306,8 @@ class Roller:
     def useRPMPackage(self, package_name):
         """ return true if the package_name is available in the current yum database
         and package_name is the same version as the one available in the local yum DB
+
+        TODO unused at the moment
         """
         #this whole thing will run only on REDHAT system
         import yum
