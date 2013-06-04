@@ -255,7 +255,10 @@ class Roller:
             else:
                 self.disable_pcks |= set(packages)
         logger.debug("Adding swirl: " + swirl_file.path)
-        self.wanted_pcks.add(swirl_file.package)
+        if 'ELF' in swirl_file.type :
+            # for ELF swf if we select the libmpi.so.2 we also want to carry all its dynamic libraries
+            # even if their name matches an available package for this reason we use wanted_pcks
+            self.wanted_pcks.add(swirl_file.package)
         self.files.append(swirl_file)
         #
         # for each swf in swirlFile.all_dependencies
