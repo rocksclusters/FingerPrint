@@ -154,7 +154,7 @@ class Roller:
             for swf in self.files:
                 dest_path = rpm_tmp_dir + swf.path
                 if not os.path.exists(swf.source_path) :
-                    print "file ", swf.source_path, " is not present in the archive"
+                    logger.debug("File " + swf.source_path + " is not present in the archive")
                     continue
                 if not os.path.exists( os.path.dirname(dest_path) ):
                     os.makedirs( os.path.dirname(dest_path) )
@@ -247,9 +247,11 @@ class Roller:
                 packages[0] not in self.excluded_packages:
                 self.skipped_swfs.add( swirl_file  )
                 self.packages.add( packages[0] )
+                logger.debug("Adding package " + packages[0] + " for swirl " + swirl_file.path)
                 return
             else:
                 self.disable_pcks |= set(packages)
+        logger.debug("Adding swirl: " + swirl_file.path)
         self.wanted_pcks.add(swirl_file.package)
         self.files.append(swirl_file)
         #
