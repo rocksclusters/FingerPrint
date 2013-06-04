@@ -247,6 +247,9 @@ class Roller:
                 packages[0] not in self.excluded_packages:
                 self.skipped_swfs.add( swirl_file  )
                 self.packages.add( packages[0] )
+                # so we found a package which can handle this swf but we should still process its
+                # opened file in case it is an interpreter
+                self._process_open_file(swirl_file)
                 logger.debug("Adding package " + packages[0] + " for swirl " + swirl_file.path)
                 return
             else:
@@ -263,7 +266,11 @@ class Roller:
             if new_swf not in self.files:
                 #this file is already in the included files
                 self.resolve_file(new_swf)
-        # scan the open files too
+        self._process_open_file(swirl_file)
+
+
+    def _process_open_file(self, swirl_file):
+        """ scan the open files of this swirl """
         for exec_file in swirl_file.openedFiles:
             for open_file in swirl_file.openedFiles[exec_file]:
                 if open_file not in self.files:
