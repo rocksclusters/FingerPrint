@@ -13,9 +13,9 @@ import FingerPrint.sergeant
 
 import tempfile
 import os, signal, re
-#TODO add logger
-from logging import (getLogger, DEBUG, INFO, WARNING, ERROR)
+import logging
 
+logger = logging.getLogger('fingerprint')
 
 
 
@@ -69,10 +69,10 @@ class SyscallTracer:
         else:
             # father or tracer process
             # we trace the execution here
-            print "The fingerprint process %d going to trace %d" % (os.getpid(), child)
+            logger.debug("The fingerprint process %d going to trace %d" % (os.getpid(), child))
             pid, status = os.waitpid(-1, 0)
             if pid != child :
-                print("The process tracer could not bootstrap.")
+                logger.error("The process tracer could not bootstrap.")
                 return False
             
             ptrace_func.ptrace_setoptions(child, options);
@@ -88,10 +88,10 @@ class SyscallTracer:
                     # wait for all cloned children __WALL = 0x40000000
                     (pid, status) = os.waitpid(-1, 0x40000000 )
                 except OSError:
-                    print "Tracing terminated successfully"
+                    logger.error("Tracing terminated successfully")
                     return True
                 if not pid > 0:
-                    print "Catastrofic failure"
+                    logger.error("Catastrofic failure")
                     return False
 
                 event = status >> 16;
@@ -99,7 +99,7 @@ class SyscallTracer:
                 deliverSignal = 0
                 if os.WIFEXITED(status):
                     # a process died, report it and go back to wait for syscall
-                    print "The process ", pid, " exited"
+                    logger.debug("The process " + str(pid) + " exited")
                     processesStatus.pop(pid)
                     continue
 
@@ -161,13 +161,13 @@ class SyscallTracer:
                     # this is just to print some output to the users
                     subChild = ptrace_func.ptrace_geteventmsg(pid)
                     if event == ptrace_func.PTRACE_EVENT_FORK:
-                        print "The process %d forked a new process %d" % (pid, subChild)
+                        logger.debug("The process %d forked a new process %d" % (pid, subChild))
                     elif event == ptrace_func.PTRACE_EVENT_VFORK:
-                        print "The process %d vforked a new process %d" % (pid, subChild)
+                        logger.debug("The process %d vforked a new process %d" % (pid, subChild))
                     elif event == ptrace_func.PTRACE_EVENT_CLONE :
-                        print "The process %d cloned a new process %d" % (pid, subChild)
+                        logger.debug("The process %d cloned a new process %d" % (pid, subChild))
                     elif event == ptrace_func.PTRACE_EVENT_EXEC :
-                        print "The process %d run exec" % (pid)
+                        logger.debug("The process %d run exec" % (pid))
                         processesStatus[pid].updateProcessInfo()
                     elif event == ptrace_func.PTRACE_EVENT_EXIT:
                         pass
@@ -177,8 +177,8 @@ class SyscallTracer:
                     # we need to relay it properly to the child
                     # (in particular SIGCHLD must be rerouted to the parents if not mpirun
                     # will never end)
-                    print "Signal %s(%d) delivered to %d " % \
-                        (FingerPrint.ptrace.signames.signalName(signalValue), signalValue, pid)
+                    logger.debug("Signal %s(%d) delivered to %d " % \
+                        (FingerPrint.ptrace.signames.signalName(signalValue), signalValue, pid))
                     deliverSignal = signalValue
 
                 # set the ptrace option and wait for the next syscall notification
@@ -280,7 +280,7 @@ class TracerControlBlock:
             cls.tracing = True
         except :
             # no tracer compiled fall back to binary name
-            print " - Unable to load stacktracer - "
+            logger.error(" - Unable to load stacktracer - ")
             cls.tracing = False
 
     def getProcessName(self):
