@@ -96,6 +96,10 @@ class PluginManager(object):
 import pkgutil
 import os
 import sys
+import logging
+
+logger = logging.getLogger('fingerprint')
+
 
 if hasattr(pkgutil,'iter_modules'):              #line added
     for importer, package_name, _ in pkgutil.iter_modules(globals()["__path__"]):
@@ -112,7 +116,7 @@ else:
                 try:
                     __import__(nm)
                 except:
-                    print >> sys.stderr, "Failed to import module %s" % nm
+                    logger.error("Failed to import module %s" % nm)
                     pass
 
 
