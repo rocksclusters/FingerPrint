@@ -20,9 +20,12 @@ if "any" not in dir(__builtins__):
     from FingerPrint.utils import any
 
 
-def_exec_dir = "bin"
-def_lib_dir = "lib"
-def_data_dir = "data"
+def_base_dir = "output"
+def_exec_dir = os.path.join(def_base_dir, "bin")
+def_lib_dir = os.path.join(def_base_dir, "lib")
+def_data_dir = os.path.join(def_base_dir, "data")
+def_swirl_path = os.path.join(def_base_dir, "output.swirl")
+
 logger = logging.getLogger('fingerprint')
 
 
@@ -48,12 +51,10 @@ class Archiver:
             return False
         # prepare the folders for the tar
         base_tar = tempfile.mkdtemp()
-        base_dir = os.path.join(base_tar, self.archive_filename.split(".tar.gz")[0])
-        exec_dir = os.path.join(base_dir, def_exec_dir)
-        lib_dir = os.path.join(base_dir, def_lib_dir)
-        data_dir = os.path.join(base_dir, def_data_dir)
-        os.mkdir(base_dir)
-        os.mkdir(exec_dir)
+        exec_dir = os.path.join(base_tar, def_exec_dir)
+        lib_dir = os.path.join(base_tar, def_lib_dir)
+        data_dir = os.path.join(base_tar, def_data_dir)
+        os.makedirs(exec_dir)
         os.mkdir(data_dir)
         os.mkdir(lib_dir)
         # copy all the files referenced by this swirl
@@ -81,7 +82,7 @@ class Archiver:
             #    if not os.path.exists( new_link ):
             #        os.symlink( os.path.basename(swf.path), new_link)
         # copy the swirl itself
-        shutil.copy2(self.sergeant.filename, base_dir)
+        shutil.copy2(self.sergeant.filename, os.path.join(base_tar, def_swirl_path))
         # let's do the tar
         tar = tarfile.open(self.archive_filename, "w:gz")
         cwd = os.getcwd()
