@@ -97,6 +97,7 @@ class Roller:
     """ this class make a roll out of an fingerprint archive"""
 
     # this is a list of rpm packages which are broken or known to cause problem
+    #TODO unify this with the excludeRPMs in the get_package_from_dep
     excluded_packages = ["fftw"] # fftw rocks rpm is compiled only statically
 
     def __init__(self, archive_filename, roll_name):
@@ -125,7 +126,6 @@ class Roller:
         # list of rpm pakcage we have to exclude
         self.disable_pcks = set()
 
-
         #
         # read the content of the archive
         #
@@ -134,11 +134,9 @@ class Roller:
         archive_file = tarfile.open(self.archive_filename, 'r:gz')
         archive_file.extractall(temp_workdir)
         archive_file.close()
-
         # open swirl
         self.swirl = sergeant.readFromPickle(os.path.join(self.tempbase_dir, base_dir) \
                                         + ".swirl" ).swirl
-
         #
         # recursively resolve all dependencies of the execedFile
         #
@@ -241,7 +239,6 @@ class Roller:
                                                 os.path.basename(swirl_file.path))
         if packages :
             if len(packages) > 1 :
-                #TODO remove print statment
                 error_message = "The Swirl file " + swirl_file.path + " "
                 error_message += "resoves with more than one RPMs: " + ", ".join(packages)
                 logger.error(error_message)
@@ -281,16 +278,6 @@ class Roller:
             for open_file in swirl_file.openedFiles[exec_file]:
                 if open_file not in self.files:
                     self.resolve_file(open_file)
-
-
-
-    def get_swirl_file_by_prov(self, dependency):
-        """find the swirl file which provides the given dependency"""
-        #TODO replicated code from swirl.py remove this!!
-        for swF in self.files:
-            if dependency in swF.provides :
-                return swF
-        return None
 
 
     def get_package_from_dep(self, package_name, match_all = True):
