@@ -51,32 +51,24 @@ class Archiver:
             return False
         # prepare the folders for the tar
         base_tar = tempfile.mkdtemp()
-        exec_dir = os.path.join(base_tar, def_exec_dir)
-        lib_dir = os.path.join(base_tar, def_lib_dir)
-        data_dir = os.path.join(base_tar, def_data_dir)
-        os.makedirs(exec_dir)
-        os.mkdir(data_dir)
-        os.mkdir(lib_dir)
+        base_path = os.path.join(base_tar, def_base_dir)
+        os.mkdir(base_path)
         # copy all the files referenced by this swirl
         for swf in self.sergeant.swirl.swirlFiles:
-            if 'ELF' in swf.type and swf.executable:
-                temp_path = exec_dir
-            elif 'ELF' in swf.type and not swf.executable:
-                temp_path = lib_dir
-            elif swf.path[0] == '$' or \
+            if swf.path[0] == '$' or \
                 any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
                 #TODO maybe we could keep user data into a special folder?
                 # this file belongs to the special folders let's skip it
                 continue
-            else:
-                temp_path = data_dir
-            if not os.path.exists(os.path.join(temp_path, os.path.basename(swf.path))) and \
+            dest_path = os.path.join(base_path, swf.md5sum)
+            if not os.path.exists(os.path.join(dest_path, os.path.basename(swf.path))) and \
                 os.path.exists(swf.path):
                 # do not copy twice the same file
-                shutil.copy2(swf.path, temp_path)
+                os.mkdir(dest_path)
+                shutil.copy2(swf.path, dest_path)
                 if sergeant.prelink :
                     utils.getOutputAsList([sergeant.prelink, "-u",
-                        os.path.join(temp_path, os.path.basename(swf.path))])
+                        os.path.join(dest_path, os.path.basename(swf.path))])
             #for i in swf.links:
             #    new_link = os.path.join(temp_path, os.path.basename(i))
             #    if not os.path.exists( new_link ):
