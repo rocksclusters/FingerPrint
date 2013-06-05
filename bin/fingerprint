@@ -135,8 +135,13 @@ def main():
     logger.addHandler(fh)
     # create console handler and set level to debug
     ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
+    if options.verbose :
+        ch.setLevel(logging.DEBUG)
+    else:
+        ch.setLevel(logging.ERROR)
     logger.addHandler(ch)
+
+
 
     if options.create and options.roll:
         # 
