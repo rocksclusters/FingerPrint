@@ -242,7 +242,10 @@ class Roller:
         if packages :
             if len(packages) > 1 :
                 #TODO remove print statment
-                print "swirl_file ", swirl_file.path, " has two rpm ", packages
+                error_message = "The Swirl file " + swirl_file.path + " "
+                error_message += "resoves with more than one RPMs: " + ", ".join(packages)
+                logger.error(error_message)
+                raise Exception(error_message)
             if swirl_file.package not in self.wanted_pcks and \
                 packages[0] not in self.excluded_packages:
                 self.skipped_swfs.add( swirl_file  )
