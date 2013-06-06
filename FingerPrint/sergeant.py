@@ -65,13 +65,16 @@ specialFolders = ["/proc/","/sys/","/tmp", "/dev/",
                 "/etc/nsswitch.conf", "/etc/localtime", "/etc/hosts",
                 "/etc/selinux"]
 
+def is_special_folder(path):
+    """ return true if path start with one of the specialFolder"""
+    return any([ path.startswith(i) for i in specialFolders ])
 
 def getHash(fileName, fileType):
     """Given a valid fileName it returns a string containing a md5sum
     of the file content. If we are running on a system which prelink
     binaries (aka RedHat based) the command prelink must be on the PATH"""
     # let's skip weird stuff
-    if any([ fileName.startswith(i) for i in specialFolders ]):
+    if is_special_folder(fileName):
         return ""
     if not stat.S_ISREG( os.stat(fileName).st_mode  ):
         # probably a socket, fifo, or similar

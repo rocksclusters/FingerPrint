@@ -55,8 +55,7 @@ class Archiver:
         os.mkdir(base_path)
         # copy all the files referenced by this swirl
         for swf in self.sergeant.swirl.swirlFiles:
-            if swf.path[0] == '$' or \
-                any([ swf.path.startswith(i) for i in sergeant.specialFolders ]):
+            if swf.path[0] == '$' or sergeant.is_special_folder(swf.path):
                 #TODO maybe we could keep user data into a special folder?
                 # this file belongs to the special folders let's skip it
                 continue
@@ -218,8 +217,7 @@ class Roller:
         elif 'ELF' in swirl_file.type and not swirl_file.executable:
             # library
             packages = self.get_package_from_dep(swirl_file.getPaths(), False)
-        elif swirl_file.path[0] == '$' or \
-            any([ swirl_file.path.startswith(i) for i in sergeant.specialFolders ]):
+        elif swirl_file.path[0] == '$' or sergeant.is_special_folder(swirl_file.path):
             # this file belongs to the special folders or it's a relative path
             return
         else:

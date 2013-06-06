@@ -145,7 +145,7 @@ class Blotter:
             if swf.path[0] != '$' and os.path.exists(swf.path):
                 swf.md5sum = sergeant.getHash(swf.path, swf.type)
                 #TODO make this code nicer
-                if any([ swf.path.startswith(a) for a in sergeant.specialFolders ]):
+                if sergeant.is_special_folder( swf.path ) :
                     swf.package = None
                 else:
                     swf.package = self._getPackage(swf.path)
