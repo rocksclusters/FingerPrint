@@ -96,7 +96,7 @@ class Roller:
     def __init__(self, archive_filename, roll_name):
         """ """
         self.archive_filename = archive_filename
-        self.roll_name = roll_name
+        self.roll_name = "output"
         import yum
         self.yb = yum.YumBase()
 
@@ -107,7 +107,6 @@ class Roller:
             logger.error("The file " + self.archive_filename + " does not exist" +
                 " (specify a different one with -f option)")
             return False
-        base_dir = self.archive_filename.split(".tar.gz")[0]
         # this is the list of package we will have to hadd
         self.packages = set()
         self.skipped_swfs = set()
@@ -123,13 +122,13 @@ class Roller:
         # read the content of the archive
         #
         temp_workdir = tempfile.mkdtemp()
-        self.tempbase_dir = os.path.join(temp_workdir, base_dir)
+        tar_tmp_dir = os.path.join(temp_workdir, def_base_dir)
         archive_file = tarfile.open(self.archive_filename, 'r:gz')
         archive_file.extractall(temp_workdir)
         archive_file.close()
         # open swirl
-        self.swirl = sergeant.readFromPickle(os.path.join(self.tempbase_dir, base_dir) \
-                                        + ".swirl" ).swirl
+        self.swirl = sergeant.readFromPickle(os.path.join(temp_workdir,
+                        def_swirl_path)).swirl
         #
         # recursively resolve all dependencies of the execedFile
         #
@@ -144,14 +143,16 @@ class Roller:
             # laydown the file
             for swf in self.files:
                 dest_path = rpm_tmp_dir + swf.path
-                if not os.path.exists(swf.source_path) :
-                    logger.debug("File " + swf.source_path + " is not present in the archive")
+                source_path = os.path.join(tar_tmp_dir, swf.md5sum,
+                                os.path.basename(swf.path))
+                if not os.path.exists(source_path) :
+                    logger.debug("File " + source_path + " is not present in the archive")
                     continue
                 if not os.path.exists( os.path.dirname(dest_path) ):
                     os.makedirs( os.path.dirname(dest_path) )
                 if 'ELF' in swf.type and swf.executable:
                     # we need a wrapper script to set the env
-                    shutil.copy2(swf.source_path, dest_path + ".orig")
+                    shutil.copy2(source_path, dest_path + ".orig")
                     f=open(dest_path, 'w')
                     f.write("#!/bin/bash\n\n")
                     ldconf_written = False
@@ -172,7 +173,7 @@ class Roller:
                     f.close()
                     os.chmod(dest_path, 0755)
                 else:
-                    shutil.copy2(swf.source_path, dest_path)
+                    shutil.copy2(source_path, dest_path)
                 # and the symlinks
                 for i in swf.links:
                     dest_link = rpm_tmp_dir + i
@@ -183,14 +184,14 @@ class Roller:
             # rocks create package "/tmp/tmpAFDASDF/*" pakcagename prefix=/
             logger.info("RPM root dir " + rpm_tmp_dir)
             (output, retcode) = utils.getOutputAsList( ["rocks", "create",
-                        "package", rpm_tmp_dir + "/*", base_dir, "prefix=/"])
+                        "package", rpm_tmp_dir + "/*", self.roll_name, "prefix=/"])
             if any([i for i in output if 'RPM build errors' in i ]):
                 logger.error('\n'.join(output))
                 logger.error("Error building base RPM package\n")
                 return False
             logger.info('\n'.join(output))
             #TODO need to run ldconfig
-            self.packages.add(base_dir)
+            self.packages.add(self.roll_name)
         else:
             logger.info("No files to include in the custom RPM")
 
@@ -214,13 +215,9 @@ class Roller:
         if 'ELF' in swirl_file.type and swirl_file.executable:
             # executable
             packages = self.get_package_from_dep([swirl_file.path])
-            swirl_file.source_path = os.path.join(self.tempbase_dir, def_exec_dir,
-                                                os.path.basename(swirl_file.path))
         elif 'ELF' in swirl_file.type and not swirl_file.executable:
             # library
             packages = self.get_package_from_dep(swirl_file.getPaths(), False)
-            swirl_file.source_path = os.path.join(self.tempbase_dir, def_lib_dir,
-                                                os.path.basename(swirl_file.path))
         elif swirl_file.path[0] == '$' or \
             any([ swirl_file.path.startswith(i) for i in sergeant.specialFolders ]):
             # this file belongs to the special folders or it's a relative path
@@ -228,8 +225,6 @@ class Roller:
         else:
             #data
             packages = self.get_package_from_dep([swirl_file.path])
-            swirl_file.source_path = os.path.join(self.tempbase_dir, def_data_dir,
-                                                os.path.basename(swirl_file.path))
         if packages :
             if len(packages) > 1 :
                 error_message = "The Swirl file " + swirl_file.path + " "
