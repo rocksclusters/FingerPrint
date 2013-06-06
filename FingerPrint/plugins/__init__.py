@@ -8,6 +8,8 @@
 import os
 from FingerPrint.swirl import SwirlFile
 
+import FingerPrint.sergeant
+
 """This is the base class that implement the interface that all the plugins subclasses 
 should implement
 """
@@ -70,7 +72,8 @@ class PluginManager(object):
         # if the file does not exist anymore (possible with temporary file and
         # dynamic tracing) just set it to Data
         fileName = os.path.normpath(fileName)
-        if os.path.exists(fileName) :
+        if os.path.exists(fileName) and not \
+		FingerPrint.sergeant.is_special_folder(fileName):
             #we call all the getSwirl method of all the plugin
             for key, plugin in self.plugins.iteritems():
                 temp = plugin.getSwirl(fileName, swirl)
