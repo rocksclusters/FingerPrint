@@ -135,73 +135,69 @@ class Roller:
         for swf in self.swirl.execedFiles:
             self.resolve_file(swf)
 
-        if self.files:
-            #
-            # make rpms with all the files
-            #
-            rpm_tmp_dir = tempfile.mkdtemp()
-            home_rpm_tmp_dir = tempfile.mkdtemp()
-            rpm_list = set()
-            # laydown the file
-            for swf in self.files:
-                if swf.path.startswith("/home/"):
-                    # files in /home need special treatment 1. we need to create a user
-                    # 2 they need to go in /export/home only on the Frontend
-                    rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
-                    tmp_user = swf.path.split("/home/",1)[1]
-                    self.users.add(tmp_user.split("/",1)[0])
-                    dest_path = home_rpm_tmp_dir + "/export" + swf.path
-                else:
-                    rpm_list.add((rpm_tmp_dir,self.roll_name))
-                    dest_path = rpm_tmp_dir + swf.path
-                source_path = os.path.join(tar_tmp_dir, swf.md5sum,
-                                os.path.basename(swf.path))
-                if not os.path.exists(source_path) :
-                    logger.debug("File " + source_path + " is not present in the archive")
-                    continue
-                if not os.path.exists( os.path.dirname(dest_path) ):
-                    os.makedirs( os.path.dirname(dest_path) )
-                if 'ELF' in swf.type and swf.executable:
-                    # we need a wrapper script to set the environment
-                    shutil.copy2(source_path, dest_path + ".orig")
-                    f=open(dest_path, 'w')
-                    f.write("#!/bin/bash\n\n")
-                    ldconf_written = False
-                    for i in swf.env:
-                        if self.swirl.ldconf_paths and i.startswith('LD_LIBRARY_PATH'):
-                            #we need to prepend the ldconf_paths
-                            prefix = 'LD_LIBRARY_PATH=' + ':'.join( self.swirl.ldconf_paths )
-                            ldconf_written = True
-                            if i.split('=')[1] :
-                                prefix += ':' + i.split('=')[1]
-                            i = prefix
-                        f.write("export " + i + ":$" + i.split("=")[0] + "\n")
-                    if not ldconf_written:
-                        f.write("export LD_LIBRARY_PATH=" +
-                                ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\n')
-                    f.write("\n")
-                    f.write(swf.path + ".orig $@\n")
-                    f.close()
-                    os.chmod(dest_path, 0755)
-                else:
-                    shutil.copy2(source_path, dest_path)
-                # and the symlinks
-                for i in swf.links:
-                    dest_link = rpm_tmp_dir + i
-                    # source link must be without the rpm_tmp_dir part
-                    if not os.path.isdir(os.path.dirname(dest_link)):
-                        os.makedirs(os.path.dirname(dest_link))
-                    os.symlink( swf.path, dest_link)
-            # files are in place so let's make the RPMs
-            for (base_dir, rpm_name) in rpm_list:
-                if self.make_rpm(base_dir, rpm_name):
-                    self.packages.add(rpm_name)
-                else:
-                    return False
+        #
+        # make rpms with all the files
+        #
+        rpm_tmp_dir = tempfile.mkdtemp()
+        home_rpm_tmp_dir = tempfile.mkdtemp()
+        rpm_list = set()
+        # laydown the file
+        for swf in self.files:
+            if swf.path.startswith("/home/"):
+                # files in /home need special treatment 1. we need to create a user
+                # 2 they need to go in /export/home only on the Frontend
+                rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
+                tmp_user = swf.path.split("/home/",1)[1]
+                self.users.add(tmp_user.split("/",1)[0])
+                dest_path = home_rpm_tmp_dir + "/export" + swf.path
+            else:
+                rpm_list.add((rpm_tmp_dir,self.roll_name))
+                dest_path = rpm_tmp_dir + swf.path
+            source_path = os.path.join(tar_tmp_dir, swf.md5sum,
+                            os.path.basename(swf.path))
+            if not os.path.exists(source_path) :
+                logger.debug("File " + source_path + " is not present in the archive")
+                continue
+            if not os.path.exists( os.path.dirname(dest_path) ):
+                os.makedirs( os.path.dirname(dest_path) )
+            if 'ELF' in swf.type and swf.executable:
+                # we need a wrapper script to set the environment
+                shutil.copy2(source_path, dest_path + ".orig")
+                f=open(dest_path, 'w')
+                f.write("#!/bin/bash\n\n")
+                ldconf_written = False
+                for i in swf.env:
+                    if self.swirl.ldconf_paths and i.startswith('LD_LIBRARY_PATH'):
+                        #we need to prepend the ldconf_paths
+                        prefix = 'LD_LIBRARY_PATH=' + ':'.join( self.swirl.ldconf_paths )
+                        ldconf_written = True
+                        if i.split('=')[1] :
+                            prefix += ':' + i.split('=')[1]
+                        i = prefix
+                    f.write("export " + i + ":$" + i.split("=")[0] + "\n")
+                if not ldconf_written:
+                    f.write("export LD_LIBRARY_PATH=" +
+                            ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\n')
+                f.write("\n")
+                f.write(swf.path + ".orig $@\n")
+                f.close()
+                os.chmod(dest_path, 0755)
+            else:
+                shutil.copy2(source_path, dest_path)
+            # and the symlinks
+            for i in swf.links:
+                dest_link = rpm_tmp_dir + i
+                # source link must be without the rpm_tmp_dir part
+                if not os.path.isdir(os.path.dirname(dest_link)):
+                    os.makedirs(os.path.dirname(dest_link))
+                os.symlink( swf.path, dest_link)
+        # files are in place so let's make the RPMs
+        for (base_dir, rpm_name) in rpm_list:
+            if self.make_rpm(base_dir, rpm_name):
+                self.packages.add(rpm_name)
+            else:
+                return False
 
-            #TODO need to run ldconfig
-        else:
-            logger.info("No files to include in the custom RPM")
 
         print "yum install ", ' '.join(self.packages)
         print "yum remove ", ' '.join(self.disable_pcks)
