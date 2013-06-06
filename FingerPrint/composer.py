@@ -116,6 +116,7 @@ class Roller:
         self.wanted_pcks = set()
         # list of rpm pakcage we have to exclude
         self.disable_pcks = set()
+        self.users = set()
 
         #
         # read the content of the archive
@@ -136,12 +137,23 @@ class Roller:
 
         if self.files:
             #
-            # make an rpm with all the files
+            # make rpms with all the files
             #
             rpm_tmp_dir = tempfile.mkdtemp()
+            home_rpm_tmp_dir = tempfile.mkdtemp()
+            rpm_list = set()
             # laydown the file
             for swf in self.files:
-                dest_path = rpm_tmp_dir + swf.path
+                if swf.path.startswith("/home/"):
+                    # files in /home need special treatment 1. we need to create a user
+                    # 2 they need to go in /export/home only on the Frontend
+                    rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
+                    tmp_user = swf.path.split("/home/",1)[1]
+                    self.users.add(tmp_user.split("/",1)[0])
+                    dest_path = home_rpm_tmp_dir + "/export" + swf.path
+                else:
+                    rpm_list.add((rpm_tmp_dir,self.roll_name))
+                    dest_path = rpm_tmp_dir + swf.path
                 source_path = os.path.join(tar_tmp_dir, swf.md5sum,
                                 os.path.basename(swf.path))
                 if not os.path.exists(source_path) :
@@ -150,7 +162,7 @@ class Roller:
                 if not os.path.exists( os.path.dirname(dest_path) ):
                     os.makedirs( os.path.dirname(dest_path) )
                 if 'ELF' in swf.type and swf.executable:
-                    # we need a wrapper script to set the env
+                    # we need a wrapper script to set the environment
                     shutil.copy2(source_path, dest_path + ".orig")
                     f=open(dest_path, 'w')
                     f.write("#!/bin/bash\n\n")
@@ -180,17 +192,14 @@ class Roller:
                     if not os.path.isdir(os.path.dirname(dest_link)):
                         os.makedirs(os.path.dirname(dest_link))
                     os.symlink( swf.path, dest_link)
-            # rocks create package "/tmp/tmpAFDASDF/*" pakcagename prefix=/
-            logger.info("RPM root dir " + rpm_tmp_dir)
-            (output, retcode) = utils.getOutputAsList( ["rocks", "create",
-                        "package", rpm_tmp_dir + "/*", self.roll_name, "prefix=/"])
-            if any([i for i in output if 'RPM build errors' in i ]):
-                logger.error('\n'.join(output))
-                logger.error("Error building base RPM package\n")
-                return False
-            logger.info('\n'.join(output))
+            # files are in place so let's make the RPMs
+            for (base_dir, rpm_name) in rpm_list:
+                if self.make_rpm(base_dir, rpm_name):
+                    self.packages.add(rpm_name)
+                else:
+                    return False
+
             #TODO need to run ldconfig
-            self.packages.add(self.roll_name)
         else:
             logger.info("No files to include in the custom RPM")
 
@@ -198,6 +207,23 @@ class Roller:
         print "yum remove ", ' '.join(self.disable_pcks)
         print "Skipped swirl Files:\n", '\n'.join([i.path for i in self.skipped_swfs])
         return True
+
+    def make_rpm(self, base_path, rpm_name):
+        """ makes an rpm called rpm_name starting from base_path
+
+        return False if something went wrong
+        """
+        # rocks create package "/tmp/tmpAFDASDF/*" pakcagename prefix=/
+        logger.info("RPM " + rpm_name + " root dir " + base_path)
+        (output, retcode) = utils.getOutputAsList( ["rocks", "create",
+                    "package", base_path + "/*", rpm_name, "prefix=/"])
+        if any([i for i in output if 'RPM build errors' in i ]):
+            logger.error('\n'.join(output))
+            logger.error("Error building " + rpm_name + " RPM package\n")
+            return False
+        logger.info('\n'.join(output))
+        return True
+
 
 
     def resolve_file(self, swirl_file):
