@@ -218,6 +218,7 @@ class Roller:
             logger.error("Error building " + rpm_name + " RPM package\n")
             return False
         logger.info('\n'.join(output))
+        shutil.rmtree(base_path)
         return True
 
 
