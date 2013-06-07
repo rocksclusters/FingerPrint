@@ -7,7 +7,6 @@ import glob
 from datetime import datetime
 
 
-from FingerPrint.plugins import PluginManager
 from FingerPrint.blotter import Blotter
 from FingerPrint.swirl import Swirl
 from FingerPrint.utils import getOutputAsList
@@ -44,8 +43,8 @@ class TestSequenceFunctions(unittest.TestCase):
         print "\n     -----------------------     Testing pluging manager via API  -------------------------\n"
         self.swirl = Swirl("test", datetime.now())
         for i in self.files:
-            swirlFile = PluginManager.getSwirl(i, self.swirl)
-        p = PluginManager.get_plugins()
+            swirlFile = FingerPrint.plugins.PluginManager.getSwirl(i, self.swirl)
+        p = FingerPrint.plugins.PluginManager.get_plugins()
         print "plugins: ", p
         self.assertEqual(len(p), self.availablePlugin,
             msg="Plugin manager did not load all the available plugins (available %d, detected %d) " 
