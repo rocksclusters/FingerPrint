@@ -219,31 +219,30 @@ class Roller:
         source = glob.glob(self.roll_name + "-1.0-*.rpm")
         if len(source) == 1:
             shutil.copy2(source[0], dest)
+            # create the base-nodea.xml
+            node_base_xml = self.node_base_xml_top
+            #   1. install packages
+            for package in self.packages:
+                node_base_xml += '<package>' + package + '</package>\n'
+            #   2. remove pakcages
+            for package in self.disable_pcks:
+                node_base_xml += '<package>-' + package + '</package>\n'
+            #   3. set the paths
+            new_paths = set()
+            for swf in self.swirl.execedFiles:
+                new_paths |= set([os.path.dirname(i) for i in swf.getPaths()])
+            node_base_xml += self.node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
+            self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
+                    node_base_xml)
         source = glob.glob(self.roll_name + "-home-1.0-*.rpm")
         if len(source) == 1:
             shutil.copy2(source[0], dest)
-
+            # create the server-node
+            self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
+                    self.node_server_xml % (self.roll_name, ' '.join(self.users)))
         # create the graph xml
         self.write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
                 self.graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
-        # create the server-node
-        self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
-                self.node_server_xml % (self.roll_name, ' '.join(self.users)))
-        # create the base-node
-        node_base_xml = self.node_base_xml_top
-        #   1. install packages
-        for package in self.packages:
-            node_base_xml += '<package>' + package + '</package>\n'
-        #   2. remove pakcages
-        for package in self.disable_pcks:
-            node_base_xml += '<package>-' + package + '</package>\n'
-        #   3. set the paths
-        new_paths = set()
-        for swf in self.swirl.execedFiles:
-            new_paths |= set([os.path.dirname(i) for i in swf.getPaths()])
-        node_base_xml += self.node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
-        self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
-                node_base_xml)
 
         #TODO improve logging
         print "yum install ", ' '.join(self.packages)
