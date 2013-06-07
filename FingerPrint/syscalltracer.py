@@ -232,6 +232,15 @@ class TracerControlBlock:
     env = {}
     cmdline = {}
 
+    @classmethod
+    def get_env_variable(cls, process_name, variable_name):
+        """returns the value of the variable_name if found int he process_name environment"""
+        if process_name in cls.env:
+            for i in cls.env[process_name]:
+                if i.startswith(variable_name + '='):
+                    return i
+        return None
+
 
     def __init__(self, pid):
         self.pid = pid
