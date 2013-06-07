@@ -251,7 +251,21 @@ class Roller:
         # create the graph xml
         self.write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
                 self.graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
-
+        # make the roll
+        os.chdir(self.roll_name)
+        (output, retcode) = utils.getOutputAsList(["make", "roll"])
+        os.chdir("..")
+        roll_path = glob.glob(self.roll_name + "/" + self.roll_name + "*.iso")
+        if retcode or len(roll_path) < 1:
+            # error :-(
+            logger.error("Unable to make the roll")
+            logger.error(' > ' + '\n > '.join(output))
+            return False
+        logger.error("Roll %s succesfully created.\nTo add it to your distribution:" % roll_path[0])
+        logger.error("rocks add roll " + roll_path[0])
+        logger.error("rocks enable roll " + self.roll_name)
+        logger.error("cd /export/rocks/install")
+        logger.error("rocks create distro")
         return True
 
     def write_file(self, file_name, string):
