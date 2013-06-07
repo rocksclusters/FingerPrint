@@ -96,7 +96,7 @@ class Roller:
     def __init__(self, archive_filename, roll_name):
         """ """
         self.archive_filename = archive_filename
-        self.roll_name = "output"
+        self.roll_name = roll_name
         import yum
         self.yb = yum.YumBase()
 

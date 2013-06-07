@@ -73,7 +73,8 @@ def main():
     parser.add_option("-m", "--makeroll", action="store_true", dest="roll",
                     help="Make a roll which can run the software contained in the archive. "
                     "You can specify the archive file name with the -f flag otherwise it "
-                    "will be output.tar.gz")
+                    "will be output.tar.gz. The name of the final roll is the name of the archive "
+                    "without the tar.gz extension")
     parser.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the "
@@ -150,7 +151,8 @@ def main():
         archive_name = "output.tar.gz"
         if 'output.swirl' not in options.filename :
             archive_name = options.filename
-        roller = FingerPrint.composer.Roller(archive_name, None)
+        roll_name = archive_name.rsplit(".tar.gz", 1)[0]
+        roller = FingerPrint.composer.Roller(archive_name, roll_name)
 	if not roller.make_roll() :
             sys.exit(1)
         return
