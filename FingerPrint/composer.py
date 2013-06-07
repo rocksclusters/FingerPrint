@@ -119,7 +119,7 @@ class Roller:
         self.users = set()
 
         #
-        # read the content of the archive
+        #    ----------------      read the content of the archive
         #
         temp_workdir = tempfile.mkdtemp()
         tar_tmp_dir = os.path.join(temp_workdir, def_base_dir)
@@ -130,13 +130,13 @@ class Roller:
         self.swirl = sergeant.readFromPickle(os.path.join(temp_workdir,
                         def_swirl_path)).swirl
         #
-        # recursively resolve all dependencies of the execedFile
+        #    ----------------      recursively resolve all dependencies of the execedFile
         #
         for swf in self.swirl.execedFiles:
             self.resolve_file(swf)
 
         #
-        # make rpms with all the files
+        #    ----------------      make rpms with all the files
         #
         rpm_tmp_dir = tempfile.mkdtemp()
         home_rpm_tmp_dir = tempfile.mkdtemp()
