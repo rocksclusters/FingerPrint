@@ -10,6 +10,7 @@ import os, string, stat, logging
 import tempfile
 import shutil
 import tarfile
+import platform, glob
 
 import sergeant, utils
 
@@ -198,12 +199,64 @@ class Roller:
                     self.packages.add(rpm_name)
             else:
                 return False
+        #
+        #    ----------------      create roll copy files there and build
+        #
+        (output, retcode) = utils.getOutputAsList( ["rocks", "create",
+                "new", "roll", self.roll_name] )
+        if retcode :
+            logger.error("Unable to create the roll")
+            if os.path.exists(self.roll_name):
+                logger.error("Remove the direcotry: rm -rf %s" % (self.roll_name))
+            logger.error(" ".join(output))
+            return False
+        shutil.rmtree(self.roll_name + "/src/" + self.roll_name)
+        shutil.rmtree(self.roll_name + "/src/usersguide")
+        os.remove(self.roll_name + "/nodes/" + self.roll_name + ".xml")
+        dest = self.roll_name + "/RPMS/" + platform.machine()
+        os.makedirs(dest)
+        #copying global rpm
+        source = glob.glob(self.roll_name + "-1.0-*.rpm")
+        if len(source) == 1:
+            shutil.copy2(source[0], dest)
+        source = glob.glob(self.roll_name + "-home-1.0-*.rpm")
+        if len(source) == 1:
+            shutil.copy2(source[0], dest)
 
+        # create the graph xml
+        self.write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
+                self.graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
+        # create the server-node
+        self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
+                self.node_server_xml % (self.roll_name, ' '.join(self.users)))
+        # create the base-node
+        node_base_xml = self.node_base_xml_top
+        #   1. install packages
+        for package in self.packages:
+            node_base_xml += '<package>' + package + '</package>\n'
+        #   2. remove pakcages
+        for package in self.disable_pcks:
+            node_base_xml += '<package>-' + package + '</package>\n'
+        #   3. set the paths
+        new_paths = set()
+        for swf in self.swirl.execedFiles:
+            new_paths |= set([os.path.dirname(i) for i in swf.getPaths()])
+        node_base_xml += self.node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
+        self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
+                node_base_xml)
 
+        #TODO improve logging
         print "yum install ", ' '.join(self.packages)
         print "yum remove ", ' '.join(self.disable_pcks)
         print "Skipped swirl Files:\n", '\n'.join([i.path for i in self.skipped_swfs])
         return True
+
+    def write_file(self, file_name, string):
+        """write string into file_name """
+        f = open(file_name, 'w')
+        f.write(string)
+        f.close()
+
 
     def make_rpm(self, base_path, rpm_name):
         """ makes an rpm called rpm_name starting from base_path
@@ -365,6 +418,60 @@ class Roller:
             return False
 
 
-        def findWhoProvides(self, dependencies):
-            """ """
-            matches = yum.YumBase.searchPackageProvides(self, [str(depstring)])
+    def findWhoProvides(self, dependencies):
+        """ """
+        matches = yum.YumBase.searchPackageProvides(self, [str(depstring)])
+
+    graph_node_xml = '''<?xml version="1.0" standalone="no"?>
+<graph>
+<description>
+The FingerPrint Roll
+</description>
+<edge from="client">
+<to>%s-base</to>
+</edge>
+<edge from="server">
+<to>%s-server</to>
+<to>%s-base</to>
+</edge>
+</graph>'''
+
+    node_server_xml = '''<?xml version="1.0" standalone="no"?>
+<kickstart>
+<description>
+FingerPrint roll
+</description>
+<package>%s-home</package>
+<post>
+users="%s"
+for i in $users; do
+    /usr/sbin/useradd -m $i
+    #skel was not copied by useradd so we need to do it manually
+    /bin/cp -r /etc/skel/.[a-zA-Z0-9]* /export/home/$i/
+    /bin/chown -R $i:$i /export/home/$i
+done
+</post>
+</kickstart>'''
+
+    node_base_xml_top = '''<?xml version="1.0" standalone="no"?>
+<kickstart>
+<description>
+FingerPrint
+</description>
+'''
+    node_base_xml_bottom = '''
+<post>
+<file name="/etc/profile.d/%s-paths.sh" perms="0755">
+#!/bin/bash
+dirs="%s"
+for dir in $dirs; do
+  if [ -d ${dir} ]; then
+    if ! echo ${PATH} | /bin/grep -q ${dir} ; then
+      export PATH=${PATH}:${dir}
+    fi
+  fi
+done
+</file>
+</post>
+</kickstart>
+'''
