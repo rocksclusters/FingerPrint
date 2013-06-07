@@ -85,6 +85,16 @@ class Blotter:
                     cmd = utils.which(cmd)
                     if not cmd :
                         cmd = i
+                    if cmd and cmd[0] != '/':
+                        # hmm we have a relative path
+                        pwd = FingerPrint.syscalltracer.TracerControlBlock.get_env_variable(i, "PWD")
+                        pwd = pwd + '/' + cmd
+                        if os.path.isfile(pwd) and os.access(pwd, os.X_OK):
+                            cmd = pwd
+                        else:
+                            # TODO this way to resolving relative path is not 100% correct
+                            # it should be done in the syscalltracer
+                            cmd = i
                 swirlFile = PluginManager.getSwirl(cmd, self.swirl)
                 # add the env
                 for var in ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']:
