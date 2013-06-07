@@ -213,7 +213,7 @@ class Roller:
             logger.error("Unable to create the roll")
             if os.path.exists(self.roll_name):
                 logger.error("Remove the direcotry: rm -rf %s" % (self.roll_name))
-            logger.error(" ".join(output))
+            logger.error(" > " + "\n > ".join(output))
             return False
         shutil.rmtree(self.roll_name + "/src/" + self.roll_name)
         shutil.rmtree(self.roll_name + "/src/usersguide")
@@ -287,7 +287,7 @@ class Roller:
         (output, retcode) = utils.getOutputAsList( ["rocks", "create",
                     "package", base_path + "/*", rpm_name, "prefix=/"])
         if any([i for i in output if 'RPM build errors' in i ]):
-            logger.error('\n'.join(output))
+            logger.error(' > ' + '\n > '.join(output))
             logger.error("Error building " + rpm_name + " RPM package\n")
             return False
         logger.debug(' > '+ '\n > '.join(output))
