@@ -194,7 +194,8 @@ class Roller:
         # files are in place so let's make the RPMs
         for (base_dir, rpm_name) in rpm_list:
             if self.make_rpm(base_dir, rpm_name):
-                self.packages.add(rpm_name)
+                if '-home-' not in rpm_name:
+                    self.packages.add(rpm_name)
             else:
                 return False
 
