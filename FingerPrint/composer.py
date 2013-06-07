@@ -123,19 +123,23 @@ class Roller:
         #    ----------------      read the content of the archive
         #
         temp_workdir = tempfile.mkdtemp()
+        logger.info("Extracting archive in %s..." % temp_workdir)
         tar_tmp_dir = os.path.join(temp_workdir, def_base_dir)
         archive_file = tarfile.open(self.archive_filename, 'r:gz')
         archive_file.extractall(temp_workdir)
         archive_file.close()
         # open swirl
+        logger.info("Reading swirl %s" % os.path.join(temp_workdir, def_swirl_path))
         self.swirl = sergeant.readFromPickle(os.path.join(temp_workdir,
                         def_swirl_path)).swirl
+
         #
         #    ----------------      recursively resolve all dependencies of the execedFile
         #
         for swf in self.swirl.execedFiles:
             self.resolve_file(swf)
-
+        logger.debug("Dependency resolution terminated. Skipped swirl Files:\n - " +
+                                '\n - '.join([i.path for i in self.skipped_swfs]))
         #
         #    ----------------      make rpms with all the files
         #
@@ -202,6 +206,7 @@ class Roller:
         #
         #    ----------------      create roll copy files there and build
         #
+        logger.info("Creating roll " + self.roll_name)
         (output, retcode) = utils.getOutputAsList( ["rocks", "create",
                 "new", "roll", self.roll_name] )
         if retcode :
@@ -215,9 +220,10 @@ class Roller:
         os.remove(self.roll_name + "/nodes/" + self.roll_name + ".xml")
         dest = self.roll_name + "/RPMS/" + platform.machine()
         os.makedirs(dest)
-        #copying global rpm
+        # copying global RPM
         source = glob.glob(self.roll_name + "-1.0-*.rpm")
         if len(source) == 1:
+            logger.info("Coping RPM in: " + dest + "/" + source[0])
             shutil.copy2(source[0], dest)
             # create the base-nodea.xml
             node_base_xml = self.node_base_xml_top
@@ -234,8 +240,10 @@ class Roller:
             node_base_xml += self.node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
             self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
                     node_base_xml)
+        # copying -home- RPM
         source = glob.glob(self.roll_name + "-home-1.0-*.rpm")
         if len(source) == 1:
+            logger.info("Coping RPM in: " + dest + "/" + source[0])
             shutil.copy2(source[0], dest)
             # create the server-node
             self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
@@ -244,14 +252,12 @@ class Roller:
         self.write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
                 self.graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
 
-        #TODO improve logging
-        print "yum install ", ' '.join(self.packages)
-        print "yum remove ", ' '.join(self.disable_pcks)
-        print "Skipped swirl Files:\n", '\n'.join([i.path for i in self.skipped_swfs])
         return True
 
     def write_file(self, file_name, string):
-        """write string into file_name """
+        """write string into file_name and log it"""
+        logger.info("Writing file: " + file_name)
+        logger.debug(" > " + "\n > ".join(string.split("\n")))
         f = open(file_name, 'w')
         f.write(string)
         f.close()
@@ -270,10 +276,9 @@ class Roller:
             logger.error('\n'.join(output))
             logger.error("Error building " + rpm_name + " RPM package\n")
             return False
-        logger.info('\n'.join(output))
+        logger.debug(' > '+ '\n > '.join(output))
         shutil.rmtree(base_path)
         return True
-
 
 
     def resolve_file(self, swirl_file):
