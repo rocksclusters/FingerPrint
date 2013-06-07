@@ -267,6 +267,7 @@ class Roller:
         logger.error("rocks enable roll " + self.roll_name)
         logger.error("cd /export/rocks/install")
         logger.error("rocks create distro")
+        logger.error("rocks run roll " + self.roll_name + " | bash")
         return True
 
     def write_file(self, file_name, string):
