@@ -6,9 +6,10 @@
 #
 
 import os
+
+import FingerPrint
 from FingerPrint.swirl import SwirlFile
 
-import FingerPrint.sergeant
 
 """This is the base class that implement the interface that all the plugins subclasses 
 should implement
