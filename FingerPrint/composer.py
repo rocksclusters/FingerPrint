@@ -203,6 +203,7 @@ class Roller:
                     self.packages.add(rpm_name)
             else:
                 return False
+        shutil.rmtree(temp_workdir)
         #
         #    ----------------      create roll copy files there and build
         #
