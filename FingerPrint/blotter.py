@@ -74,6 +74,7 @@ class Blotter:
         # set up the fileList for the static dependency detection
         if not fileList :
             fileList = []
+        fileList = [f if f[0] == '/' else os.path.normpath(os.getcwd() + '/' + f)  for f in fileList]
         fileList = fileList + dynamicDependecies.keys()
         # add all the fileList to the swirl and figure out all their static libraries
         for i in fileList:

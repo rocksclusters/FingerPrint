@@ -266,7 +266,8 @@ def main():
             try:
                 filelistfd = open(options.filelist)
                 for i in filelistfd:
-                    filenameList.append(i.strip())
+                    if i.strip():
+                        filenameList.append(i.strip())
             except IOError, e:
                 parser.error("The file %s does not exist on this system: %s" %
 			(options.filelist, str(e)) + runHelp)
