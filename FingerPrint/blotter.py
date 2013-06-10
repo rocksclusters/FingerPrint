@@ -74,7 +74,14 @@ class Blotter:
         # set up the fileList for the static dependency detection
         if not fileList :
             fileList = []
-        fileList = [f if f[0] == '/' else os.path.normpath(os.getcwd() + '/' + f)  for f in fileList]
+        # it does not work on python 2.5 aka RHEL 5.X
+        # fileList = [f if f[0] == '/' else os.path.normpath(os.getcwd() + '/' + f)  for f in fileList]
+        def norm_path(path):
+            if path[0] == '/':
+                return os.path.normpath(path)
+            else:
+                return os.path.normpath(os.getcwd() + '/' + path)
+        fileList = [ norm_path(f) for f in fileList ]
         fileList = fileList + dynamicDependecies.keys()
         # add all the fileList to the swirl and figure out all their static libraries
         for i in fileList:
