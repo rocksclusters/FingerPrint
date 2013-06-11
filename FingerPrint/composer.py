@@ -487,7 +487,7 @@ dirs="%s"
 for dir in $dirs; do
   if [ -d ${dir} ]; then
     if ! echo ${PATH} | /bin/grep -q ${dir} ; then
-      export PATH=${PATH}:${dir}
+      export PATH=${dir}:${PATH}
     fi
   fi
 done
