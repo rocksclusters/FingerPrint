@@ -60,15 +60,16 @@ class Archiver:
                 #TODO maybe we could keep user data into a special folder?
                 # this file belongs to the special folders let's skip it
                 continue
-            dest_path_dir = os.path.join(base_path, swf.md5sum)
-            dest_path_full = os.path.join(dest_path_dir, os.path.basename(swf.path))
-            if not os.path.exists(dest_path_full) and \
-                os.path.exists(swf.path):
-                # do not copy twice the same file
-                os.mkdir(dest_path_dir)
-                shutil.copy2(swf.path, dest_path_dir)
-                if sergeant.prelink :
-                    utils.getOutputAsList([sergeant.prelink, "-u", dest_path_full])
+            if os.path.exists(swf.path) and swf.md5sum:
+		# the file was not a temporary file
+                dest_path_dir = os.path.join(base_path, swf.md5sum)
+                dest_path_full = os.path.join(dest_path_dir, os.path.basename(swf.path))
+                if not os.path.exists(dest_path_full):
+                    # do not copy twice the same file
+                    os.mkdir(dest_path_dir)
+                    shutil.copy2(swf.path, dest_path_dir)
+                    if sergeant.prelink :
+                        utils.getOutputAsList([sergeant.prelink, "-u", dest_path_full])
             #for i in swf.links:
             #    new_link = os.path.join(temp_path, os.path.basename(i))
             #    if not os.path.exists( new_link ):
