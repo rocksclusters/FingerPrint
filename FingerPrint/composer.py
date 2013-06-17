@@ -155,11 +155,12 @@ class Roller:
                 rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
                 tmp_user = swf.path.split("/home/",1)[1]
                 self.users.add(tmp_user.split("/",1)[0])
-                dest_path = home_rpm_tmp_dir + "/export" + swf.path
+                rpm_prefix_dir = home_rpm_tmp_dir + "/export"
             else:
                 rpm_list.add((rpm_tmp_dir,self.roll_name))
-                dest_path = rpm_tmp_dir + swf.path
-            source_path = os.path.join(tar_tmp_dir, swf.md5sum,
+                rpm_prefix_dir = rpm_tmp_dir
+            dest_path = rpm_prefix_dir + swf.path
+            source_path = os.path.join(tar_tmp_dir, str(swf.md5sum),
                             os.path.basename(swf.path))
             if not os.path.exists(source_path) :
                 logger.debug("File " + source_path + " is not present in the archive")
@@ -192,7 +193,7 @@ class Roller:
                 shutil.copy2(source_path, dest_path)
             # and the symlinks
             for i in swf.links:
-                dest_link = rpm_tmp_dir + i
+                dest_link = rpm_prefix_dir + i
                 # source link must be without the rpm_tmp_dir part
                 if not os.path.isdir(os.path.dirname(dest_link)):
                     os.makedirs(os.path.dirname(dest_link))
