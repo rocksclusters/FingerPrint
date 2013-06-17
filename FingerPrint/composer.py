@@ -323,10 +323,10 @@ class Roller:
             packages = self.get_package_from_dep([swirl_file.path])
         if packages :
             if len(packages) > 1 :
-                error_message = "The Swirl file " + swirl_file.path + " "
-                error_message += "resoves with more than one RPMs: " + ", ".join(packages)
+                error_message = "The file " + swirl_file.path + " "
+                error_message += "is provided by more than one RPM: " + ", ".join(packages)
+                error_message += "\nAdding " + packages[0]
                 logger.error(error_message)
-                raise Exception(error_message)
             if swirl_file.package not in self.wanted_pcks and \
                 packages[0] not in self.excluded_packages:
                 self.skipped_swfs.add( swirl_file  )
