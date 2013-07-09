@@ -103,7 +103,14 @@ class SyscallTracer:
                     processesStatus.pop(pid)
                     continue
 
-                if os.WIFSTOPPED(status) and signalValue == (signal.SIGTRAP | 0x80 ):
+                if os.WIFSIGNALED(status):
+                    logger.debug("The process " + str(pid) + " exited because of a signal")
+                    processesStatus.pop(pid)
+                    continue
+
+                if os.WIFCONTINUED(status):
+                    logger.debug("The process " + str(pid) + " continued")
+                elif os.WIFSTOPPED(status) and signalValue == (signal.SIGTRAP | 0x80 ):
                     #
                     # we have a syscall
                     # orig_rax or orig_eax contains the syscall number 
@@ -172,7 +179,7 @@ class SyscallTracer:
                     elif event == ptrace_func.PTRACE_EVENT_EXIT:
                         pass
                         #print "the process %d is in a event exit %d" % (pid, subChild)
-                else:
+                elif os.WIFSTOPPED(status):
                     # when a signal is delivered to one of the child and we get notified
                     # we need to relay it properly to the child
                     # (in particular SIGCHLD must be rerouted to the parents if not mpirun
@@ -180,6 +187,8 @@ class SyscallTracer:
                     logger.debug("Signal %s(%d) delivered to %d " % \
                         (FingerPrint.ptrace.signames.signalName(signalValue), signalValue, pid))
                     deliverSignal = signalValue
+                else:
+                    logger.debug("This should not happen!!")
 
                 # set the ptrace option and wait for the next syscall notification
                 ptrace_func.ptrace_setoptions(pid, options);
