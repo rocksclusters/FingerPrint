@@ -27,6 +27,12 @@ If found on the system (they are not required), fingerprint uses:
  - prelink (to remove prelinking information from libraries and get their hash)
  - dpkg or rpm (to record package version and info regarding dependencies)
 
+FingerPrint comes with a stack tracing facility that can be used to determine
+which shared library opens a file. The stack tracing module is not required for
+the proper functioning. To compile the module you will need libunwind
+shared libraries (version 0.99 comes with libunwind-ptrace compiled statically
+so it does not work :-(). The stack tracing facility is written in C, so it 
+requires gcc.
 
 Installation
 ------------
@@ -58,7 +64,7 @@ privilege on system directories for such installation.
 
 FingerPrint consist of:
  - a bunch of python modules and submodules inside the FingerPrint/ directory
- - a command line called fingerprint, inside bin/ directory
+ - a command line python script called fingerprint, inside bin/ directory
 
 
 Use
@@ -75,6 +81,11 @@ Basically there are four main actions fingerprint can do (-c create, -d disaply,
     In this mode fingerprint will scan the list of files passed on the command
     line or it will (-x) trace the execution of the command specified to output
     a swirl file containing the dependencies fingerprint of the given input.
+    This mode can also create a "swirl archive" (-r) which is nothing else than
+    a tar.gz containing the swirl and all the file referenced by it.
+    Using the create flag it is also possible to create a Rocks Cluster roll
+    (flag -m), which will install the software described in the given "swirl
+    archive" on all the nodes of a rocks cluster.
 
  2. Display the content of a swirl file (flag -d). In this mode fingerprint
     will print to stdout a detailed description of the input swirl. The input
