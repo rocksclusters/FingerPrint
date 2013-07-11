@@ -84,37 +84,35 @@ class Blotter:
         fileList = [ norm_path(f) for f in fileList ]
         fileList = fileList + dynamicDependecies.keys()
         # add all the fileList to the swirl and figure out all their static libraries
-        for i in fileList:
-            if os.path.isfile(i):
-                cmd = i
-                if i in FingerPrint.syscalltracer.TracerControlBlock.cmdline:
+        for binPath in fileList:
+            if os.path.isfile(binPath):
+                cmd = binPath
+                if binPath in FingerPrint.syscalltracer.TracerControlBlock.cmdline:
                     # the user cmdline could be a symlink so we want to keep track
-                    cmd = FingerPrint.syscalltracer.TracerControlBlock.cmdline[i][0]
+                    cmd = FingerPrint.syscalltracer.TracerControlBlock.cmdline[binPath][0]
                     cmd = utils.which(cmd)
                     if not cmd :
-                        cmd = i
+                        cmd = binPath
                     if cmd and cmd[0] != '/':
                         # hmm we have a relative path
-                        pwd = FingerPrint.syscalltracer.TracerControlBlock.get_env_variable(i, "PWD")
+                        pwd = FingerPrint.syscalltracer.TracerControlBlock.get_env_variable(binPath, "PWD")
                         pwd = pwd + '/' + cmd
                         if os.path.isfile(pwd) and os.access(pwd, os.X_OK):
                             cmd = pwd
                         else:
                             # TODO this way to resolving relative path is not 100% correct
                             # it should be done in the syscalltracer
-                            cmd = i
+                            cmd = binPath
                 swirlFile = PluginManager.getSwirl(cmd, self.swirl)
                 # add the env
-                for var in ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']:
-                    temp = FingerPrint.syscalltracer.TracerControlBlock.get_env_variable(i, var)
-                    if temp :
-                        swirlFile.env.append(temp)
+                for var in FingerPrint.syscalltracer.TracerControlBlock.env[binPath]:
+                    swirlFile.env.append(var)
                 self.swirl.execedFiles.append(swirlFile)
 
-            elif os.path.isdir(i):
+            elif os.path.isdir(binPath):
                 pass
             else:
-                raise IOError("The file %s cannot be opened." % i)
+                raise IOError("The file %s cannot be opened." % binPath)
         #
         # we might need to add the dynamic dependencies to the swirl
         # if they did not get detected already
