@@ -2,7 +2,8 @@
 #
 # LC
 #
-# create archives an archive from a swirl and create rolls from an archive
+# creates a swirl archive from a swirl file 
+# creates a roll from a swirl archive
 # 
 #
 
@@ -174,15 +175,21 @@ class Roller:
                 f=open(dest_path, 'w')
                 f.write("#!/bin/bash\n\n")
                 ldconf_written = False
-                for i in swf.env:
-                    if self.swirl.ldconf_paths and i.startswith('LD_LIBRARY_PATH'):
+                for env_variable in swf.env:
+                    if self.swirl.ldconf_paths and env_variable.startswith('LD_LIBRARY_PATH'):
                         #we need to prepend the ldconf_paths
                         prefix = 'LD_LIBRARY_PATH=' + ':'.join( self.swirl.ldconf_paths )
                         ldconf_written = True
-                        if i.split('=')[1] :
-                            prefix += ':' + i.split('=')[1]
-                        i = prefix
-                    f.write("export " + i + ":$" + i.split("=")[0] + "\n")
+                        if env_variable.split('=')[1] :
+                            prefix += ':' + env_variable.split('=')[1]
+                        env_variable = prefix
+                    elif any( [ i in env_variable for i in ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD'] ] ): 
+                        # override variables we want to override this variable
+                        f.write("export " + env_variable + ":$" + env_variable.split("=")[0] + "\n")
+                    else:
+                        # not override variable
+                        f.write("if [ -z \"$" + env_variable.split("=")[0] + "\" ]; "
+                            "then export " + env_variable + "; fi\n")
                 if not ldconf_written:
                     f.write("export LD_LIBRARY_PATH=" +
                             ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\n')
