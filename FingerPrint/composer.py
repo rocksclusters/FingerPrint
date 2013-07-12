@@ -96,6 +96,10 @@ class Roller:
     #TODO unify this with the excludeRPMs in the get_package_from_dep
     excluded_packages = ["fftw"] # fftw rocks rpm is compiled only statically
 
+    # these varaibles will be merged (prepended) with the local variable values
+    # in the wrapper script
+    append_variables = ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']
+
     def __init__(self, archive_filename, roll_name):
         """ """
         self.archive_filename = archive_filename
@@ -176,23 +180,26 @@ class Roller:
                 f.write("#!/bin/bash\n\n")
                 ldconf_written = False
                 for env_variable in swf.env:
-                    if self.swirl.ldconf_paths and env_variable.startswith('LD_LIBRARY_PATH'):
-                        #we need to prepend the ldconf_paths
-                        prefix = 'LD_LIBRARY_PATH=' + ':'.join( self.swirl.ldconf_paths )
-                        ldconf_written = True
-                        if env_variable.split('=')[1] :
-                            prefix += ':' + env_variable.split('=')[1]
-                        env_variable = prefix
-                    elif any( [ i in env_variable for i in ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD'] ] ): 
-                        # override variables we want to override this variable
-                        f.write("export " + env_variable + ":$" + env_variable.split("=")[0] + "\n")
+                    if '=' not in env_variable:
+                        continue
+                    variable_name = env_variable.split('=')[0]
+                    variable_value = env_variable.split('=')[1]
+                    if any([ env_variable.startswith(i) for i in self.append_variables]):
+                        # for these variables we want to add their content to
+                        # the corresponding system variable values
+                        if self.swirl.ldconf_paths and env_variable.startswith('LD_LIBRARY_PATH'):
+                            variable_value = ':'.join(self.swirl.ldconf_paths) + ':' + variable_value
+                            ldconf_written = True
+                        f.write("export " + variable_name + "=\"" + variable_value + ":$" +
+                            variable_name + "\"\n")
                     else:
-                        # not override variable
-                        f.write("if [ -z \"$" + env_variable.split("=")[0] + "\" ]; "
-                            "then export " + env_variable + "; fi\n")
-                if not ldconf_written:
-                    f.write("export LD_LIBRARY_PATH=" +
-                            ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\n')
+                        # for all the other variables we simply want to define them
+                        # if they are not already defined them
+                        f.write("if [ -z \"$" + variable_name + "\" ]; then export " +
+                            variable_name + "=\"" + variable_value + "\"; fi\n")
+                if not ldconf_written and self.swirl.ldconf_paths:
+                    f.write("export LD_LIBRARY_PATH=\"" +
+                            ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\"\n')
                 f.write("\n")
                 f.write(swf.path + ".orig $@\n")
                 f.close()
