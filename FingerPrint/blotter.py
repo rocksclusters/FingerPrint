@@ -105,9 +105,10 @@ class Blotter:
                             cmd = binPath
                 swirlFile = PluginManager.getSwirl(cmd, self.swirl)
                 # add the env
-                for var in FingerPrint.syscalltracer.TracerControlBlock.env[binPath]:
-                    if '=' in var and '=()' not in var:
-                        swirlFile.env.append(var)
+                if binPath in FingerPrint.syscalltracer.TracerControlBlock.env:
+                    for var in FingerPrint.syscalltracer.TracerControlBlock.env[binPath]:
+                        if '=' in var and '=()' not in var:
+                            swirlFile.env.append(var)
                 self.swirl.execedFiles.append(swirlFile)
 
             elif os.path.isdir(binPath):
