@@ -177,7 +177,7 @@ dependencies.  To this extent it uses the posix ptrace system call and it can
 trace spwaned processes as well.
 
 Dynamic tracing can trace dynamically loaded shared libraries and opened files.
-If FingerPrint is compiled with stacktracer support (see blelow, TODO write doc)
+If FingerPrint is compiled with stacktracer support (see Requirements for more info) 
 it can also detect which shared library initiated the open syscall. To dynamically
 trace a program run fingperprint with the '-c -x' flags:
 
