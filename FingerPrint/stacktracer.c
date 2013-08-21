@@ -178,8 +178,11 @@ trace_method(PyObject *self, PyObject* args)
     buffer.alloc = 50;
     buffer.pos = 0;
 
+    if ( ! buffer.buffer ) 
+        perror_msg_and_die("Error allocating memory");
+
     if (!PyArg_ParseTuple(args, "i", &pid))
-            return NULL;
+        return NULL;
 
     int n = 0, ret;
     char * return_val[MAX_STACK];
@@ -202,7 +205,7 @@ trace_method(PyObject *self, PyObject* args)
 
         // since mmap_cache is sorted, do a binary search 
         int lower = 0;
-        int upper = mmap_cache_size;
+        int upper = mmap_cache_size - 1;
 
         while (lower <= upper) {
             int mid = (int)((upper + lower) / 2);
