@@ -73,7 +73,7 @@ setup(
     maintainer_email =  'luca.clementi@gmail.com',
     url = 'https://github.com/rocksclusters/FingerPrint',
     #main package, most of the code is inside here
-    packages = ['FingerPrint', 'FingerPrint.plugins'],
+    packages = ['FingerPrint', 'FingerPrint.plugins', 'FingerPrint.ptrace'],
     
     package_data={'FingerPrint.plugins': ['find-requires', 'find-provides']},
     #package_dir = {'FingerPrint': 'FingerPrint'},
