@@ -66,19 +66,21 @@ def main():
     parser.add_option("-a", "--search", action="store_true", dest="search",
                     default=False,
                     help="Use the \'module\' command line to search and display a "
-                    "list of modules able to sattisfy missing dependencies")
+                    "list of modules able to sattisfy missing dependencies (Use with "
+                    "with verify flag -y)")
     parser.add_option("-r", "--archive", action="store_true", dest="archive",
                     help="Create an archive with all the dependency included. "
-                    "The archive will be named with the name of the swirl but with tar.gz appended")
+                    "The archive will be named with the name of the swirl but with tar.gz "
+                    "appended (use with create flag -c)")
     parser.add_option("-m", "--makeroll", action="store_true", dest="roll",
                     help="Make a roll which can run the software contained in the archive. "
                     "You can specify the archive file name with the -f flag otherwise it "
                     "will be output.tar.gz. The name of the final roll is the name of the archive "
-                    "without the tar.gz extension")
+                    "without the tar.gz extension (use with create flag -c)")
     parser.add_option("-i", "--integrity", action="store_true", dest="integrity",
                     default=False,
                     help="Verify the integrity of all the dependencies of the "
-                    "given swirl (using md5sum)")
+                    "given swirl (using md5sum) (use with verify flag -y)")
     parser.add_option("-f", "--file", dest="filename", default='output.swirl',
                     help="write or read swirl FILE instead of the default output.swirl",
                     metavar="FILE")
@@ -96,7 +98,7 @@ def main():
                     "included to this swirl")
     parser.add_option("-x", "--exec", dest="execCmd", default=None,
                     help="create a swirl running the command passed as COMMAND and tracing "
-                    "its execution", metavar="COMMAND")
+                    "its execution (use with create flag -c)", metavar="COMMAND")
     parser.add_option("-s", "--csvfile", dest="csvfile", default=None,
                     help="The output of a verification or of an integrity check "
                     "will be saved in the FILE in a CSV format, if the file "
@@ -107,7 +109,8 @@ def main():
                     "with verbose it also print the file requiring this FILE. Return "
                     "0 if this FILE is required by this swirl 1 otherwise", metavar="FILE")
     parser.add_option("-g", "--graph", dest="graph", default=None,
-                    help="create a file FILENAME to display the current swirl graph with dot program",
+                    help="create a file FILENAME to display the current swirl graph with dot "
+                    "program (use with display flag -d)",
                     metavar="FILENAME")
 
 
