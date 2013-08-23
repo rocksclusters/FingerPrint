@@ -118,7 +118,7 @@ class Sergeant:
         self.swirl = swirl
         self.extraPath = extraPath
         self.error = []
-        self.missingDeps = []
+        self.missingDeps = set()
 
     def setFilename(self, filename):
         """ """
@@ -135,7 +135,6 @@ class Sergeant:
         """actually perform the check on the system and return True if all 
         the dependencies can be satisfied on the current system
         """
-        self.missingDeps = []
         returnValue = True
         # this method of using rpath is not totaly correct but it's faster
         # so for the moment we have to live with this
@@ -146,10 +145,11 @@ class Sergeant:
                     ld_library = i.split('=')[1].split(':')
                     break
             rpath = swF.rpaths + self.extraPath + ld_library
-            for dep in swF.staticDependencies:
-                if not PluginManager.getPathToLibrary(dep, rpath = rpath):
-                    self.missingDeps.append(dep)
-                    returnValue = False
+            for swf_dep in [swF] + self.swirl.getListSwirlFilesDependentStaticAndDynamic(swF):
+                for dep in swf_dep.staticDependencies:
+                    if not PluginManager.getPathToLibrary(dep, rpath = rpath):
+                        self.missingDeps.add(dep)
+                        returnValue = False
         return returnValue
 
     def checkHash(self, verbose=False):
