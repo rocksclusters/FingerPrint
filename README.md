@@ -118,54 +118,90 @@ clem@sirius:~/projects/FingerPrint/temp$ fingerprint -c /bin/ls
 File output.swirl saved
 ```
 
-By default it use output.swirl for input or output file name you can choose your own file name with "-f"
+By default it uses output.swirl as input or output Siwrl file name 
+but you can choose your own file name with "-f"
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ ls -lh output.swirl
+clem@sirius:~/projects/FingerPrint$ ls -lh output.swirl
 -rw-rw-r-- 1 clem clem 2.4K Feb 20 15:51 output.swirl
 ```
 
 To see the list of libraries your /bin/ls depends on along with
-their hash and local package name (that's what the swirl file saves)
+the local package name (this is what is stored in a swirl).
+You can always use the verbose flag (-v) to create more output.
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -d
+clem@hermes:~/projects/FingerPrint$ fingerprint -dv
 File name:  output.swirl
-Swirl 2013-03-27 10:22
- -- File List -- 
-  /bin/ls
-    /lib/x86_64-linux-gnu/ld-2.15.so
-    /lib/x86_64-linux-gnu/libacl.so.1.1.0
-    /lib/x86_64-linux-gnu/libc-2.15.so
-    /lib/x86_64-linux-gnu/librt-2.15.so
-    /lib/x86_64-linux-gnu/libselinux.so.1
-    /lib/x86_64-linux-gnu/libattr.so.1.1.0
-    /lib/x86_64-linux-gnu/libpthread-2.15.so
-    /lib/x86_64-linux-gnu/libdl-2.15.so
+Swirl 2013-08-23 17:27
+ ls.so.conf path list:
+  /lib/i386-linux-gnu
+  /usr/lib/i386-linux-gnu
+  /usr/local/lib
+  /lib/x86_64-linux-gnu
+  /usr/lib/x86_64-linux-gnu
+  /usr/lib/x86_64-linux-gnu/mesa
+  /lib32
+  /usr/lib32
+ -- File List --
+  /bin/ls  - coreutils 8.13-3ubuntu3.2 amd64
+    Deps: librt.so.1, ld-linux-x86-64.so.2, libselinux.so.1, libacl.so.1, libc.so.6
+    Provs: 
+    /lib/x86_64-linux-gnu/ld-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+    -> /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      Deps: 
+      Provs: ld-linux-x86-64.so.2
+    /lib/x86_64-linux-gnu/libacl.so.1.1.0  - libacl1 2.2.51-5ubuntu1 amd64
+    -> /lib/x86_64-linux-gnu/libacl.so.1
+      Deps: libattr.so.1, libc.so.6
+      Provs: libacl.so.1
+    /lib/x86_64-linux-gnu/libc-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+    -> /lib/x86_64-linux-gnu/libc.so.6
+      Deps: ld-linux-x86-64.so.2
+      Provs: libc.so.6
+    /lib/x86_64-linux-gnu/librt-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+    -> /lib/x86_64-linux-gnu/librt.so.1
+      Deps: libpthread.so.0, libc.so.6
+      Provs: librt.so.1
+    /lib/x86_64-linux-gnu/libselinux.so.1  - libselinux1 2.1.0-4.1ubuntu1 amd64
+      Deps: ld-linux-x86-64.so.2, libc.so.6, libdl.so.2
+      Provs: libselinux.so.1
+    /lib/x86_64-linux-gnu/libattr.so.1.1.0  - libattr1 1:2.4.46-5ubuntu1 amd64
+    -> /lib/x86_64-linux-gnu/libattr.so.1
+      Deps: libc.so.6
+      Provs: libattr.so.1
+    /lib/x86_64-linux-gnu/libpthread-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+    -> /lib/x86_64-linux-gnu/libpthread.so.0
+      Deps: ld-linux-x86-64.so.2, libc.so.6
+      Provs: libpthread.so.0
+    /lib/x86_64-linux-gnu/libdl-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+    -> /lib/x86_64-linux-gnu/libdl.so.2
+      Deps: ld-linux-x86-64.so.2, libc.so.6
+      Provs: libdl.so.2
 ```
 
 Scan the current system to verify compatibility with given swirl
 i.e. either all dependencies could be resolved
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -y
+clem@sirius:~/projects/FingerPrint$ fingerprint -y
 ```
 
 Verify that none of the dependencies have been modified
 (it uses md5sum to check for changes).
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -yi
+clem@sirius:~/projects/FingerPrint$ fingerprint -yi
 ```
 
 You can run the same query on the swirl
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -q -S
+clem@sirius:~/projects/FingerPrint$ fingerprint -q -S
 /lib/x86_64-linux-gnu/librt.so.1 && echo librt is used
 librt is used
 
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -q -v -S
+clem@sirius:~/projects/FingerPrint$ fingerprint -q -v -S
 /lib/x86_64-linux-gnu/libcrypt.so.1 || echo libcrypt is not used
 libcrypt is not used
 ```
@@ -173,18 +209,16 @@ libcrypt is not used
 Dynamic tracing
 ---------------
 FingerPrint can dynamically trace a running process to properly detect dynamic
-dependencies.  To this extent it uses the posix ptrace system call and it can
-trace spwaned processes as well.
+dependencies and opened files. To this extent it uses the posix ptrace system
+call and it can trace spwaned processes as well.
 
 Dynamic tracing can trace dynamically loaded shared libraries and opened files.
-If FingerPrint is compiled with stacktracer support (see Requirements for more info) 
+If FingerPrint is compiled with stacktracer support (see Requirements for more info)
 it can also detect which shared library initiated the open syscall. To dynamically
 trace a program run fingperprint with the '-c -x' flags:
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -c -x xeyes
-The fingerprint process 16131 going to trace 16134
-The process  16134  exited
+clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -c -x xeyes
 Tracing terminated successfully
 File output.swirl saved
 ```
@@ -193,9 +227,9 @@ When disaplying a Swirl created with the dynamics tracing it include information
 regarding open files and dynamically loaded libraries.
 
 ```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -d
+clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -d
 File name:  output.swirl
-Swirl 2013-05-03 12:00
+Swirl 2013-08-23 17:43
  -- File List --
   /usr/bin/xeyes
     /lib/x86_64-linux-gnu/ld-2.15.so
@@ -225,9 +259,7 @@ Swirl 2013-05-03 12:00
     /lib/x86_64-linux-gnu/libuuid.so.1.3.0
     /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2 --(Dyn)--
     /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0 --(Dyn)--
-
 ```
-
 
 Authors and Contributors
 ------------------------
