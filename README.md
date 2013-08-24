@@ -31,21 +31,23 @@ FingerPrint comes with a stack tracing facility that can be used to determine
 which shared library opens a file. The stack tracing module is not required for
 the proper functioning. To compile the module you will need libunwind
 shared libraries (version 0.99 comes with libunwind-ptrace compiled statically
-so it does not work :-(). The stack tracing facility is written in C, so it 
-requires gcc.
+so it does not work :-(). The stack tracing facility is written in C, so it
+requires gcc. To properly compile the stack tracing facility copy the file
+`setup.cfg.template` into `setup.cfg` and insert the paths to libunwind before
+installing Fingerprint.
 
 Installation
 ------------
 
-The simplest way to use FingerPrint is to add to your PATH the ./bin directory
-of this source code, and you will be done (on bash export PATH=$PATH:$PWD/bin )
+The simplest way to use FingerPrint is to add to your `PATH` the `./bin` directory
+of this source code, and you will be done (on bash export `PATH=$PATH:$PWD/bin` )
 
 To invoke unit-tests run
 
     # python setup.py test
 
-Unit-tests will generate a lot of outputs and errors but if they all succeed
-at the end you will see the following lines:
+Unit-tests generate a lot of outputs and errors but if they all succeed at the
+end you will see the following lines:
 
     ----------------------------------------------------------------------
     Ran 4 tests in 38.870s
@@ -63,8 +65,8 @@ This will install FingerPrint within your Python environment. You might need wri
 privilege on system directories for such installation.
 
 FingerPrint consist of:
- - a bunch of python modules and submodules inside the FingerPrint/ directory
- - a command line python script called fingerprint, inside bin/ directory
+ - a bunch of python modules and submodules inside the `FingerPrint/` directory
+ - a command line python script called fingerprint, inside `bin/` directory
 
 
 Use
