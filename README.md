@@ -2,14 +2,14 @@
 FingerPrint
 ===========
 
-FingerPrint is a tool to analyze an arbitrary application to 
-automatically list all its dependencies in a file (called Swirl) along with 
-other information to describe the running process.
+FingerPrint is a software tool which can analyze arbitrary lists of binaries
+and save all their dependencies information in a file (called Swirl) along
+with other information.
 
-A Swirl can then be used to understand if the given application can run on 
-another system or if some of the dependencies got modified since the 
-Swirl creation.
-
+A Swirl can then be used to understand if the given application can run on
+another system or if some of the dependencies got modified since the
+Swirl creation. Swirl can also be used to deploy the traced application
+on a Rocks cluster.
 
 
 Requirements
@@ -24,7 +24,7 @@ ldd, and objdump) but all these tools are generally present on most of
 the systems.
 
 If found on the system (they are not required), fingerprint uses:
- - prelink (to remove prelinking information from libraries and get their hash)
+ - prelink (to remove pre-linking information from libraries and get their hash)
  - dpkg or rpm (to record package version and info regarding dependencies)
 
 FingerPrint comes with a stack tracing facility that can be used to determine
@@ -55,10 +55,12 @@ end you will see the following lines:
     OK
 
 
-FingerPrint uses distutils so you can also run the standrad distutils procedure to install
-FingerPrint on your system from source (we strongly discourag 'normal' user from using this
-method though). To install fingerprint in your system from source you can run:
+FingerPrint uses [distutils] (http://docs.python.org/2/library/distutils.html) hence
+it follows its standard procedure to build and install.
+If you want to install FingerPrint on your system python path ('normal' user do not 
+need this) you can run:
 
+    # python setup.py build
     # python setup.py install
 
 This will install FingerPrint within your Python environment. You might need writing 
@@ -76,7 +78,7 @@ To get some help on the command line you can simply type:
 
     # fingerprint -h
 
-Basically there are four main actions fingerprint can do (-c create, -d disaply,
+Basically there are four main actions fingerprint can do (-c create, -d display,
 -q query, and -y verify):
 
  1. Create a swirl from a set of input file (flag -c) or with dynamic tracing.
@@ -211,13 +213,13 @@ libcrypt is not used
 Dynamic tracing
 ---------------
 FingerPrint can dynamically trace a running process to properly detect dynamic
-dependencies and opened files. To this extent it uses the posix ptrace system
-call and it can trace spwaned processes as well.
+dependencies and opened files. To this extent it uses the POSIX ptrace system
+call and it can trace spawned processes as well.
 
 Dynamic tracing can trace dynamically loaded shared libraries and opened files.
 If FingerPrint is compiled with stacktracer support (see Requirements for more info)
 it can also detect which shared library initiated the open syscall. To dynamically
-trace a program run fingperprint with the '-c -x' flags:
+trace a program run Fingperprint with the '-c -x' flags:
 
 ```
 clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -c -x xeyes
@@ -225,7 +227,7 @@ Tracing terminated successfully
 File output.swirl saved
 ```
 
-When disaplying a Swirl created with the dynamics tracing it include information
+When displaying a Swirl created with the dynamics tracing it include information
 regarding open files and dynamically loaded libraries.
 
 ```
