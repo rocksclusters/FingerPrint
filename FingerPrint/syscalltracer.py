@@ -298,6 +298,8 @@ class TracerControlBlock:
             cls.tracing = True
         except :
             # no tracer compiled fall back to binary name
+            #import traceback
+            #traceback.print_exc()
             logger.error(" - Unable to load stacktracer - ")
             cls.tracing = False
 
