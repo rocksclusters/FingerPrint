@@ -24,6 +24,7 @@ ldd, and objdump) but all these tools are generally present on most of
 the systems.
 
 If found on the system (they are not required), fingerprint uses:
+
  - prelink (to remove pre-linking information from libraries and get their hash)
  - dpkg or rpm (to record package version and info regarding dependencies)
 
@@ -51,7 +52,8 @@ and then add to your ``PATH`` the ``./bin`` directory of the source code
   cd FingerPrint
   export PATH=$PATH:$PWD/bin
 
-To invoke unit-tests run
+After this steps you can start to use fingerprint. The following steps are
+only required for advanced users. To invoke unit-tests run:
 
 ::
 
@@ -78,10 +80,11 @@ After that run:
   # python setup.py build
   # python setup.py install
 
-This will install FingerPrint in your Python environment. You might need writing
+This installs FingerPrint in your Python environment. You might need writing
 privilege on system directories for such installation.
 
-FingerPrint consist of:
+FingerPrint consists of:
+
  - a bunch of python modules and submodules inside the ``FingerPrint/`` directory
  - a command line python script called fingerprint, inside ``bin/`` directory
 
@@ -204,7 +207,7 @@ You can always use the verbose flag (-v) to create more output.
 
 
 Scan the current system to verify compatibility with given swirl
-i.e. either all dependencies could be resolved
+i.e. all dependencies listed in the Swirl can be found:
 
 ::
 
@@ -219,7 +222,7 @@ Verify that none of the dependencies have been modified
  clem@sirius:~/projects/FingerPrint$ fingerprint -yi
 
 
-You can run the same query on the swirl
+You can query the swirl:
 
 ::
 
@@ -250,7 +253,7 @@ trace a program run Fingperprint with the '-c -x' flags:
  File output.swirl saved
 
 
-When displaying a Swirl created with the dynamics tracing it include information
+When displaying a Swirl created with the dynamic tracing it includes information
 regarding open files and dynamically loaded libraries.
 
 ::
