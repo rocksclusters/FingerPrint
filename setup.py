@@ -63,10 +63,9 @@ else:
 # main configuration of distutils
 # 
 setup(
-    name = 'FingerPrint',
-    version = '0.1',
-    description = 'Module and application for fingerprinting application '
-                  'dependencies',
+    name = 'fingerprint-app',
+    version = '0.2',
+    description = 'Application dependencies fingerprint generator',
     author = 'Phil Papadopoulos',
     author_email =  'philip.papadopoulos@gmail.com',
     maintainer = 'Luca Clementi',
