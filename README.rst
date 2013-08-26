@@ -71,9 +71,9 @@ end you will see the following lines:
 
 If you want to install FingerPrint on your system python path you can follow the
 standard `distutils <http://docs.python.org/2/install/index.html>`_ procedure.
-To properly compile the stack tracing facility copy the file ``setup.cfg.template``
-into ``setup.cfg`` and insert the paths to libunwind before installing Fingerprint.
-After that run:
+If you want the stack tracing functionality copy the file ``setup.cfg.template``
+into ``setup.cfg`` and insert the paths to your libunwind before proceeding.
+To build and install FingerPrint type:
 
 ::
 
@@ -83,16 +83,17 @@ After that run:
 This installs FingerPrint in your Python environment. You might need writing
 privilege on system directories for such installation.
 
-FingerPrint consists of:
+The installation will deploy:
 
-- a bunch of python modules and submodules inside the ``FingerPrint/`` directory
-- a command line python script called fingerprint, inside ``bin/`` directory
+- a bunch of python source files inside the ``FingerPrint`` python module
+- a command line python script called fingerprint, inside one of your  ``PATH``
+  directories
 
 
 Use
 ---
 
-To get some help on the command line you can simply type:
+To get some help on the command line you can type:
 
 ::
 
@@ -244,11 +245,11 @@ call and it can trace spawned processes as well.
 Dynamic tracing can trace dynamically loaded shared libraries and opened files.
 If FingerPrint is compiled with stacktracer support (see Requirements for more info)
 it can also detect which shared library initiated the open syscall. To dynamically
-trace a program run Fingperprint with the '-c -x' flags:
+trace a program run FingperPrint with the '-c -x' flags:
 
 ::
 
- clem@hermes:~/projects/FingerPrint$ fingerprint -c -x xeyes
+ clem@hermes:~/projects/FingerPrint$ fingerprint -c -x "xeyes"
  Tracing terminated successfully
  File output.swirl saved
 
@@ -291,8 +292,9 @@ regarding open files and dynamically loaded libraries.
      /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2 --(Dyn)--
      /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0 --(Dyn)--
 
-It the example above you can see that the file ``/home/clem/.Xauthority`` was
-pened by the ``/usr/lib/x86_64-linux-gnu/libXau.so.6.0.0`` shared library.
+It the example above, thanks to the stack tracing facility, it is possible to see
+that the file ``/home/clem/.Xauthority`` was opened by the
+``/usr/lib/x86_64-linux-gnu/libXau.so.6.0.0`` shared library.
 
 Authors and Contributors
 ------------------------
