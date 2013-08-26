@@ -44,15 +44,18 @@ of this source code, and you will be done (on bash export `PATH=$PATH:$PWD/bin` 
 
 To invoke unit-tests run
 
-    # python setup.py test
+::
+
+  # python setup.py test
 
 Unit-tests generate a lot of outputs and errors but if they all succeed at the
 end you will see the following lines:
 
-    ----------------------------------------------------------------------
-    Ran 4 tests in 38.870s
+::
     
-    OK
+  Ran 4 tests in 38.870s
+   
+  OK
 
 
 FingerPrint uses [distutils] (http://docs.python.org/2/library/distutils.html) hence
@@ -60,8 +63,10 @@ it follows its standard procedure to build and install.
 If you want to install FingerPrint on your system python path ('normal' user do not 
 need this) you can run:
 
-    # python setup.py build
-    # python setup.py install
+::
+
+  # python setup.py build
+  # python setup.py install
 
 This will install FingerPrint within your Python environment. You might need writing 
 privilege on system directories for such installation.
@@ -76,7 +81,9 @@ Use
 
 To get some help on the command line you can simply type:
 
-    # fingerprint -h
+::
+
+  # fingerprint -h
 
 Basically there are four main actions fingerprint can do (-c create, -d display,
 -q query, and -y verify):
@@ -117,98 +124,103 @@ Examples
 Create a fingerprint of your ls command:
 
 
-```
-clem@sirius:~/projects/FingerPrint/temp$ fingerprint -c /bin/ls
-File output.swirl saved
-```
+::
+
+ clem@sirius:~/projects/FingerPrint/temp$ fingerprint -c /bin/ls
+ File output.swirl saved
 
 By default it uses output.swirl as input or output Siwrl file name 
 but you can choose your own file name with "-f"
 
-```
-clem@sirius:~/projects/FingerPrint$ ls -lh output.swirl
--rw-rw-r-- 1 clem clem 2.4K Feb 20 15:51 output.swirl
-```
+::
+
+ clem@sirius:~/projects/FingerPrint$ ls -lh output.swirl
+ -rw-rw-r-- 1 clem clem 2.4K Feb 20 15:51 output.swirl
+
 
 To see the list of libraries your /bin/ls depends on along with
 the local package name (this is what is stored in a swirl).
 You can always use the verbose flag (-v) to create more output.
 
-```
-clem@hermes:~/projects/FingerPrint$ fingerprint -dv
-File name:  output.swirl
-Swirl 2013-08-23 17:27
- ls.so.conf path list:
-  /lib/i386-linux-gnu
-  /usr/lib/i386-linux-gnu
-  /usr/local/lib
-  /lib/x86_64-linux-gnu
-  /usr/lib/x86_64-linux-gnu
-  /usr/lib/x86_64-linux-gnu/mesa
-  /lib32
-  /usr/lib32
- -- File List --
-  /bin/ls  - coreutils 8.13-3ubuntu3.2 amd64
-    Deps: librt.so.1, ld-linux-x86-64.so.2, libselinux.so.1, libacl.so.1, libc.so.6
-    Provs: 
-    /lib/x86_64-linux-gnu/ld-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
-    -> /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
-      Deps: 
-      Provs: ld-linux-x86-64.so.2
-    /lib/x86_64-linux-gnu/libacl.so.1.1.0  - libacl1 2.2.51-5ubuntu1 amd64
-    -> /lib/x86_64-linux-gnu/libacl.so.1
-      Deps: libattr.so.1, libc.so.6
-      Provs: libacl.so.1
-    /lib/x86_64-linux-gnu/libc-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
-    -> /lib/x86_64-linux-gnu/libc.so.6
-      Deps: ld-linux-x86-64.so.2
-      Provs: libc.so.6
-    /lib/x86_64-linux-gnu/librt-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
-    -> /lib/x86_64-linux-gnu/librt.so.1
-      Deps: libpthread.so.0, libc.so.6
-      Provs: librt.so.1
-    /lib/x86_64-linux-gnu/libselinux.so.1  - libselinux1 2.1.0-4.1ubuntu1 amd64
-      Deps: ld-linux-x86-64.so.2, libc.so.6, libdl.so.2
-      Provs: libselinux.so.1
-    /lib/x86_64-linux-gnu/libattr.so.1.1.0  - libattr1 1:2.4.46-5ubuntu1 amd64
-    -> /lib/x86_64-linux-gnu/libattr.so.1
-      Deps: libc.so.6
-      Provs: libattr.so.1
-    /lib/x86_64-linux-gnu/libpthread-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
-    -> /lib/x86_64-linux-gnu/libpthread.so.0
-      Deps: ld-linux-x86-64.so.2, libc.so.6
-      Provs: libpthread.so.0
-    /lib/x86_64-linux-gnu/libdl-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
-    -> /lib/x86_64-linux-gnu/libdl.so.2
-      Deps: ld-linux-x86-64.so.2, libc.so.6
-      Provs: libdl.so.2
-```
+::
+
+ clem@hermes:~/projects/FingerPrint$ fingerprint -dv
+ File name:  output.swirl
+ Swirl 2013-08-23 17:27
+  ls.so.conf path list:
+   /lib/i386-linux-gnu
+   /usr/lib/i386-linux-gnu
+   /usr/local/lib
+   /lib/x86_64-linux-gnu
+   /usr/lib/x86_64-linux-gnu
+   /usr/lib/x86_64-linux-gnu/mesa
+   /lib32
+   /usr/lib32
+  -- File List --
+   /bin/ls  - coreutils 8.13-3ubuntu3.2 amd64
+     Deps: librt.so.1, ld-linux-x86-64.so.2, libselinux.so.1, libacl.so.1, libc.so.6
+     Provs: 
+     /lib/x86_64-linux-gnu/ld-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+     -> /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+       Deps: 
+       Provs: ld-linux-x86-64.so.2
+     /lib/x86_64-linux-gnu/libacl.so.1.1.0  - libacl1 2.2.51-5ubuntu1 amd64
+     -> /lib/x86_64-linux-gnu/libacl.so.1
+       Deps: libattr.so.1, libc.so.6
+       Provs: libacl.so.1
+     /lib/x86_64-linux-gnu/libc-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+     -> /lib/x86_64-linux-gnu/libc.so.6
+       Deps: ld-linux-x86-64.so.2
+       Provs: libc.so.6
+     /lib/x86_64-linux-gnu/librt-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+     -> /lib/x86_64-linux-gnu/librt.so.1
+       Deps: libpthread.so.0, libc.so.6
+       Provs: librt.so.1
+     /lib/x86_64-linux-gnu/libselinux.so.1  - libselinux1 2.1.0-4.1ubuntu1 amd64
+       Deps: ld-linux-x86-64.so.2, libc.so.6, libdl.so.2
+       Provs: libselinux.so.1
+     /lib/x86_64-linux-gnu/libattr.so.1.1.0  - libattr1 1:2.4.46-5ubuntu1 amd64
+     -> /lib/x86_64-linux-gnu/libattr.so.1
+       Deps: libc.so.6
+       Provs: libattr.so.1
+     /lib/x86_64-linux-gnu/libpthread-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+     -> /lib/x86_64-linux-gnu/libpthread.so.0
+       Deps: ld-linux-x86-64.so.2, libc.so.6
+       Provs: libpthread.so.0
+     /lib/x86_64-linux-gnu/libdl-2.15.so  - libc6 2.15-0ubuntu10.4 amd64
+     -> /lib/x86_64-linux-gnu/libdl.so.2
+       Deps: ld-linux-x86-64.so.2, libc.so.6
+       Provs: libdl.so.2
+
 
 Scan the current system to verify compatibility with given swirl
 i.e. either all dependencies could be resolved
 
-```
-clem@sirius:~/projects/FingerPrint$ fingerprint -y
-```
+::
+
+ clem@sirius:~/projects/FingerPrint$ fingerprint -y
+
 
 Verify that none of the dependencies have been modified
 (it uses md5sum to check for changes).
 
-```
-clem@sirius:~/projects/FingerPrint$ fingerprint -yi
-```
+::
+
+ clem@sirius:~/projects/FingerPrint$ fingerprint -yi
+
 
 You can run the same query on the swirl
 
-```
-clem@sirius:~/projects/FingerPrint$ fingerprint -q -S
-/lib/x86_64-linux-gnu/librt.so.1 && echo librt is used
-librt is used
+::
 
-clem@sirius:~/projects/FingerPrint$ fingerprint -q -v -S
-/lib/x86_64-linux-gnu/libcrypt.so.1 || echo libcrypt is not used
-libcrypt is not used
-```
+ clem@sirius:~/projects/FingerPrint$ fingerprint -q -S
+ /lib/x86_64-linux-gnu/librt.so.1 && echo librt is used
+ librt is used
+ 
+ clem@sirius:~/projects/FingerPrint$ fingerprint -q -v -S
+ /lib/x86_64-linux-gnu/libcrypt.so.1 || echo libcrypt is not used
+ libcrypt is not used
+
 
 Dynamic tracing
 ---------------
@@ -221,49 +233,51 @@ If FingerPrint is compiled with stacktracer support (see Requirements for more i
 it can also detect which shared library initiated the open syscall. To dynamically
 trace a program run Fingperprint with the '-c -x' flags:
 
-```
-clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -c -x xeyes
-Tracing terminated successfully
-File output.swirl saved
-```
+::
+
+ clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -c -x xeyes
+ Tracing terminated successfully
+ File output.swirl saved
+
 
 When displaying a Swirl created with the dynamics tracing it include information
 regarding open files and dynamically loaded libraries.
 
-```
-clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -d
-File name:  output.swirl
-Swirl 2013-08-23 17:43
- -- File List --
-  /usr/bin/xeyes
-    /lib/x86_64-linux-gnu/ld-2.15.so
-    /lib/x86_64-linux-gnu/libc-2.15.so
-      Opened files:
-        /proc/meminfo
-        /usr/lib/locale/locale-archive
-    /lib/x86_64-linux-gnu/libm-2.15.so
-    /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
-      Opened files:
-        /usr/share/X11/locale/C/XLC_LOCALE
-        /usr/share/X11/locale/locale.dir
-        /usr/share/X11/locale/locale.alias
-        /usr/share/X11/locale/en_US.UTF-8/XLC_LOCALE
-    /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
-    /usr/lib/x86_64-linux-gnu/libXmu.so.6.2.0
-    /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
-    /usr/lib/x86_64-linux-gnu/libXt.so.6.0.0
-    /lib/x86_64-linux-gnu/libdl-2.15.so
-    /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
-    /usr/lib/x86_64-linux-gnu/libICE.so.6.3.0
-    /usr/lib/x86_64-linux-gnu/libSM.so.6.0.1
-    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
-      Opened files:
-        /home/clem/.Xauthority
-    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
-    /lib/x86_64-linux-gnu/libuuid.so.1.3.0
-    /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2 --(Dyn)--
-    /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0 --(Dyn)--
-```
+::
+
+ clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -d
+ File name:  output.swirl
+ Swirl 2013-08-23 17:43
+  -- File List --
+   /usr/bin/xeyes
+     /lib/x86_64-linux-gnu/ld-2.15.so
+     /lib/x86_64-linux-gnu/libc-2.15.so
+       Opened files:
+         /proc/meminfo
+         /usr/lib/locale/locale-archive
+     /lib/x86_64-linux-gnu/libm-2.15.so
+     /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+       Opened files:
+         /usr/share/X11/locale/C/XLC_LOCALE
+         /usr/share/X11/locale/locale.dir
+         /usr/share/X11/locale/locale.alias
+         /usr/share/X11/locale/en_US.UTF-8/XLC_LOCALE
+     /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
+     /usr/lib/x86_64-linux-gnu/libXmu.so.6.2.0
+     /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
+     /usr/lib/x86_64-linux-gnu/libXt.so.6.0.0
+     /lib/x86_64-linux-gnu/libdl-2.15.so
+     /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+     /usr/lib/x86_64-linux-gnu/libICE.so.6.3.0
+     /usr/lib/x86_64-linux-gnu/libSM.so.6.0.1
+     /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+       Opened files:
+         /home/clem/.Xauthority
+     /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+     /lib/x86_64-linux-gnu/libuuid.so.1.3.0
+     /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2 --(Dyn)--
+     /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0 --(Dyn)--
+
 
 Authors and Contributors
 ------------------------
