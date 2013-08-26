@@ -43,14 +43,14 @@ The simplest way to use FingerPrint is to checkout the source code
 
 ::
 
-  git clone https://github.com/rocksclusters/FingerPrint.git
+  # git clone https://github.com/rocksclusters/FingerPrint.git
 
 and then add to your ``PATH`` the ``./bin`` directory of the source code
 
 ::
 
-  cd FingerPrint
-  export PATH=$PATH:$PWD/bin
+  # cd FingerPrint
+  # export PATH=$PATH:$PWD/bin
 
 After this steps you can start to use fingerprint. The following steps are
 only required for advanced users. To invoke unit-tests run:
@@ -248,7 +248,7 @@ trace a program run Fingperprint with the '-c -x' flags:
 
 ::
 
- clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -c -x xeyes
+ clem@hermes:~/projects/FingerPrint$ fingerprint -c -x xeyes
  Tracing terminated successfully
  File output.swirl saved
 
@@ -258,7 +258,7 @@ regarding open files and dynamically loaded libraries.
 
 ::
 
- clem@hermes:~/projects/FingerPrint/FingerPrint$ fingerprint -d
+ clem@hermes:~/projects/FingerPrint$ fingerprint -d
  File name:  output.swirl
  Swirl 2013-08-23 17:43
   -- File List --
@@ -291,6 +291,8 @@ regarding open files and dynamically loaded libraries.
      /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2 --(Dyn)--
      /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0 --(Dyn)--
 
+It the example above you can see that the file ``/home/clem/.Xauthority`` was
+pened by the ``/usr/lib/x86_64-linux-gnu/libXau.so.6.0.0`` shared library.
 
 Authors and Contributors
 ------------------------
