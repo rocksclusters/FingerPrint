@@ -59,11 +59,13 @@ else:
     module = []
 
 # read the README.rst
-with open('README.rst') as file:
-    long_description = file.read()
+file = open('README.rst')
+long_description = file.read()
+file.close()
 
-with open('LICENSE') as file:
-    license = file.read()
+file = open('LICENSE')
+license = file.read()
+file.close()
 
 
 # 
