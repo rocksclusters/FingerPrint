@@ -25,8 +25,8 @@ the systems.
 
 If found on the system (they are not required), fingerprint uses:
 
- - prelink (to remove pre-linking information from libraries and get their hash)
- - dpkg or rpm (to record package version and info regarding dependencies)
+- prelink (to remove pre-linking information from libraries and get their hash)
+- dpkg or rpm (to record package version and info regarding dependencies)
 
 FingerPrint comes with a stack tracing facility that can be used to determine
 which shared library opens a file. The stack tracing module is not required for
@@ -85,8 +85,8 @@ privilege on system directories for such installation.
 
 FingerPrint consists of:
 
- - a bunch of python modules and submodules inside the ``FingerPrint/`` directory
- - a command line python script called fingerprint, inside ``bin/`` directory
+- a bunch of python modules and submodules inside the ``FingerPrint/`` directory
+- a command line python script called fingerprint, inside ``bin/`` directory
 
 
 Use
@@ -101,34 +101,34 @@ To get some help on the command line you can simply type:
 Basically there are four main actions fingerprint can do (-c create, -d display,
 -q query, and -y verify):
 
- 1. Create a swirl from a set of input file (flag -c) or with dynamic tracing.
-    In this mode fingerprint will scan the list of files passed on the command
-    line or it will (-x) trace the execution of the command specified to output
-    a swirl file containing the dependencies fingerprint of the given input.
-    This mode can also create a "swirl archive" (-r) which is nothing else than
-    a tar.gz containing the swirl and all the file referenced by it.
-    Using the create flag it is also possible to create a Rocks Cluster roll
-    (flag -m), which will install the software described in the given "swirl
-    archive" on all the nodes of a rocks cluster.
+1. Create a swirl from a set of input file (flag -c) or with dynamic tracing.
+   In this mode fingerprint will scan the list of files passed on the command
+   line or it will (-x) trace the execution of the command specified to output
+   a swirl file containing the dependencies fingerprint of the given input.
+   This mode can also create a "swirl archive" (-r) which is nothing else than
+   a tar.gz containing the swirl and all the file referenced by it.
+   Using the create flag it is also possible to create a Rocks Cluster roll
+   (flag -m), which will install the software described in the given "swirl
+   archive" on all the nodes of a rocks cluster.
 
- 2. Display the content of a swirl file (flag -d). In this mode fingerprint
-    will print to stdout a detailed description of the input swirl. The input
-    swirl can be specified with -f, or it will be the default output.swirl.
+2. Display the content of a swirl file (flag -d). In this mode fingerprint
+   will print to stdout a detailed description of the input swirl. The input
+   swirl can be specified with -f, or it will be the default output.swirl.
 
- 3. Query the content of a swirl file (flag -q). In this mode fingerprint
-    will run a query against the specified swirl file and return 0 upon success
-    or 1 when failing. If the query is run with the verbose flag (-v) it will
-    also print to stdout more information regarding the query.
+3. Query the content of a swirl file (flag -q). In this mode fingerprint
+   will run a query against the specified swirl file and return 0 upon success
+   or 1 when failing. If the query is run with the verbose flag (-v) it will
+   also print to stdout more information regarding the query.
 
- 4. Verify a swirl (flag -y). In this mode fingerprint scan the current system
-    for the dependencies listed in the input swirl and return 0 if they were
-    all found or 1 if some of then are unavailable. If verbose flag is given
-    it will print also a list of unmet dependencies. Above the verify it is also
-    possible to perform an integrity check. In this mode fingerprint scans the
-    system where invoked and checks if any of the dependencies listed in the
-    input swirl have been modified since its creation (to this purpose it uses
-    the checksums stored in the swirl). It return 0 upon success or 1 in case of
-    failure, with the verbose flag it prints also a list of modified files.
+4. Verify a swirl (flag -y). In this mode fingerprint scan the current system
+   for the dependencies listed in the input swirl and return 0 if they were
+   all found or 1 if some of then are unavailable. If verbose flag is given
+   it will print also a list of unmet dependencies. Above the verify it is also
+   possible to perform an integrity check. In this mode fingerprint scans the
+   system where invoked and checks if any of the dependencies listed in the
+   input swirl have been modified since its creation (to this purpose it uses
+   the checksums stored in the swirl). It return 0 upon success or 1 in case of
+   failure, with the verbose flag it prints also a list of modified files.
 
 Examples
 --------
