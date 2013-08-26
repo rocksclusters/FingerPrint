@@ -74,7 +74,7 @@ file.close()
 setup(
     name = 'fingerprint-app',
     version = '0.2',
-    description = 'Application dependencies fingerprint generator',
+    description = 'Fingerprinting application dependencies',
     author = 'Phil Papadopoulos',
     author_email =  'philip.papadopoulos@gmail.com',
     maintainer = 'Luca Clementi',
