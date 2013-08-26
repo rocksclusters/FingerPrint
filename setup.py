@@ -58,6 +58,13 @@ if os.path.exists("setup.cfg"):
 else:
     module = []
 
+# read the README.rst
+with open('README.rst') as file:
+    long_description = file.read()
+
+with open('LICENSE') as file:
+    license = file.read()
+
 
 # 
 # main configuration of distutils
@@ -70,14 +77,18 @@ setup(
     author_email =  'philip.papadopoulos@gmail.com',
     maintainer = 'Luca Clementi',
     maintainer_email =  'luca.clementi@gmail.com',
+    platforms = ['linux'],
     url = 'https://github.com/rocksclusters/FingerPrint',
+    long_description = long_description,
+    license = license,
     #main package, most of the code is inside here
     packages = ['FingerPrint', 'FingerPrint.plugins', 'FingerPrint.ptrace'],
-    
-    package_data={'FingerPrint.plugins': ['find-requires', 'find-provides']},
+    package_data = {'FingerPrint.plugins': ['find-requires', 'find-provides']},
     #package_dir = {'FingerPrint': 'FingerPrint'},
     #needs this for detecting file type
     #py_modules=['magic'],
+    # readme and license files
+    data_files = [('', ['README.rst', 'LICENSE', 'setup.cfg.template'])],
     ext_modules = module,
     #the command line called by users    
     scripts=['bin/fingerprint'],
