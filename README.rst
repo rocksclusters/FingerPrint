@@ -1,4 +1,4 @@
-
+===========
 FingerPrint
 ===========
 
@@ -44,7 +44,7 @@ The simplest way to use FingerPrint is to checkout the source code
 
   git clone https://github.com/rocksclusters/FingerPrint.git
 
-and then add to your `PATH` the `./bin` directory of the source code
+and then add to your ``PATH`` the ``./bin`` directory of the source code
 
 ::
 
@@ -68,7 +68,7 @@ end you will see the following lines:
 
 
 If you want to install FingerPrint on your system python path you can follow the
-standard [distutils] (http://docs.python.org/2/library/distutils.html) procedure.
+standard `distutils <http://docs.python.org/2/install/index.html>`_ procedure.
 To properly compile the stack tracing facility copy the file ``setup.cfg.template``
 into ``setup.cfg`` and insert the paths to libunwind before installing Fingerprint.
 After that run:
@@ -82,8 +82,8 @@ This will install FingerPrint in your Python environment. You might need writing
 privilege on system directories for such installation.
 
 FingerPrint consist of:
- - a bunch of python modules and submodules inside the `FingerPrint/` directory
- - a command line python script called fingerprint, inside `bin/` directory
+ - a bunch of python modules and submodules inside the ``FingerPrint/`` directory
+ - a command line python script called fingerprint, inside ``bin/`` directory
 
 
 Use
