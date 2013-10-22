@@ -9,6 +9,9 @@ import os
 from subprocess import PIPE, Popen
 import StringIO
 import re
+import logging
+
+logger = logging.getLogger('fingerprint')
 
 from FingerPrint.swirl import SwirlFile, Dependency
 from FingerPrint.plugins import PluginManager
@@ -100,6 +103,10 @@ class ElfPlugin(PluginManager):
                 newDep = Dependency.fromString( line )
                 swirlFile.addDependency( newDep )
                 p = cls.getPathToLibrary( newDep , useCache = True, rpath = swirlFile.rpaths)
+		if not p:
+		    # a dependency was not found complain loudly
+		    logger.error("Unable to find library %s" % newDep)
+		    continue
                 if p and not swirl.isFileTracked(p):
                     # p not null and p is not already in swirl
                     cls.getSwirl(p, swirl)

@@ -155,7 +155,7 @@ class Blotter:
                                 swirlFile.openedFiles[execFile] = []
                             swirlFile.openedFiles[execFile].append(swirlOpenedFile)
         self.swirl.ldconf_paths = self._get_ldconf_paths()
-        #hash and get package name
+        # get hash and package name for each swirlFile
         for swf in self.swirl.swirlFiles:
             #let's skip relative path
             if swf.path[0] != '$' and os.path.exists(swf.path):
