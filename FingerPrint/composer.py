@@ -512,3 +512,15 @@ done
 </post>
 </kickstart>
 '''
+
+
+def make_mapping_file(swirl):
+	""" TODO only for testing
+	this function makes a mapping file"""
+	base_path = '/tmp/output/'
+	file_desc = open('mapping', 'w')
+	for swf in swirl.swirlFiles:
+		for path in swf.getPaths():
+			if path[0] != '$' and swf.md5sum:
+				file_desc.write(path + '\t' + base_path + swf.md5sum + swf.path +'\n')
+	file_desc.close()

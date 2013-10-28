@@ -112,6 +112,9 @@ def main():
                     help="create a file FILENAME to display the current swirl graph with dot "
                     "program (use with display flag -d)",
                     metavar="FILENAME")
+    parser.add_option("-z", dest="mapping", default=False, action="store_true",
+                    help="testing only TODO remove me",
+                    metavar="FILENAME")
 
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -259,6 +262,7 @@ def main():
             return
 
 
+
     elif options.create :
         #
         # create a swirl
@@ -310,6 +314,9 @@ def main():
                 parser.error("The file %s could not be opened on this system: %s." %
                             (options.filename, e) + runHelp)
             print "File name: ", options.filename
+	    if options.mapping :
+		    FingerPrint.composer.make_mapping_file(serg.swirl)
+		    return
             if options.verbose :
                 print serg.printVerbose()
             else:
