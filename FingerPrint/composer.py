@@ -155,7 +155,7 @@ class Roller:
         rpm_tmp_dir = tempfile.mkdtemp()
         home_rpm_tmp_dir = tempfile.mkdtemp()
         rpm_list = set()
-        remapper_rpm_tmp_dir = rpm_tmp_dir + remapper_base_path
+        remapper_rpm_tmp_dir = rpm_tmp_dir + self.remapper_base_path
         # laydown the file
         for swf in self.files:
             # if use_remapping = true swf must be executable 
@@ -206,7 +206,7 @@ class Roller:
                     f.write("export LD_LIBRARY_PATH=\"" +
                             ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\"\n')
                 f.write("\n")
-                if use_mapping:
+                if use_remapping:
                     f.write("/opt/rocks/bin/remapper ")
                 f.write(swf.path + ".orig $@\n")
                 f.close()
