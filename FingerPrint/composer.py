@@ -522,5 +522,5 @@ def make_mapping_file(swirl):
 	for swf in swirl.swirlFiles:
 		for path in swf.getPaths():
 			if path[0] != '$' and swf.md5sum:
-				file_desc.write(path + '\t' + base_path + swf.md5sum + swf.path +'\n')
+				file_desc.write(path + '\t' + base_path + swf.md5sum + '/' +os.path.basename(swf.path) +'\n')
 	file_desc.close()
