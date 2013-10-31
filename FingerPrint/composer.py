@@ -220,7 +220,7 @@ class Roller:
                 else:
                     shutil.copy2(source_path, dest_path)
             # if use remapping we don't need the symlinks
-            if use_remapping :
+            if use_remapping and not swf.isExecutable():
                 continue
             # and the symlinks
             for i in swf.links:
