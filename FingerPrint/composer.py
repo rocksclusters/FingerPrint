@@ -158,9 +158,9 @@ class Roller:
         remapper_rpm_tmp_dir = rpm_tmp_dir + remapper_base_path
         # laydown the file
         for swf in self.files:
-            # if use_remapping = true swf.type must be ELF if use_remapping = false just
-            # follow the first swf.path.startswith("/home/")
-            if swf.path.startswith("/home/") and (not use_remapping or ELF in swf.type):
+            # if use_remapping = true swf must be executable 
+            # if use_remapping = false just follow the first swf.path.startswith("/home/")
+            if swf.path.startswith("/home/") and (not use_remapping or swf.isExecutable()):
                 # files in /home need special treatment 1. we need to create a user
                 # 2 they need to go in /export/home only on the Frontend
                 rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
@@ -178,7 +178,7 @@ class Roller:
                 continue
             if not os.path.exists( os.path.dirname(dest_path) ):
                 os.makedirs( os.path.dirname(dest_path) )
-            if 'ELF' in swf.type and swf.executable:
+            if swf.isExecutable():
                 # we need a wrapper script to set the environment
                 shutil.copy2(source_path, dest_path + ".orig")
                 f=open(dest_path, 'w')
@@ -343,10 +343,10 @@ class Roller:
         # if swirl_file.path in yum db add rpm to self.packages
         # else add swirl_file to self.files
         packages = []
-        if 'ELF' in swirl_file.type and swirl_file.executable:
+        if swirl_file.isExecutable():
             # executable
             packages = self.get_package_from_dep([swirl_file.path])
-        elif 'ELF' in swirl_file.type and not swirl_file.executable and not use_remapping:
+        elif swirl_file.isExecutable() and not use_remapping:
             # library
             # do not process it if we are using remapping
             packages = self.get_package_from_dep(swirl_file.getPaths(), False)
