@@ -306,6 +306,10 @@ class SwirlFile(Arch):
             dependency.type = self.type
             self.provides.append(dependency)
 
+    def isExecutable(self):
+        """ return true if this swirl is executable"""
+        return 'ELF' in self.type and self.executable
+
     def isYourPath(self, path):
         """check if this path is part of this swirlFile looking into the links as well"""
         if path == self.path:
