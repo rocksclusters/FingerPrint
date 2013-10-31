@@ -100,6 +100,8 @@ class Roller:
     # in the wrapper script
     append_variables = ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']
 
+    remapper_base_path = "/opt/rocks/remapper/"
+
     def __init__(self, archive_filename, roll_name):
         """ """
         self.archive_filename = archive_filename
@@ -108,8 +110,8 @@ class Roller:
         self.yb = yum.YumBase()
 
 
-    def make_roll(self):
-        """ """
+    def make_roll(self, use_remapping = False):
+        """If use remapping is True it will use the remapper technology"""
         if not os.path.exists(self.archive_filename) :
             logger.error("The file " + self.archive_filename + " does not exist" +
                 " (specify a different one with -f option)")
@@ -144,7 +146,7 @@ class Roller:
         #    ----------------      recursively resolve all dependencies of the execedFile
         #
         for swf in self.swirl.execedFiles:
-            self.resolve_file(swf)
+            self.resolve_file(swf, use_remapping)
         logger.debug("Dependency resolution terminated. Skipped swirl Files:\n - " +
                                 '\n - '.join([i.path for i in self.skipped_swfs]))
         #
@@ -153,9 +155,12 @@ class Roller:
         rpm_tmp_dir = tempfile.mkdtemp()
         home_rpm_tmp_dir = tempfile.mkdtemp()
         rpm_list = set()
+        remapper_rpm_tmp_dir = rpm_tmp_dir + remapper_base_path
         # laydown the file
         for swf in self.files:
-            if swf.path.startswith("/home/"):
+            # if use_remapping = true swf.type must be ELF if use_remapping = false just
+            # follow the first swf.path.startswith("/home/")
+            if swf.path.startswith("/home/") and (not use_remapping or ELF in swf.type):
                 # files in /home need special treatment 1. we need to create a user
                 # 2 they need to go in /export/home only on the Frontend
                 rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
@@ -201,11 +206,22 @@ class Roller:
                     f.write("export LD_LIBRARY_PATH=\"" +
                             ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\"\n')
                 f.write("\n")
+                if use_mapping:
+                    f.write("/opt/rocks/bin/remapper ")
                 f.write(swf.path + ".orig $@\n")
                 f.close()
                 os.chmod(dest_path, 0755)
             else:
-                shutil.copy2(source_path, dest_path)
+                if use_remapping:
+                    tmp_path = remapper_rpm_tmp_dir + str(swf.md5sum)
+                    if not os.path.exists(tmp_path):
+                        os.makedirs(tmp_path)
+                    shutil.copy2(source_path, tmp_path + '/' + os.path.basename(swf.path))
+                else:
+                    shutil.copy2(source_path, dest_path)
+            # if use remapping we don't need the symlinks
+            if use_remapping :
+                continue
             # and the symlinks
             for i in swf.links:
                 dest_link = rpm_prefix_dir + i
@@ -213,6 +229,8 @@ class Roller:
                 if not os.path.isdir(os.path.dirname(dest_link)):
                     os.makedirs(os.path.dirname(dest_link))
                 os.symlink( swf.path, dest_link)
+        if use_remapping :
+            make_mapping_file(self.swirl, rpm_tmp_dir + "/etc/fp_mapping", remapper_base_path)
         # files are in place so let's make the RPMs
         for (base_dir, rpm_name) in rpm_list:
             if self.make_rpm(base_dir, rpm_name):
@@ -314,7 +332,7 @@ class Roller:
         return True
 
 
-    def resolve_file(self, swirl_file):
+    def resolve_file(self, swirl_file, use_remapping = False):
         """ this function recursively try to resolve the swirlFile
 
         this function will add the package name to self.packages if it can find
@@ -328,14 +346,16 @@ class Roller:
         if 'ELF' in swirl_file.type and swirl_file.executable:
             # executable
             packages = self.get_package_from_dep([swirl_file.path])
-        elif 'ELF' in swirl_file.type and not swirl_file.executable:
+        elif 'ELF' in swirl_file.type and not swirl_file.executable and not use_remapping:
             # library
+            # do not process it if we are using remapping
             packages = self.get_package_from_dep(swirl_file.getPaths(), False)
         elif swirl_file.path[0] == '$' or sergeant.is_special_folder(swirl_file.path):
             # this file belongs to the special folders or it's a relative path
             return
         else:
-            #data
+            # data
+            # TODO what do we do with this when we use remapping?
             packages = self.get_package_from_dep([swirl_file.path])
         if packages :
             if len(packages) > 1 :
@@ -349,13 +369,13 @@ class Roller:
                 self.packages.add( packages[0] )
                 # so we found a package which can handle this swf but we should still process its
                 # opened file in case it is an interpreter
-                self._process_open_file(swirl_file)
+                self._process_open_file(swirl_file, use_remapping)
                 logger.debug("Adding package " + packages[0] + " for swirl " + swirl_file.path)
                 return
             else:
                 self.disable_pcks |= set(packages)
         logger.debug("Adding swirl: " + swirl_file.path)
-        if 'ELF' in swirl_file.type :
+        if 'ELF' in swirl_file.type and not use_remapping:
             # for ELF swf if we select the libmpi.so.2 we also want to carry all its dynamic libraries
             # even if their name matches an available package for this reason we use wanted_pcks
             self.wanted_pcks.add(swirl_file.package)
@@ -368,16 +388,16 @@ class Roller:
         for new_swf in deps:
             if new_swf not in self.files:
                 #this file is already in the included files
-                self.resolve_file(new_swf)
-        self._process_open_file(swirl_file)
+                self.resolve_file(new_swf, use_remapping)
+        self._process_open_file(swirl_file, use_remapping)
 
 
-    def _process_open_file(self, swirl_file):
+    def _process_open_file(self, swirl_file, use_remapping):
         """ scan the open files of this swirl """
         for exec_file in swirl_file.openedFiles:
             for open_file in swirl_file.openedFiles[exec_file]:
                 if open_file not in self.files:
-                    self.resolve_file(open_file)
+                    self.resolve_file(open_file, use_remapping)
 
 
     def get_package_from_dep(self, package_name, match_all = True):
@@ -514,11 +534,10 @@ done
 '''
 
 
-def make_mapping_file(swirl):
+def make_mapping_file(swirl, output_file, base_path):
 	""" TODO only for testing
 	this function makes a mapping file"""
-	base_path = '/tmp/output/'
-	file_desc = open('mapping', 'w')
+	file_desc = open(output_file, 'w')
 	for swf in swirl.swirlFiles:
 		for path in swf.getPaths():
 			if path[0] != '$' and swf.md5sum:

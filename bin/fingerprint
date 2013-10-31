@@ -159,7 +159,10 @@ def main():
             archive_name = options.filename
         roll_name = archive_name.rsplit(".tar.gz", 1)[0]
         roller = FingerPrint.composer.Roller(archive_name, roll_name)
-	if not roller.make_roll() :
+        mapping = False
+        if options.mapping :
+            mapping = True
+        if not roller.make_roll(mapping) :
             sys.exit(1)
         return
     elif options.verify or options.integrity or (options.archive and options.create) :
@@ -314,9 +317,6 @@ def main():
                 parser.error("The file %s could not be opened on this system: %s." %
                             (options.filename, e) + runHelp)
             print "File name: ", options.filename
-	    if options.mapping :
-		    FingerPrint.composer.make_mapping_file(serg.swirl)
-		    return
             if options.verbose :
                 print serg.printVerbose()
             else:
