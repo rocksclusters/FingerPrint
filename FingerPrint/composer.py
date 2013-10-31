@@ -230,7 +230,7 @@ class Roller:
                     os.makedirs(os.path.dirname(dest_link))
                 os.symlink( swf.path, dest_link)
         if use_remapping :
-            make_mapping_file(self.swirl, rpm_tmp_dir + "/etc/fp_mapping", remapper_base_path)
+            make_mapping_file(self.files, rpm_tmp_dir + "/etc/fp_mapping", self.remapper_base_path)
         # files are in place so let's make the RPMs
         for (base_dir, rpm_name) in rpm_list:
             if self.make_rpm(base_dir, rpm_name):
@@ -534,11 +534,11 @@ done
 '''
 
 
-def make_mapping_file(swirl, output_file, base_path):
+def make_mapping_file(sw_files, output_file, base_path):
 	""" TODO only for testing
 	this function makes a mapping file"""
 	file_desc = open(output_file, 'w')
-	for swf in swirl.swirlFiles:
+	for swf in sw_files:
 		for path in swf.getPaths():
 			if path[0] != '$' and swf.md5sum:
 				file_desc.write(path + '\t' + base_path + swf.md5sum + '/' +os.path.basename(swf.path) +'\n')
