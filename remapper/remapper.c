@@ -18,6 +18,8 @@
  * 02110-1301 USA
  */
 
+/* assert */
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
@@ -30,7 +32,12 @@
 #include <sys/user.h>
 #include <sys/ptrace.h>
 #include <fcntl.h>
+
+/* for waitpid */
+#include <sys/wait.h>
 #include <sys/types.h> 
+
+/* shared memory */
 #include <sys/ipc.h> 
 #include <sys/shm.h>
 #include <unistd.h>
