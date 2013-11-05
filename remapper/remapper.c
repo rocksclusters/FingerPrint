@@ -283,9 +283,7 @@ init_mapping(){
 		mapping->original_path = orig_file;
 		mapping->rewritten_path = remapped_file;
 		HASH_ADD_KEYPTR(hh, global_mappings, mapping->original_path, strlen(mapping->original_path), mapping);
-#if DEBUG
-		fprintf(stderr, "Loading mapping: %s -> %s\n", orig_file, remapped_file);
-#endif
+		debug(LOG_MAPPING, "mapping: loading new: %s -> %s", orig_file, remapped_file);
 
 		/* we need to add directory remapping for stat syscall */
 		mapping = malloc(sizeof(struct file_mapping));
@@ -293,9 +291,7 @@ init_mapping(){
 		mapping->original_path = get_base_path(orig_file);
 		mapping->rewritten_path = get_base_path(remapped_file);
 		HASH_ADD_KEYPTR(hh, global_mappings, mapping->original_path, strlen(mapping->original_path), mapping);
-#if DEBUG
-		fprintf(stderr, "Loading mapping: %s -> %s\n", mapping->original_path, mapping->rewritten_path);
-#endif
+		debug(LOG_MAPPING, "mapping: loading new: %s -> %s", mapping->original_path, mapping->rewritten_path);
 	}
 }//init_mapping
 
@@ -422,7 +418,7 @@ main(int argc, char *argv[]) {
 	
 	/* set up local shared memory */
 	page_size = sysconf(_SC_PAGESIZE);
-	debug(LOG_DEBUG, "page size is %ld", page_size);
+	debug(LOG_INFO, "page size is %ld", page_size);
 	/* randomly probe for a valid shm key */
 	do {
 		errno = 0;
@@ -475,7 +471,7 @@ main(int argc, char *argv[]) {
 
 	//tracing of process
 	sprintf(mem_filename, "/proc/%d/mem", pid);
-	debug(LOG_INFO, "Memory access filename is %s\n", mem_filename);
+	debug(LOG_INFO, "info: memory access filename is %s", mem_filename);
 	mem_fp = fopen(mem_filename, "rb");
 	EXITIF(mem_fp == NULL);
 	while (1) {
@@ -489,11 +485,11 @@ main(int argc, char *argv[]) {
 			if (setting_up_shm == 0){
 				begin_setup_shmat(pid);
 				setting_up_shm = 1;
-				debug(LOG_INFO, "SHM: begin setup");
+				debug(LOG_INFO, "info: shared memory begin setup");
 			} else if (setting_up_shm == 1) {
 				finish_setup_shmat(pid);
 				setting_up_shm = 2;
-				debug(LOG_INFO, "SHM: end setup address %p", childshm);
+				debug(LOG_INFO, "info: shared memory end setup address %p", childshm);
 			/* -- end -- set up the shared memory region */
 			} else if (!syscall_return && (sysnum == SYS_open ||
 					sysnum == SYS_stat )) {
@@ -508,18 +504,14 @@ main(int argc, char *argv[]) {
 				}
 				/* lookup up if we have a mapping for the current path */
 				HASH_FIND_STR(global_mappings, original_path, mapping);
-				if (mapping){
+				if (mapping) {
 					/* we have to rewrite the file path */
-#ifdef DEBUG
-					fprintf(stderr, "%s -> %s\n", original_path, mapping->rewritten_path);
-#endif
+					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s", original_path, mapping->rewritten_path);
 					strcpy(localshm, mapping->rewritten_path);
 					iregs.rdi = (unsigned long int)childshm;
 					EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&iregs) < 0);
-				}else{
-#ifdef DEBUG
-					fprintf(stderr, "%s not found\n", original_path);
-#endif
+				} else {
+					debug(LOG_MAPPING, "mapping: file not found %s", original_path);
 				}
 				syscall_return = 1;
 			}else if (syscall_return && (sysnum == SYS_open ||
@@ -534,7 +526,7 @@ main(int argc, char *argv[]) {
 			return 0;
 		} else {
 			if (ev->type == EVENT_NONE)
-				debug(LOG_INFO, "Event none\n");
+				debug(LOG_INFO, "info: event none\n");
 			continue_process(pid, 0);
 		}
 	}
