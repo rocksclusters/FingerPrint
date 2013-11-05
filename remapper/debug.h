@@ -28,6 +28,22 @@
 #include <stdio.h>
 
 
+
+#define ABORT(msg)            {       \
+	fprintf(options.output, msg);        \
+	exit(-1);  }
+
+// like an assert except that it always fires
+#define EXITIF(x) do { \
+	if (x) { \
+		fprintf(options.output, "Fatal error in %s [%s:%d]\n", __FUNCTION__, __FILE__, __LINE__); \
+		exit(1); \
+	} \
+	} while(0)
+
+
+#define debug(level, expr...) debug_(level, __FILE__, __LINE__, expr)
+
 struct options_t {
 	FILE *output;   /* output to a specific file */
 	int debug;      /* debug */
@@ -43,9 +59,6 @@ enum {
 	LOG_DEBUG = 040,
 };
 
-//extern struct options;
-
-#define debug(level, expr...) debug_(level, __FILE__, __LINE__, expr)
 
 void debug_(int level, const char *file, int line, const char *fmt, ...)
 		__attribute__((format(printf,4,5)));

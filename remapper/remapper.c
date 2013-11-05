@@ -47,21 +47,6 @@
 #include "uthash.h"
 
 
-#define ABORT(msg)            {       \
-	fprintf(options.output, msg);        \
-	exit(-1);  }
-
-#define X86_64
-
-// like an assert except that it always fires
-#define EXITIF(x) do { \
-  if (x) { \
-    fprintf(options.output, "Fatal error in %s [%s:%d]\n", __FUNCTION__, __FILE__, __LINE__); \
-    exit(1); \
-  } \
-} while(0)
-
-
 #ifdef __x86_64__
 # define ORIG_XAX (8 * ORIG_RAX)
 #else
