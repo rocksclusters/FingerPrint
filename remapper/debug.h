@@ -25,7 +25,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "options.h"
+#include <stdio.h>
+
+
+struct options_t {
+	FILE *output;   /* output to a specific file */
+	int debug;      /* debug */
+};
+
+struct options_t options;
 
 /* debug levels:
  */
@@ -35,6 +43,7 @@ enum {
 	DEBUG = 040
 };
 
+//extern struct options;
 
 #define debug(level, expr...) debug_(level, __FILE__, __LINE__, expr)
 
