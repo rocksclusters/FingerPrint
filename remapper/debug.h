@@ -55,8 +55,8 @@ struct options_t options;
  */
 enum {
 	LOG_INFO    = 010,
-	LOG_WARNING = 020,
-	LOG_DEBUG = 040,
+	LOG_MAPPING = 020,
+	LOG_EVENT = 040,
 };
 
 

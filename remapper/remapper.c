@@ -325,10 +325,10 @@ next_event(pid_t pid){
 	new_pid = waitpid(-1, &status, __WALL);
 	if (new_pid == -1) {
 	        if (errno == ECHILD) {
-	                debug(LOG_DEBUG, "event: No more traced programs: exiting");
+	                debug(LOG_EVENT, "event: No more traced programs: exiting");
 	                exit(0);
 	        } else if (errno == EINTR) {
-	                debug(LOG_DEBUG, "event: none (wait received EINTR?)");
+	                debug(LOG_EVENT, "event: none (wait received EINTR?)");
 	                event.type = EVENT_NONE;
 	                return &event;
 	        }
@@ -338,7 +338,7 @@ next_event(pid_t pid){
 
 	if (new_pid != pid) {
 		/* a new process */
-	        debug(LOG_DEBUG, "event: NEW: new_pid=%d old_pid=%d", new_pid, pid);
+	        debug(LOG_EVENT, "event: NEW: new_pid=%d old_pid=%d", new_pid, pid);
 		event.type = EVENT_NEW;
 		return &event;
 	}
@@ -347,13 +347,13 @@ next_event(pid_t pid){
 		/*return an signal */
 	        event.value = WTERMSIG(status);
 		event.type = EVENT_EXIT;
-	        debug(LOG_DEBUG, "event: EXIT_SIGNAL: pid=%d, signum=%d", new_pid, event.value);
+	        debug(LOG_EVENT, "event: EXIT_SIGNAL: pid=%d, signum=%d", new_pid, event.value);
 	        return &event;
 	}
 	if (WIFEXITED(status)) {
 	        event.value = WEXITSTATUS(status);
 		event.type = EVENT_EXIT;
-	        debug(LOG_DEBUG, "event: EXIT: pid=%d, status=%d", new_pid, event.value);
+	        debug(LOG_EVENT, "event: EXIT: pid=%d, status=%d", new_pid, event.value);
 	        return &event;
 	}
 
@@ -361,21 +361,21 @@ next_event(pid_t pid){
 		if (WSTOPSIG(status) == (SIGTRAP | 0x80)) {
 			/* this is a syscall */
 			event.type = EVENT_SYSCALL;
-	        	debug(LOG_DEBUG, "event: SYSCALL: pid=%d, signum=%d", new_pid, event.value);
+			debug(LOG_EVENT, "event: SYSCALL: pid=%d, signum=%d", new_pid, event.value);
 			return &event;
 		}
 		/* exec fork clone ignored so far */
 		else {
 			event.type = EVENT_SIGNAL;
 			event.value = WSTOPSIG(status);
-		        debug(LOG_DEBUG, "event: SIGNAL: pid=%d, signum=%d", new_pid, event.value);
+		        debug(LOG_EVENT, "event: SIGNAL: pid=%d, signum=%d", new_pid, event.value);
 			return &event;
 		}
 	}
 	
 	/* we should not get to this point */
 	event.type = EVENT_NONE;
-        debug(LOG_DEBUG, "event: unknown stop: pid=%d", new_pid);
+        debug(LOG_EVENT, "event: unknown stop: pid=%d", new_pid);
 	return &event;
 }
 
@@ -390,7 +390,7 @@ continue_process(pid_t pid, int signal){
 		perror("PTRACE_SYSCALL");
 		exit(1);
 	}
-	debug(LOG_DEBUG, "ptrace: pid=%d signal=%d ret=%d", pid, signal, ret);
+	debug(LOG_EVENT, "ptrace: pid=%d signal=%d ret=%d", pid, signal, ret);
 }
 
 int
@@ -475,7 +475,7 @@ main(int argc, char *argv[]) {
 
 	//tracing of process
 	sprintf(mem_filename, "/proc/%d/mem", pid);
-	debug(LOG_DEBUG, "Memory access filename is %s\n", mem_filename);
+	debug(LOG_INFO, "Memory access filename is %s\n", mem_filename);
 	mem_fp = fopen(mem_filename, "rb");
 	EXITIF(mem_fp == NULL);
 	while (1) {
@@ -489,11 +489,11 @@ main(int argc, char *argv[]) {
 			if (setting_up_shm == 0){
 				begin_setup_shmat(pid);
 				setting_up_shm = 1;
-				debug(LOG_DEBUG, "SHM: begin setup");
+				debug(LOG_INFO, "SHM: begin setup");
 			} else if (setting_up_shm == 1) {
 				finish_setup_shmat(pid);
 				setting_up_shm = 2;
-				debug(LOG_DEBUG, "SHM: end setup address %p", childshm);
+				debug(LOG_INFO, "SHM: end setup address %p", childshm);
 			/* -- end -- set up the shared memory region */
 			} else if (!syscall_return && (sysnum == SYS_open ||
 					sysnum == SYS_stat )) {
