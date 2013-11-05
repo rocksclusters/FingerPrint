@@ -454,6 +454,9 @@ main(int argc, char *argv[]) {
 	assert(localshm);
 	/* end set up local shared memory */
 
+	/* load file path remapping hash table */
+	init_mapping();
+
 	//fix the argument list	
 	command = argv[1];
 	argv = argv + 1;
