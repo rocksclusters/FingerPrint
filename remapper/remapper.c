@@ -401,7 +401,7 @@ main(int argc, char *argv[]) {
 	key_t key;
 	long page_size = 0, ptrace_options = 0;
 	int syscall_return = 0;
-	char *original_path, *command;
+	char *original_path, *command, *log_level;
 	pid_t pid;
 	struct file_mapping *mapping;
 	int ret;
@@ -409,13 +409,24 @@ main(int argc, char *argv[]) {
 	struct user_regs_struct iregs;
 	struct Event *ev;
 
-
 	original_path = malloc(PATH_MAX);
+
+	/* setup logger */
 	options.output = stderr;
-	//maxium noise
 	options.debug = 0;
-	
-	
+	log_level = getenv("REMAPPER_DEBUG");
+	if (log_level) {
+		if (strstr(log_level, "info")){
+			options.debug |= LOG_INFO;
+		}
+		if (strstr(log_level, "event")){
+			options.debug |= LOG_EVENT;
+		}
+		if (strstr(log_level, "mapping")){
+			options.debug |= LOG_MAPPING;
+                }
+	}
+
 	/* set up local shared memory */
 	page_size = sysconf(_SC_PAGESIZE);
 	debug(LOG_INFO, "page size is %ld", page_size);
