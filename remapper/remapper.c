@@ -400,7 +400,7 @@ continue_process(pid_t pid, int signal){
 	if (signal == 0)
 		ret = ptrace(PTRACE_SYSCALL, pid, 0, NULL);
 	else
-		ret = ptrace(PTRACE_SYSCALL, pid, 0, &signal);
+		ret = ptrace(PTRACE_SYSCALL, pid, 0, (void *)(uintptr_t)signal);
 	if (ret < 0){
 		perror("PTRACE_SYSCALL");
 		exit(1);
