@@ -394,7 +394,19 @@ next_event(pid_t pid){
 	return &event;
 }
 
-
+void
+continue_process(pid_t pid, int signal){
+	int ret;
+	if (signal == 0)
+		ret = ptrace(PTRACE_SYSCALL, pid, 0, NULL);
+	else
+		ret = ptrace(PTRACE_SYSCALL, pid, 0, &signal);
+	if (ret < 0){
+		perror("PTRACE_SYSCALL");
+		exit(1);
+	}
+	debug(LOG_DEBUG, "ptrace: pid=%d signal=%d ret=%d", pid, signal, ret);
+}
 
 int
 main(int argc, char *argv[]) {
@@ -463,15 +475,15 @@ main(int argc, char *argv[]) {
         if (waitpid(pid, NULL, __WALL) != pid) {
                 perror ("trace_pid: waitpid");
                 exit(1);
-        }       
+        }
 	assert(pid != 0);
 	
         ptrace_options = PTRACE_O_TRACESYSGOOD;
-        if (ptrace(PTRACE_SETOPTIONS, pid, 0, (void *)ptrace_options) < 0 &&
-            ptrace(PTRACE_SYSCALL, pid, 0, NULL) < 0) {
+        if (ptrace(PTRACE_SETOPTIONS, pid, 0, (void *)ptrace_options) < 0){
                 perror("PTRACE_SETOPTIONS");
                 exit(1);
 	}
+	continue_process(pid, 0);
 
 	//tracing of process
 	sprintf(mem_filename, "/proc/%d/mem", pid);
@@ -481,8 +493,7 @@ main(int argc, char *argv[]) {
 	while (1) {
 		ev = next_event(pid);
 		if (ev->type == EVENT_SIGNAL){
-			ptrace(PTRACE_SYSCALL, pid, 0, &ev->value);
-			//	(void *)(uintptr_t)ev->e_un.signum);
+			continue_process(pid, ev->value);
 			continue;
 		}else if (ev->type == EVENT_SYSCALL ){
 			sysnum = ptrace(PTRACE_PEEKUSER, pid, ORIG_XAX, 0);
@@ -528,12 +539,12 @@ main(int argc, char *argv[]) {
 				//fprintf(stderr, "Ret from open\n");
 				syscall_return = 0;
 			}
-			ptrace(PTRACE_SYSCALL, pid, 0, 0);
+			continue_process(pid, 0);
 
 		} else { 
 			if ( ev->type == EVENT_NONE )
-				debug(INFO, "Event none\n");
-			ptrace(PTRACE_SYSCALL, pid, 0, 0);
+				debug(LOG_INFO, "Event none\n");
+			continue_process(pid, 0);
 		}
 	}
 	fclose(mem_fp);
