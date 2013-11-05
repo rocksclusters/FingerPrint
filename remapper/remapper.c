@@ -376,14 +376,15 @@ next_event(pid_t pid){
 		if (WSTOPSIG(status) == (SIGTRAP | 0x80)) {
 			/* this is a syscall */
 			event.type = EVENT_SYSCALL;
-	        	debug(DEBUG, "event: SYSCALL: pid=%d, signum=%d", new_pid, event.value);
+	        	debug(LOG_DEBUG, "event: SYSCALL: pid=%d, signum=%d", new_pid, event.value);
+			return &event;
 		}
 		/* exec fork clone ignored so far */
 		else {
 			event.type = EVENT_SIGNAL;
 			event.value = WSTOPSIG(status);
 		        debug(LOG_DEBUG, "event: SIGNAL: pid=%d, signum=%d", new_pid, event.value);
-	        	return &event;
+			return &event;
 		}
 	}
 	
