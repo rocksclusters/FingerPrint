@@ -29,10 +29,11 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
+#include <fcntl.h>
+/* ptrace */
+#include <sys/reg.h>
 #include <sys/user.h>
 #include <sys/ptrace.h>
-#include <fcntl.h>
-
 /* for waitpid */
 #include <sys/wait.h>
 #include <sys/types.h> 
@@ -60,6 +61,12 @@
   } \
 } while(0)
 
+
+#ifdef __x86_64__
+# define ORIG_XAX (8 * ORIG_RAX)
+#else
+# define ORIG_XAX (4 * ORIG_EAX)
+#endif
 
 
 char * mapping_file = "/etc/fp_mapping";
@@ -308,6 +315,86 @@ init_mapping(){
 }//init_mapping
 
 
+enum Event_type {
+	EVENT_NONE = 0,
+	EVENT_SYSCALL,
+	EVENT_SIGNAL,
+	EVENT_EXIT,
+	EVENT_NEW,
+};
+
+
+struct Event {
+	int type;
+	int value;
+};
+
+
+struct Event event;
+
+static struct Event *
+next_event(pid_t pid){
+	pid_t new_pid;
+	int status;
+
+	new_pid = waitpid(-1, &status, __WALL);
+	if (new_pid == -1) {
+	        if (errno == ECHILD) {
+	                debug(DEBUG, "event: No more traced programs: exiting");
+	                exit(0);
+	        } else if (errno == EINTR) {
+	                debug(DEBUG, "event: none (wait received EINTR?)");
+	                event.type = EVENT_NONE;
+	                return &event;
+	        }
+	        perror("wait");
+	        exit(1);
+	}
+
+	if (new_pid != pid) {
+		/* a new process */
+	        debug(DEBUG, "event: NEW: new_pid=%d old_pid=%d", new_pid, pid);
+		event.type = EVENT_NEW;
+		return &event;
+	}
+
+	if (WIFSIGNALED(status)) {
+		/*return an signal */
+	        event.value = WTERMSIG(status);
+		event.type = EVENT_EXIT;
+	        debug(DEBUG, "event: EXIT_SIGNAL: pid=%d, signum=%d", new_pid, event.value);
+	        return &event;
+	}
+	if (WIFEXITED(status)) {
+	        event.value = WEXITSTATUS(status);
+		event.type = EVENT_EXIT;
+	        debug(DEBUG, "event: EXIT: pid=%d, status=%d", new_pid, event.value);
+	        return &event;
+	}
+
+	if ( WIFSTOPPED(status) ) {
+		if (WSTOPSIG(status) == (SIGTRAP | 0x80)) {
+			/* this is a syscall */
+			event.type = EVENT_SYSCALL;
+	        	debug(DEBUG, "event: SYSCALL: pid=%d, signum=%d", new_pid, event.value);
+		}
+		/* exec fork clone ignored so far */
+		else {
+			event.type = EVENT_SIGNAL;
+			event.value = WSTOPSIG(status);
+		        debug(DEBUG, "event: SIGNAL: pid=%d, signum=%d", new_pid, event.value);
+	        	return &event;
+		}
+	}
+	
+	/* we should not get to this point */
+	event.type = EVENT_NONE;
+        debug(DEBUG, "event: unknown stop: pid=%d", new_pid);
+	return &event;
+}
+
+
+
 int
 main(int argc, char *argv[]) {
 
@@ -318,13 +405,15 @@ main(int argc, char *argv[]) {
 	 * 2 if we have set it up */
 	char setting_up_shm = 0;
 	key_t key;
-	long page_size = 0;
+	long page_size = 0, ptrace_options = 0;
 	int syscall_return = 0;
 	char *original_path, *command;
 	pid_t pid;
 	struct file_mapping *mapping;
 	int ret;
+	long int sysnum;
 	struct user_regs_struct iregs;
+	struct Event *ev;
 
 
 	original_path = malloc(PATH_MAX);
@@ -335,7 +424,7 @@ main(int argc, char *argv[]) {
 	
 	/* set up local shared memory */
 	page_size = sysconf(_SC_PAGESIZE);
-	debug(INFO, "page size is %ld", page_size);
+	debug(DEBUG, "page size is %ld", page_size);
 	/* randomly probe for a valid shm key */
 	do {
 		errno = 0;
@@ -376,29 +465,27 @@ main(int argc, char *argv[]) {
         }       
 	assert(pid != 0);
 	
-
+        ptrace_options = PTRACE_O_TRACESYSGOOD;
+        if (ptrace(PTRACE_SETOPTIONS, pid, 0, (void *)ptrace_options) < 0 &&
+            ptrace(PTRACE_SYSCALL, pid, 0, NULL) < 0) {
+                perror("PTRACE_SETOPTIONS");
+                exit(1);
+	}
 
 	//tracing of process
 	sprintf(mem_filename, "/proc/%d/mem", pid);
-	debug(INFO, "Memory access filename is %s\n", mem_filename);
+	debug(DEBUG, "Memory access filename is %s\n", mem_filename);
 	mem_fp = fopen(mem_filename, "rb");
 	EXITIF(mem_fp == NULL);
 	while (1) {
-		ev = next_event();
-		if (ev->proc)
-			ret = ev->proc->pid;
-		else 
-			ret = 0;
-		fprintf(stderr, "call: %d\tpid: %d\n", ev->type, ret);
+		ev = next_event(pid);
 		if (ev->type == EVENT_SIGNAL){
-			ptrace(PTRACE_SYSCALL, ev->proc->pid, 0, &ev->e_un.signum);
+			ptrace(PTRACE_SYSCALL, pid, 0, &ev->value);
 			//	(void *)(uintptr_t)ev->e_un.signum);
 			continue;
-		}else if (ev->type == EVENT_BREAKPOINT){
-			handle_breakpoint(ev);
-		}else if (ev->type == EVENT_SYSCALL && ev->proc && 
-				ev->proc->state != STATE_IGNORED){
-			/* set up the shared memory region */
+		}else if (ev->type == EVENT_SYSCALL ){
+			sysnum = ptrace(PTRACE_PEEKUSER, pid, ORIG_XAX, 0);
+			/* --begin-- set up the shared memory region */
 			if (setting_up_shm == 0){
 				begin_setup_shmat(pid);
 				setting_up_shm = 1;
@@ -406,9 +493,9 @@ main(int argc, char *argv[]) {
 				finish_setup_shmat(pid);
 				setting_up_shm = 2;
 				fprintf(stderr, "child shm address %p\n", childshm);
-			/* end set up the shared memory region */
-			} else if (!syscall_return && (ev->e_un.sysnum == SYS_open ||
-					ev->e_un.sysnum == SYS_stat )) {
+			/* -- end -- set up the shared memory region */
+			} else if (!syscall_return && (sysnum == SYS_open ||
+					sysnum == SYS_stat )) {
 				ptrace(PTRACE_GETREGS, pid, 0, &iregs);
 				ret = fseek(mem_fp, iregs.rdi, SEEK_SET);
 				if (ret != 0)
@@ -434,31 +521,17 @@ main(int argc, char *argv[]) {
 #endif
 				}
 				syscall_return = 1;
-			}else if (syscall_return && (ev->e_un.sysnum == SYS_open ||
-					ev->e_un.sysnum == SYS_stat)) {
+			}else if (syscall_return && (sysnum == SYS_open ||
+					sysnum == SYS_stat)) {
 				//fprintf(stderr, "Ret from open\n");
 				syscall_return = 0;
 			}
-			continue_process(ev->proc->pid);
-		} else if (ev->type == EVENT_NEW) {
-			handle_new(ev);
-		} else if (ev->type == EVENT_CLONE || ev->type == EVENT_VFORK ) {
-			handle_clone(ev);
-		} else if (ev->type == EVENT_EXEC){
-			setting_up_shm = 0;
-			childshm = NULL;
-			handle_exec(ev);
-			//after an exec we have to re-create the shared segment
-		} else if ((ev->type == EVENT_EXIT) || (ev->type == EVENT_EXIT_SIGNAL)) {
-			remove_process(ev->proc);
+			ptrace(PTRACE_SYSCALL, pid, 0, 0);
+
 		} else { 
-			if ( ev->proc )
-				continue_process(ev->proc->pid);
-			else
-#ifdef DEBUG
-				fprintf(stderr, "Unable to continue main process skipping...\n");
-#endif
-				;
+			if ( ev->type == EVENT_NONE )
+				debug(INFO, "Event none\n");
+			ptrace(PTRACE_SYSCALL, pid, 0, 0);
 		}
 	}
 	fclose(mem_fp);
