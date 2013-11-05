@@ -544,8 +544,11 @@ main(int argc, char *argv[]) {
 			}
 			continue_process(pid, 0);
 
-		} else { 
-			if ( ev->type == EVENT_NONE )
+		} else if (ev->type == EVENT_EXIT) {
+			//continue_process(pid, 0);
+			return 0;
+		} else {
+			if (ev->type == EVENT_NONE)
 				debug(LOG_INFO, "Event none\n");
 			continue_process(pid, 0);
 		}
