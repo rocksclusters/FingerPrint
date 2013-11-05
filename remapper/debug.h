@@ -38,9 +38,9 @@ struct options_t options;
 /* debug levels:
  */
 enum {
-	INFO    = 010,
-	WARNING = 020,
-	DEBUG = 040
+	LOG_INFO    = 010,
+	LOG_WARNING = 020,
+	LOG_DEBUG = 040,
 };
 
 //extern struct options;
