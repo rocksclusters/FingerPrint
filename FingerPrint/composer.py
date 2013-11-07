@@ -230,6 +230,8 @@ class Roller:
                     os.makedirs(os.path.dirname(dest_link))
                 os.symlink( swf.path, dest_link)
         if use_remapping :
+            if not os.path.exists(rpm_tmp_dir + "/etc"):
+                os.mkdir(rpm_tmp_dir + "/etc")
             make_mapping_file(self.files, rpm_tmp_dir + "/etc/fp_mapping", self.remapper_base_path)
         # files are in place so let's make the RPMs
         for (base_dir, rpm_name) in rpm_list:
