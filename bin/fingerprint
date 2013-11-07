@@ -113,8 +113,7 @@ def main():
                     "program (use with display flag -d)",
                     metavar="FILENAME")
     parser.add_option("-z", dest="mapping", default=False, action="store_true",
-                    help="testing only TODO remove me",
-                    metavar="FILENAME")
+                    help="Use remapper when creating a roll")
 
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
