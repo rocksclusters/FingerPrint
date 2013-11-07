@@ -14,9 +14,10 @@ def getOutputAsList(binary, inputString=None):
 
 
 
-# copied from stackoverflow
+# inspired from stackoverflow
 # http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028
-def which(program):
+def which(program, extra_paths = None):
+    "extra path is a string containing a list of path separated by : which "
 
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -26,7 +27,10 @@ def which(program):
         if is_exe(program):
             return program
     else:
-        for path in os.environ["PATH"].split(os.pathsep):
+        tmp = []
+        if extra_paths :
+            tmp = extra_paths.split(":")
+        for path in os.environ["PATH"].split(os.pathsep) + tmp:
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file
