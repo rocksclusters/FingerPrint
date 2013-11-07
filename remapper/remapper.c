@@ -389,11 +389,38 @@ continue_process(pid_t pid, int signal){
 	debug(LOG_EVENT, "ptrace: pid=%d signal=%d ret=%d", pid, signal, ret);
 }
 
+
+
+/**
+ * read a string from the memory of process with PID equal to child 
+ * starting from address addr and copy it in buffer
+ */
+char *
+read_string (int child, unsigned long addr, char * buffer) {
+	int allocated = PATH_MAX, read = 0;
+	unsigned long tmp =0;
+	while(1) {
+		if (read + sizeof(tmp) > allocated) {
+			ABORT("Reading original file path");
+		}
+		tmp = ptrace(PTRACE_PEEKDATA, child, addr + read);
+		if(errno != 0) {
+			buffer[read] = 0;
+			perror("ptrace peekdata error\n");
+			break;
+		}
+		memcpy(buffer + read, &tmp, sizeof(tmp));
+		if (memchr(&tmp, 0, sizeof(tmp)) != NULL)
+			break;
+		read += sizeof(tmp);
+	}
+	return buffer;
+}
+
+
 int
 main(int argc, char *argv[]) {
 
-	char mem_filename[sizeof ("/proc/0123456789/mem")];
-	FILE *mem_fp;
 	/* setting_up_shm is 0 if we have to setup shm
 	 * 1 if we're in the process of setting up shared memory
 	 * 2 if we have set it up */
@@ -404,7 +431,6 @@ main(int argc, char *argv[]) {
 	char *original_path, *command, *log_level;
 	pid_t pid;
 	struct file_mapping *mapping;
-	int ret;
 	long int sysnum;
 	struct user_regs_struct iregs;
 	struct Event *ev;
@@ -452,7 +478,6 @@ main(int argc, char *argv[]) {
 	//fix the argument list	
 	command = argv[1];
 	argv = argv + 1;
-
 	if (command){
 		pid = fork();
 		if(pid == 0) {
@@ -473,6 +498,7 @@ main(int argc, char *argv[]) {
         }
 	assert(pid != 0);
 	
+	/* set ptrace options */
         ptrace_options = PTRACE_O_TRACESYSGOOD;
         if (ptrace(PTRACE_SETOPTIONS, pid, 0, (void *)ptrace_options) < 0){
                 perror("PTRACE_SETOPTIONS");
@@ -480,11 +506,6 @@ main(int argc, char *argv[]) {
 	}
 	continue_process(pid, 0);
 
-	//tracing of process
-	sprintf(mem_filename, "/proc/%d/mem", pid);
-	debug(LOG_INFO, "info: memory access filename is %s", mem_filename);
-	mem_fp = fopen(mem_filename, "rb");
-	EXITIF(mem_fp == NULL);
 	while (1) {
 		ev = next_event(pid);
 		if (ev->type == EVENT_SIGNAL){
@@ -505,14 +526,7 @@ main(int argc, char *argv[]) {
 			} else if (!syscall_return && (sysnum == SYS_open ||
 					sysnum == SYS_stat )) {
 				ptrace(PTRACE_GETREGS, pid, 0, &iregs);
-				ret = fseek(mem_fp, iregs.rdi, SEEK_SET);
-				if (ret != 0)
-					ABORT("failed to seek\n");
-				fflush(mem_fp);
-				fgets(original_path, PATH_MAX, mem_fp);
-				if (ferror(mem_fp)){
-					ABORT("failed to read\n");
-				}
+				read_string(pid, iregs.rdi, original_path);
 				/* lookup up if we have a mapping for the current path */
 				HASH_FIND_STR(global_mappings, original_path, mapping);
 				if (mapping) {
@@ -541,7 +555,7 @@ main(int argc, char *argv[]) {
 			continue_process(pid, 0);
 		}
 	}
-	fclose(mem_fp);
+	free(original_path);
 	return 0;
 }
 
