@@ -208,6 +208,10 @@ class Roller:
                 f.write("\n")
                 if use_remapping:
                     f.write("/opt/rocks/bin/remapper ")
+                    loader = self.swirl.getLoader(swf)
+                    if loader :
+                        f.write(self.remapper_base_path + '/' + str(swf.md5sum)
+                                + '/' + os.path.basename(loader.path) + " ")
                 f.write(swf.path + ".orig $@\n")
                 f.close()
                 os.chmod(dest_path, 0755)
