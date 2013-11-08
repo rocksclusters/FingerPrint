@@ -160,7 +160,7 @@ class Roller:
         for swf in self.files:
             # if use_remapping = true swf must be executable 
             # if use_remapping = false just follow the first swf.path.startswith("/home/")
-            if swf.path.startswith("/home/") and (not use_remapping or swf.isExecutable()):
+            if swf.path.startswith("/home/"):
                 # files in /home need special treatment 1. we need to create a user
                 # 2 they need to go in /export/home only on the Frontend
                 rpm_list.add((home_rpm_tmp_dir,self.roll_name + "-home"))
