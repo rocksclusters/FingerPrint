@@ -71,6 +71,17 @@ class Swirl(object):
             return_list.update(swf.rpaths)
         return return_list
 
+
+    def getLoader(self, swirlFile):
+        """ return a swirlfile which is the loader of the given swirlFile
+
+        it returns None in case the binaries is static"""
+        for swf in self.getListSwirlFilesDependentStatic(swirlFile):
+            if swf.isLoader():
+                return swf
+        return None
+
+
     def getListSwirlFilesDependentStaticAndDynamic(self, swirlFile):
         """given a swirlFile it returns a list of all its required swirlfiles
         It includes both static recursive and dynamic dependencies """
@@ -268,7 +279,7 @@ class SwirlFile(Arch):
         self.type = "Data"
 
     def isLoader(self):
-        """ """
+        """ return True if this swirl is a loader """
         for i in self.provides :
             if i.isLoader():
                 return True
