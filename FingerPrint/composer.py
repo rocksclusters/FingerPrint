@@ -99,8 +99,9 @@ class Roller:
     # these varaibles will be merged (prepended) with the local variable values
     # in the wrapper script
     append_variables = ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']
-
+    # where all the remapped file will be placed
     remapper_base_path = "/opt/rocks/remapper/"
+    remapper_executable = "/opt/rocks/bin/remapper"
 
     def __init__(self, archive_filename, roll_name):
         """ """
@@ -207,7 +208,7 @@ class Roller:
                             ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\"\n')
                 f.write("\n")
                 if use_remapping:
-                    f.write("/opt/rocks/bin/remapper ")
+                    f.write(self.remapper_executable + " ")
                     loader = self.swirl.getLoader(swf)
                     if loader :
                         f.write(self.remapper_base_path + '/' + str(loader.md5sum)
