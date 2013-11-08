@@ -90,7 +90,9 @@ setup(
     #needs this for detecting file type
     #py_modules=['magic'],
     # readme and license files
-    data_files = [('', ['README.rst', 'LICENSE', 'setup.cfg.template'])],
+    data_files = [('', ['README.rst', 'LICENSE', 'setup.cfg.template']),
+                  ('remapper', ['remapper/Makefile', 'remapper/remapper.c',
+                               'remapper/debug.h', 'remapper/uthash.h'])],
     ext_modules = module,
     #the command line called by users    
     scripts=['bin/fingerprint'],
