@@ -11,14 +11,13 @@ import logging
 
 
 
+fullPath = os.path.dirname(os.path.realpath(__file__))
+fingerprint_base_path = os.path.abspath(os.path.join(fullPath, os.path.pardir))
 try:
     import FingerPrint, FingerPrint.sergeant
 except ImportError:
     #we need this to run from sources without installing fingerprint
-    fullPath = os.path.dirname(os.path.realpath(__file__))
-    parDir = os.path.abspath(os.path.join(fullPath, os.path.pardir))
-    #we need to use our local patched python-ptrace and not the system one
-    sys.path.insert(0, parDir)
+    sys.path.insert(0, fingerprint_base_path)
     import FingerPrint, FingerPrint.sergeant
 
 #
