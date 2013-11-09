@@ -191,7 +191,7 @@ class SyscallTracer:
                     logger.debug("This should not happen!!")
 
                 # set the ptrace option and wait for the next syscall notification
-                ptrace_func.ptrace_setoptions(pid, options);
+                #ptrace_func.ptrace_setoptions(pid, options);
                 ptrace_func.ptrace_syscall(pid, deliverSignal);
 
 
