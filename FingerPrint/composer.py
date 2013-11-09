@@ -111,7 +111,7 @@ class Roller:
         self.yb = yum.YumBase()
 
 
-    def make_roll(self, use_remapping = False):
+    def make_roll(self, fingerprint_base_path, use_remapping = False):
         """If use remapping is True it will use the remapper technology"""
         if not os.path.exists(self.archive_filename) :
             logger.error("The file " + self.archive_filename + " does not exist" +
@@ -234,11 +234,30 @@ class Roller:
                 if not os.path.isdir(os.path.dirname(dest_link)):
                     os.makedirs(os.path.dirname(dest_link))
                 os.symlink( swf.path, dest_link)
+        #
+        #    ----------------      create file mapping and include remapper in the RPM
+        #
         if use_remapping :
             if not os.path.exists(rpm_tmp_dir + "/etc"):
                 os.mkdir(rpm_tmp_dir + "/etc")
-            make_mapping_file(self.files, rpm_tmp_dir + "/etc/fp_mapping", self.remapper_base_path)
-        # files are in place so let's make the RPMs
+            make_mapping_file(self.files, rpm_tmp_dir + "/etc/fp_mapping",
+                    self.remapper_base_path)
+            build_remapper_path = fingerprint_base_path + '/remapper'
+            (output, retcode) = utils.getOutputAsList( ["make", "-C",
+                    build_remapper_path] )
+            if retcode :
+                logger.error("Unable to built remapper")
+                logger.error("You need to install make and gcc")
+                logger.error(" > " + "\n > ".join(output))
+                return False
+            logger.debug(' > '+ '\n > '.join(output))
+            shutil.copy2(build_remapper_path + "/remapper", rpm_tmp_dir +
+                    self.remapper_base_path)
+            #let's notify we have to build the base RPM
+            rpm_list.add((rpm_tmp_dir,self.roll_name))
+        #
+        #    ----------------      files are in place so let's make the RPMs
+        #
         for (base_dir, rpm_name) in rpm_list:
             if self.make_rpm(base_dir, rpm_name):
                 if '-home-' not in rpm_name:

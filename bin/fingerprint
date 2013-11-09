@@ -160,7 +160,7 @@ def main():
         mapping = False
         if options.mapping :
             mapping = True
-        if not roller.make_roll(mapping) :
+        if not roller.make_roll(fingerprint_base_path, mapping) :
             sys.exit(1)
         return
     elif options.verify or options.integrity or (options.archive and options.create) :
