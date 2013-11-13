@@ -362,7 +362,7 @@ class SwirlFile(Arch):
     def printVerbose(self, separator="", dynamic="", verbosity = 1):
         """a more detailed representation of this swrilfile """
         retString = separator + "  " + self.path + " " + dynamic
-        if verbosity > 1:
+        if verbosity > 1 and self.md5sum:
             retString += " - " + self.md5sum
         if self.package:
             retString += " - " + self.package
