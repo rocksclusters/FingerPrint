@@ -115,9 +115,9 @@ def main():
                     help="Use remapper when creating a roll")
 
 
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
-                    default=False,
-                    help="Output a textual representation of the swirl")
+    parser.add_option("-v", "--verbose", action="count", dest="verbose",
+                    default=0,
+                    help="Be more verbose. Use multiple time to increase the effect")
     (options, args) = parser.parse_args()
 
 
@@ -145,8 +145,6 @@ def main():
     else:
         ch.setLevel(logging.ERROR)
     logger.addHandler(ch)
-
-
 
     if options.create and options.roll:
         # 
@@ -316,7 +314,7 @@ def main():
                             (options.filename, e) + runHelp)
             print "File name: ", options.filename
             if options.verbose :
-                print serg.printVerbose()
+                print serg.printVerbose(options.verbose)
             else:
                 print serg.printMinimal()
             if options.graph :

@@ -236,9 +236,9 @@ class Sergeant:
         return retStr
 
 
-    def printVerbose(self):
+    def printVerbose(self, verbosity):
         """return a verbose representation of this swirl"""
-        return self.swirl.printVerbose()
+        return self.swirl.printVerbose(verbosity)
 
 
     def printMinimal(self):

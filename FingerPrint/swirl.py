@@ -176,7 +176,7 @@ class Swirl(object):
                 retStr += provider.printOpenedFiles(swF.path, "  ")
         return retStr
 
-    def printVerbose(self):
+    def printVerbose(self, verbosity = 1):
         """return a verbose string representation of this swirl
 
         this method is called by the -d -v flags"""
@@ -189,13 +189,13 @@ class Swirl(object):
             retStr += " ls.so.conf path list:\n  " + '\n  '.join(self.ldconf_paths) + '\n'
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
-            retStr += swF.printVerbose()
+            retStr += swF.printVerbose("", "", verbosity)
             retStr += swF.printOpenedFiles(swF.path)
             for provider in self.getListSwirlFilesDependentStatic(swF):
-                retStr += provider.printVerbose("  ")
+                retStr += provider.printVerbose("  ", "", verbosity)
                 retStr += provider.printOpenedFiles(swF.path, "  ")
             for swFile in swF.dynamicDependencies:
-                retStr += swFile.printVerbose("  ", "--(Dyn)--")
+                retStr += swFile.printVerbose("  ", "--(Dyn)--", verbosity)
                 retStr += swFile.printOpenedFiles(swF.path, "  ")
         return retStr
 
@@ -359,9 +359,11 @@ class SwirlFile(Arch):
         return "  " + self.path
 
 
-    def printVerbose(self, separator="", dynamic=""):
+    def printVerbose(self, separator="", dynamic="", verbosity = 1):
         """a more detailed representation of this swrilfile """
         retString = separator + "  " + self.path + " " + dynamic
+        if verbosity > 1:
+            retString += " - " + self.md5sum
         if self.package:
             retString += " - " + self.package
         retString += "\n"
