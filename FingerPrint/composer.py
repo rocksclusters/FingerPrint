@@ -179,7 +179,7 @@ class Roller:
                 continue
             if not os.path.exists( os.path.dirname(dest_path) ):
                 os.makedirs( os.path.dirname(dest_path) )
-            if swf.isExecutable():
+            if swf.isELFExecutable():
                 # we need a wrapper script to set the environment
                 shutil.copy2(source_path, dest_path + ".orig")
                 f=open(dest_path, 'w')
@@ -225,7 +225,7 @@ class Roller:
                 else:
                     shutil.copy2(source_path, dest_path)
             # if use remapping we don't need the symlinks
-            if use_remapping and not swf.isExecutable():
+            if use_remapping and not swf.isELFExecutable():
                 continue
             # and the symlinks
             for i in swf.links:
@@ -369,17 +369,18 @@ class Roller:
         # if swirl_file.path in yum db add rpm to self.packages
         # else add swirl_file to self.files
         packages = []
-        if swirl_file.isExecutable():
-            # executable
+        if 'ELF' in swirl_file.type and swirl_file.executable \
+                and not (use_remapping and swirl_file.isLoader()):
+            # executable and not a loader if we are using remppaing
             packages = self.get_package_from_dep([swirl_file.path])
-        elif swirl_file.isExecutable() and not use_remapping:
+        elif 'ELF' in swirl_file.type and not swirl_file.executable and not use_remapping:
             # library
             # do not process it if we are using remapping
             packages = self.get_package_from_dep(swirl_file.getPaths(), False)
         elif swirl_file.path[0] == '$' or sergeant.is_special_folder(swirl_file.path):
             # this file belongs to the special folders or it's a relative path
             return
-        else:
+        elif 'ELF' not in swirl_file.type:
             # data
             # TODO what do we do with this when we use remapping?
             packages = self.get_package_from_dep([swirl_file.path])

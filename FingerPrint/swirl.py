@@ -317,7 +317,7 @@ class SwirlFile(Arch):
             dependency.type = self.type
             self.provides.append(dependency)
 
-    def isExecutable(self):
+    def isELFExecutable(self):
         """ return true if this swirl is executable"""
         return 'ELF' in self.type and self.executable
 
