@@ -63,155 +63,158 @@ int shmid;      //key to the shared memory region
 struct user_regs_struct saved_regs;
 
 
-// inject a system call in the child process to tell it to attach our
-// shared memory segment, so that it can read modified paths from there
-//
-// Setup a shared memory region within child process,
-// then repeat current system call
-//
-// WARNING: this code is very tricky and gross!
+
+/**
+ * inject a system call in the child process to tell it to attach our
+ * shared memory segment, so that it can read modified paths from there
+ */
 static void 
 begin_setup_shmat(int pid) {
-  struct user_regs_struct cur_regs;
+	struct user_regs_struct cur_regs;
 
-  assert(localshm);
-  assert(!childshm); // avoid duplicate calls
+	assert(localshm);
+	assert(!childshm); // avoid duplicate calls
 
-  // stash away original registers so that we can restore them later
-  EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&cur_regs) < 0);
-  memcpy(&saved_regs, &cur_regs, sizeof(cur_regs));
+	// stash away original registers so that we can restore them later
+	EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&cur_regs) < 0);
+	memcpy(&saved_regs, &cur_regs, sizeof(cur_regs));
 
 #if 0
-  // #if defined (I386)
-  // To make the target process execute a shmat() on 32-bit x86, we need to make
-  // it execute the special __NR_ipc syscall with SHMAT as a param:
+	// #if defined (I386)
+	// To make the target process execute a shmat() on 32-bit x86, we need to make
+	// it execute the special __NR_ipc syscall with SHMAT as a param:
 
-  /* The shmat call is implemented as a godawful sys_ipc. */
-  cur_regs.orig_eax = __NR_ipc;
-  /* The parameters are passed in ebx, ecx, edx, esi, edi, and ebp */
-  cur_regs.ebx = SHMAT;
-  /* The kernel names the rest of these, first, second, third, ptr,
-   * and fifth. Only first, second and ptr are used as inputs.  Third
-   * is a pointer to the output (unsigned long).
-   */
-  cur_regs.ecx = shmid;
-  cur_regs.edx = 0; /* shmat flags */
-  cur_regs.esi = (long)0; /* Pointer to the return value in the
-                                          child's address space. */
-  cur_regs.edi = (long)NULL; /* We don't use shmat's shmaddr */
-  cur_regs.ebp = 0; /* The "fifth" argument is unused. */
-  //#elif defined(X86_64)
-  if (IS_32BIT_EMU) {
-    // If we're on a 64-bit machine but tracing a 32-bit target process, then we
-    // need to make the 32-bit __NR_ipc SHMAT syscall as though we're on a 32-bit
-    // machine (see code above), except that we use registers like 'rbx' rather
-    // than 'ebx'.  This was VERY SUBTLE AND TRICKY to finally get right!
+	/* The shmat call is implemented as a godawful sys_ipc. */
+	cur_regs.orig_eax = __NR_ipc;
+	/* The parameters are passed in ebx, ecx, edx, esi, edi, and ebp */
+	cur_regs.ebx = SHMAT;
+	/* The kernel names the rest of these, first, second, third, ptr,
+	 * and fifth. Only first, second and ptr are used as inputs.  Third
+	 * is a pointer to the output (unsigned long).
+	 */
+	cur_regs.ecx = shmid;
+	cur_regs.edx = 0; /* shmat flags */
+	cur_regs.esi = (long)0; /* Pointer to the return value in the
+	                                        child's address space. */
+	cur_regs.edi = (long)NULL; /* We don't use shmat's shmaddr */
+	cur_regs.ebp = 0; /* The "fifth" argument is unused. */
+	//#elif defined(X86_64)
+	if (IS_32BIT_EMU) {
+	  // If we're on a 64-bit machine but tracing a 32-bit target process, then we
+	  // need to make the 32-bit __NR_ipc SHMAT syscall as though we're on a 32-bit
+	  // machine (see code above), except that we use registers like 'rbx' rather
+	  // than 'ebx'.  This was VERY SUBTLE AND TRICKY to finally get right!
 
-    cur_regs.orig_rax = 117; // 117 is the numerical value of the __NR_ipc macro (not available on 64-bit hosts!)
-    cur_regs.rbx = 21;       // 21 is the numerical value of the SHMAT macro (not available on 64-bit hosts!)
-    cur_regs.rcx = shmid;
-    cur_regs.rdx = 0;
-    cur_regs.rsi = (long)0;
-    cur_regs.rdi = (long)NULL;
-    cur_regs.rbp = 0;
-  }
-  else {
+	  cur_regs.orig_rax = 117; // 117 is the numerical value of the __NR_ipc macro (not available on 64-bit hosts!)
+	  cur_regs.rbx = 21;       // 21 is the numerical value of the SHMAT macro (not available on 64-bit hosts!)
+	  cur_regs.rcx = shmid;
+	  cur_regs.rdx = 0;
+	  cur_regs.rsi = (long)0;
+	  cur_regs.rdi = (long)NULL;
+	  cur_regs.rbp = 0;
+	}
+	else {
 #endif
-  // If the target process is 64-bit, then life is good, because
-  // there is a direct shmat syscall in x86-64!!!
-  cur_regs.orig_rax = __NR_shmat;
-  cur_regs.rdi = shmid;
-  cur_regs.rsi = 0;
-  cur_regs.rdx = 0;
-  
-  //#else
-  //  #error "Unknown architecture (not I386 or X86_64)"
-  //#endif
+	// If the target process is 64-bit, then life is good, because
+	// there is a direct shmat syscall in x86-64!!!
+	cur_regs.orig_rax = __NR_shmat;
+	cur_regs.rdi = shmid;
+	cur_regs.rsi = 0;
+	cur_regs.rdx = 0;
 
-  EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&cur_regs) < 0);
+	EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&cur_regs) < 0);
 }
 
 
+/**
+ * return from the injection of shm into the child process
+ * not we have to invoke the original system call
+ */
 void 
 finish_setup_shmat(int pid) {
 
-  struct user_regs_struct cur_regs;
-  EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&cur_regs) < 0);
+	struct user_regs_struct cur_regs;
+	EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&cur_regs) < 0);
 
 #if 0 
-  //#if defined (I386)
-  // setup had better been a success!
-  assert(cur_regs.orig_eax == __NR_ipc);
-  assert(cur_regs.eax == 0);
+	//#if defined (I386)
+	// setup had better been a success!
+	assert(cur_regs.orig_eax == __NR_ipc);
+	assert(cur_regs.eax == 0);
 
-  // the pointer to the shared memory segment allocated by shmat() is actually
-  // located in *tcp->savedaddr (in the child's address space)
-  errno = 0;
-  childshm = (void*)ptrace(PTRACE_PEEKDATA, pid, savedaddr, 0);
-  EXITIF(errno); // PTRACE_PEEKDATA reports error in errno
+	// the pointer to the shared memory segment allocated by shmat() is actually
+	// located in *tcp->savedaddr (in the child's address space)
+	errno = 0;
+	childshm = (void*)ptrace(PTRACE_PEEKDATA, pid, savedaddr, 0);
+	EXITIF(errno); // PTRACE_PEEKDATA reports error in errno
 
-  // restore original data in child's address space
-  EXITIF(ptrace(PTRACE_POKEDATA, pid, savedaddr, savedword));
+	// restore original data in child's address space
+	EXITIF(ptrace(PTRACE_POKEDATA, pid, savedaddr, savedword));
 
-  saved_regs.eax = saved_regs.orig_eax;
+	saved_regs.eax = saved_regs.orig_eax;
 
-  // back up IP so that we can re-execute previous instruction
-  // TODO: is the use of 2 specific to 32-bit machines?
-  saved_regs.eip = saved_regs.eip - 2;
-  //#elif defined(X86_64)
-  if (IS_32BIT_EMU) {
-    // If we're on a 64-bit machine but tracing a 32-bit target process, then we
-    // need to handle the return value of the 32-bit __NR_ipc SHMAT syscall as
-    // though we're on a 32-bit machine (see code above).  This was VERY SUBTLE
-    // AND TRICKY to finally get right!
+	// back up IP so that we can re-execute previous instruction
+	// TODO: is the use of 2 specific to 32-bit machines?
+	saved_regs.eip = saved_regs.eip - 2;
+	//#elif defined(X86_64)
+	if (IS_32BIT_EMU) {
+	  // If we're on a 64-bit machine but tracing a 32-bit target process, then we
+	  // need to handle the return value of the 32-bit __NR_ipc SHMAT syscall as
+	  // though we're on a 32-bit machine (see code above).  This was VERY SUBTLE
+	  // AND TRICKY to finally get right!
 
-    // setup had better been a success!
-    assert(cur_regs.orig_rax == 117 /*__NR_ipc*/);
-    assert(cur_regs.rax == 0);
+	  // setup had better been a success!
+	  assert(cur_regs.orig_rax == 117 /*__NR_ipc*/);
+	  assert(cur_regs.rax == 0);
 
-    // the pointer to the shared memory segment allocated by shmat() is actually
-    // located in *tcp->savedaddr (in the child's address space)
-    errno = 0;
+	  // the pointer to the shared memory segment allocated by shmat() is actually
+	  // located in *tcp->savedaddr (in the child's address space)
+	  errno = 0;
 
-    // this is SUPER IMPORTANT ... only keep the 32 least significant bits
-    // (mask with 0xffffffff) before storing the pointer in tcp->childshm,
-    // since 32-bit processes only have 32-bit addresses, not 64-bit addresses :0
-    childshm = (void*)(ptrace(PTRACE_PEEKDATA, pid, savedaddr, 0) & 0xffffffff);
-    EXITIF(errno);
-    // restore original data in child's address space
-    EXITIF(ptrace(PTRACE_POKEDATA, pid, savedaddr, savedword));
-  }
-  else {
+	  // this is SUPER IMPORTANT ... only keep the 32 least significant bits
+	  // (mask with 0xffffffff) before storing the pointer in tcp->childshm,
+	  // since 32-bit processes only have 32-bit addresses, not 64-bit addresses :0
+	  childshm = (void*)(ptrace(PTRACE_PEEKDATA, pid, savedaddr, 0) & 0xffffffff);
+	  EXITIF(errno);
+	  // restore original data in child's address space
+	  EXITIF(ptrace(PTRACE_POKEDATA, pid, savedaddr, savedword));
+	}
+	else {
 #endif
-  // If the target process is 64-bit, then life is good, because
-  // there is a direct shmat syscall in x86-64!!!
-  assert(cur_regs.orig_rax == __NR_shmat);
+	// If the target process is 64-bit, then life is good, because
+	// there is a direct shmat syscall in x86-64!!!
+	assert(cur_regs.orig_rax == __NR_shmat);
 
-  // the return value of the direct shmat syscall is in %rax
-  childshm = (void*)cur_regs.rax;
+	// the return value of the direct shmat syscall is in %rax
+	childshm = (void*)cur_regs.rax;
 
-  // the code below is identical regardless of whether the target process is
-  // 32-bit or 64-bit (on a 64-bit host)
-  saved_regs.rax = saved_regs.orig_rax;
+	// the code below is identical regardless of whether the target process is
+	// 32-bit or 64-bit (on a 64-bit host)
+	saved_regs.rax = saved_regs.orig_rax;
 
-  // back up IP so that we can re-execute previous instruction
-  // ... wow, apparently the -2 offset works for 64-bit as well :)
-  saved_regs.rip = saved_regs.rip - 2;
+	// back up IP so that we can re-execute previous instruction
+	// ... wow, apparently the -2 offset works for 64-bit as well :)
+	saved_regs.rip = saved_regs.rip - 2;
 
-  EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&saved_regs) < 0);
+	EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&saved_regs) < 0);
 
-  assert(childshm);
+	assert(childshm);
 
 }
 
 
-
+/**
+ * hold a file remapping information
+ */
 struct file_mapping {
 	char * original_path;
 	char * rewritten_path;
 	UT_hash_handle hh;         /* makes this structure hashable */
 };
 
+/**
+ * global structure to hold the current remapping information
+ */
 struct file_mapping * global_mappings;
 
 
