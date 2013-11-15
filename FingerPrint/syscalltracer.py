@@ -121,22 +121,31 @@ class SyscallTracer:
                         #new pid
                         tcb = TracerControlBlock( pid )
                         processesStatus[pid] = tcb
-                    if (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 2):# or regs.orig_rax == 257):
+                    if (FingerPrint.ptrace.cpu_info.CPU_X86_64 and regs.orig_rax == 2) or \
+                            (FingerPrint.ptrace.cpu_info.CPU_I386 and regs.orig_eax == 5):# or regs.orig_rax == 257):
                         #
-                        # handle open (orig_rax == 2 on 64bit)
-                        #
+                        # handle open (orig_rax == 2 on 64bit) or (orig_eax == 5 on 32bit)
+                        # 
                         if processesStatus[pid].enterCall :
-                            # we are entering open, regs.rsi contains the first arguments
+                            # we are entering open, regs.rsi contains the first arguments for 64bit
                             # https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S#L585
-                            processesStatus[pid].firstArg = regs.rdi
+                            # ebx if for 32 bits http://man7.org/linux/man-pages/man2/syscall.2.html
+                            if FingerPrint.ptrace.cpu_info.CPU_X86_64:
+                                processesStatus[pid].firstArg = regs.rdi
+                            else:
+                                processesStatus[pid].firstArg = regs.ebx
                             processesStatus[pid].enterCall = False
                         else:
                             # we are exiting from a open
                             processesStatus[pid].enterCall = True
                             # cast from c_ulong to c_long
-                            returnValue = ctypes.c_long(regs.rax).value
+                            if FingerPrint.ptrace.cpu_info.CPU_X86_64:
+                                ret_value = regs.rax
+                            else:
+                                ret_value = regs.eax
+                            returnValue = ctypes.c_long(ret_value).value
                             if returnValue >= 0:
-                                openPath = self.readCString(regs.rdi, pid)
+                                openPath = self.readCString(processesStatus[pid].firstArg, pid)
                                 if openPath[0] != '/':
                                     #relative path we need to get the pwd
                                     openPath = "$" + processesStatus[pid].getProcessCWD() + "$" + openPath
