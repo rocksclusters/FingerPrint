@@ -236,14 +236,9 @@ class Sergeant:
         return retStr
 
 
-    def printVerbose(self, verbosity):
-        """return a verbose representation of this swirl"""
+    def print_swirl(self, verbosity):
+        """return a string with the representation of this swirl"""
         return self.swirl.printVerbose(verbosity)
-
-
-    def printMinimal(self):
-        """return a minimal representation of this swirl"""
-        return self.swirl.printMinimal()
 
 
     def checkDependencyPath(self, fileName):

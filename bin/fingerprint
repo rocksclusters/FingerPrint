@@ -313,10 +313,7 @@ def main():
                 parser.error("The file %s could not be opened on this system: %s." %
                             (options.filename, e) + runHelp)
             print "File name: ", options.filename
-            if options.verbose :
-                print serg.printVerbose(options.verbose)
-            else:
-                print serg.printMinimal()
+            print serg.print_swirl(options.verbose)
             if options.graph :
                 print "Writing dot file ", options.graph
                 outfile = open(options.graph, 'w')

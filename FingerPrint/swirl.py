@@ -155,38 +155,20 @@ class Swirl(object):
         """ return the creation time in a readable format"""
         return self.creationDate.strftime("%Y-%m-%d %H:%M")
 
-
-
-    def printMinimal(self):
+    def printVerbose(self, verbosity = 1):
         """return a string representation of this swirl
 
-        this method is called by the -d flags"""
+        this method is called by the -d flags
+        verbosity: interger representing the verbosity level (valid value is 0, 1, 2)
+        """
         #header
         retStr = self.name + " " + self.getDateString() + "\n"
+        if verbosity > 0:
+            if self.cmdLine :
+                retStr += " Command line: " + self.cmdLine + "\n"
+            if self.ldconf_paths :
+                retStr += " ls.so.conf path list:\n  " + '\n  '.join(self.ldconf_paths) + '\n'
         #file list
-        retStr += " -- File List -- \n"
-        for swF in self.execedFiles:
-            retStr += str(swF) + '\n'
-            retStr += swF.printOpenedFiles(swF.path)
-            for provider in self.getListSwirlFilesDependentStatic(swF):
-                retStr += "  " + str(provider) + '\n'
-                retStr += provider.printOpenedFiles(swF.path, "  ")
-            for provider in swF.dynamicDependencies:
-                retStr += "  " + str(provider) + ' --(Dyn)--\n'
-                retStr += provider.printOpenedFiles(swF.path, "  ")
-        return retStr
-
-    def printVerbose(self, verbosity = 1):
-        """return a verbose string representation of this swirl
-
-        this method is called by the -d -v flags"""
-        #header
-        retStr = self.name + " " + self.getDateString() + "\n"
-        #file list
-        if self.cmdLine :
-            retStr += " Command line: " + self.cmdLine + "\n"
-        if self.ldconf_paths :
-            retStr += " ls.so.conf path list:\n  " + '\n  '.join(self.ldconf_paths) + '\n'
         retStr += " -- File List -- \n"
         for swF in self.execedFiles:
             retStr += swF.printVerbose("", "", verbosity)
@@ -361,6 +343,9 @@ class SwirlFile(Arch):
 
     def printVerbose(self, separator="", dynamic="", verbosity = 1):
         """a more detailed representation of this swrilfile """
+        if verbosity == 0:
+            # first we handle the short form
+            return separator + str(self) + "\n"
         retString = separator + "  " + self.path + " " + dynamic
         if verbosity > 1 and self.md5sum:
             retString += " - " + self.md5sum
