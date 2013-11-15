@@ -3,6 +3,7 @@
 
 # binary object files
 *.o
+*.so
 
 # remapper binary
 remapper/remapper
