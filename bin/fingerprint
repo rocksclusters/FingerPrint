@@ -292,7 +292,7 @@ def main():
             #traceback.print_exc()
             parser.error("Unable to create the swirl file: " + str(e) + runHelp)
         if options.verbose:
-            print "swirl structure:\n", blotter.getSwirl().printMinimal()
+            print "swirl structure:\n", blotter.getSwirl().printVerbose(0)
         if options.filename:
             #this should be always true
             outputfd = open(options.filename, 'w')
