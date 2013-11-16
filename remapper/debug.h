@@ -29,7 +29,7 @@
 
 
 
-#define ABORT(msg)            {       \
+#define ABORT(msg...)            {       \
 	fprintf(options.output, msg);        \
 	exit(-1);  }
 

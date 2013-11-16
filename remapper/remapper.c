@@ -61,6 +61,64 @@ char* localshm; // address in our address space
 void* childshm; // address in child's address space
 int shmid;      //key to the shared memory region
 struct user_regs_struct saved_regs;
+void * temp_addr;
+unsigned long temp_value;
+
+/**
+ * is this a 64bit or a 32 bit process
+ */
+enum personality_type {
+	UNSET = 0,
+	P_64BIT,
+	P_32BIT,
+};
+
+enum personality_type personality;
+
+
+/**
+ * find a address range in the process address space indicated by PId with length size
+ */
+static void*
+find_free_addr(int pid, int prot, unsigned long size) {
+
+	FILE *f;
+	char filename[20];
+	char s[80];
+	char r, w, x, p;
+	unsigned long cstart, cend;
+	int major, minor;
+
+	sprintf(filename, "/proc/%d/maps", pid);
+
+	f = fopen(filename, "r");
+	if (!f) {
+		ABORT("Unable to find a free address in pid %d: %s\n.", pid, strerror(errno));
+	}
+
+	while (fgets(s, sizeof(s), f) != NULL) {
+
+		sscanf(s, "%lx-%lx %c%c%c%c %*x %x:%x", &cstart, &cend, &r, &w, &x, &p, &major, &minor);
+
+		if (cend - cstart < size)
+		      continue;
+		if (p != 'p')
+		      continue;
+		if ((prot & PROT_READ) && (r != 'r'))
+		      continue;
+		if ((prot & PROT_EXEC) && (x != 'x'))
+		      continue;
+		if ((prot & PROT_WRITE) && (w != 'w'))
+		      continue;
+
+		/* we found it */
+		fclose(f);
+		return (void *)cstart;
+	}
+	fclose(f);
+
+	return NULL;
+}
 
 
 
@@ -99,28 +157,35 @@ begin_setup_shmat(int pid) {
 	cur_regs.edi = (long)NULL; /* We don't use shmat's shmaddr */
 	cur_regs.ebp = 0; /* The "fifth" argument is unused. */
 	//#elif defined(X86_64)
-	if (IS_32BIT_EMU) {
-	  // If we're on a 64-bit machine but tracing a 32-bit target process, then we
-	  // need to make the 32-bit __NR_ipc SHMAT syscall as though we're on a 32-bit
-	  // machine (see code above), except that we use registers like 'rbx' rather
-	  // than 'ebx'.  This was VERY SUBTLE AND TRICKY to finally get right!
+#endif
+	if (personality == P_32BIT) {
+		// If we're on a 64-bit machine but tracing a 32-bit target process, then we
+		// need to make the 32-bit __NR_ipc SHMAT syscall as though we're on a 32-bit
+		// machine (see code above), except that we use registers like 'rbx' rather
+		// than 'ebx'.  This was VERY SUBTLE AND TRICKY to finally get right!
+		//
+		temp_addr = find_free_addr(pid, PROT_READ|PROT_WRITE, sizeof(int));
+		if (!temp_addr)
+			ABORT("Unable to find a free address range for process %d", pid);
+		temp_value = ptrace(PTRACE_PEEKDATA, pid, temp_addr, 0);
+		EXITIF(errno);
 
-	  cur_regs.orig_rax = 117; // 117 is the numerical value of the __NR_ipc macro (not available on 64-bit hosts!)
-	  cur_regs.rbx = 21;       // 21 is the numerical value of the SHMAT macro (not available on 64-bit hosts!)
-	  cur_regs.rcx = shmid;
-	  cur_regs.rdx = 0;
-	  cur_regs.rsi = (long)0;
-	  cur_regs.rdi = (long)NULL;
-	  cur_regs.rbp = 0;
+		cur_regs.orig_rax = 117; // 117 is the numerical value of the __NR_ipc macro (not available on 64-bit hosts!)
+		cur_regs.rbx = 21;       // 21 is the numerical value of the SHMAT macro (not available on 64-bit hosts!)
+		cur_regs.rcx = shmid;
+		cur_regs.rdx = 0;
+		cur_regs.rsi = (long)temp_addr;
+		cur_regs.rdi = (long)NULL;
+		cur_regs.rbp = 0;
 	}
 	else {
-#endif
-	// If the target process is 64-bit, then life is good, because
-	// there is a direct shmat syscall in x86-64!!!
-	cur_regs.orig_rax = __NR_shmat;
-	cur_regs.rdi = shmid;
-	cur_regs.rsi = 0;
-	cur_regs.rdx = 0;
+		// If the target process is 64-bit, then life is good, because
+		// there is a direct shmat syscall in x86-64!!!
+		cur_regs.orig_rax = __NR_shmat;
+		cur_regs.rdi = shmid;
+		cur_regs.rsi = 0;
+		cur_regs.rdx = 0;
+	}
 
 	EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&cur_regs) < 0);
 }
@@ -157,36 +222,35 @@ finish_setup_shmat(int pid) {
 	// TODO: is the use of 2 specific to 32-bit machines?
 	saved_regs.eip = saved_regs.eip - 2;
 	//#elif defined(X86_64)
-	if (IS_32BIT_EMU) {
-	  // If we're on a 64-bit machine but tracing a 32-bit target process, then we
-	  // need to handle the return value of the 32-bit __NR_ipc SHMAT syscall as
-	  // though we're on a 32-bit machine (see code above).  This was VERY SUBTLE
-	  // AND TRICKY to finally get right!
-
-	  // setup had better been a success!
-	  assert(cur_regs.orig_rax == 117 /*__NR_ipc*/);
-	  assert(cur_regs.rax == 0);
-
-	  // the pointer to the shared memory segment allocated by shmat() is actually
-	  // located in *tcp->savedaddr (in the child's address space)
-	  errno = 0;
-
-	  // this is SUPER IMPORTANT ... only keep the 32 least significant bits
-	  // (mask with 0xffffffff) before storing the pointer in tcp->childshm,
-	  // since 32-bit processes only have 32-bit addresses, not 64-bit addresses :0
-	  childshm = (void*)(ptrace(PTRACE_PEEKDATA, pid, savedaddr, 0) & 0xffffffff);
-	  EXITIF(errno);
-	  // restore original data in child's address space
-	  EXITIF(ptrace(PTRACE_POKEDATA, pid, savedaddr, savedword));
+#endif
+	if (personality == P_32BIT) {
+		// If we're on a 64-bit machine but tracing a 32-bit target process, then we
+		// need to handle the return value of the 32-bit __NR_ipc SHMAT syscall as
+		// though we're on a 32-bit machine (see code above).	
+	
+		// setup had better been a success!
+		assert(cur_regs.orig_rax == 117 /*__NR_ipc*/);
+		assert(cur_regs.rax == 0);
+		
+		// the pointer to the shared memory segment allocated by shmat() is actually
+		// located in *tcp->savedaddr (in the child's address space)
+		errno = 0;
+		
+		// keep only the 32 least significant bits (mask with 0xffffffff) before 
+		// storing the pointer
+		childshm = (void*)(ptrace(PTRACE_PEEKDATA, pid, temp_addr, 0) & 0xffffffff);
+		EXITIF(errno);
+		// restore original data in child's address space
+		EXITIF(ptrace(PTRACE_POKEDATA, pid, temp_addr, temp_value));
 	}
 	else {
-#endif
-	// If the target process is 64-bit, then life is good, because
-	// there is a direct shmat syscall in x86-64!!!
-	assert(cur_regs.orig_rax == __NR_shmat);
+		// If the target process is 64-bit, then life is good, because
+		// there is a direct shmat syscall in x86-64!!!
+		assert(cur_regs.orig_rax == __NR_shmat);
 
-	// the return value of the direct shmat syscall is in %rax
-	childshm = (void*)cur_regs.rax;
+		// the return value of the direct shmat syscall is in %rax
+		childshm = (void*)cur_regs.rax;
+	}
 
 	// the code below is identical regardless of whether the target process is
 	// 32-bit or 64-bit (on a 64-bit host)
@@ -334,12 +398,47 @@ next_event(pid_t pid){
 	        perror("wait");
 	        exit(1);
 	}
-
 	if (new_pid != pid) {
 		/* a new process */
 	        debug(LOG_EVENT, "event: NEW: new_pid=%d old_pid=%d", new_pid, pid);
 		event.type = EVENT_NEW;
 		return &event;
+	}
+
+	if (!personality) {
+
+		/**
+		 * we have to get the personality of this process
+		 * code taken from strace
+		 */
+		struct user_regs_struct regs;
+		EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&regs) < 0);
+
+		/* cs = 0x33 for long mode (native 64 bit and x32)
+		 * cs = 0x23 for compatibility mode (32 bit)
+		 * ds = 0x2b for x32 mode (x86-64 in 32 bit)
+		 */
+		switch (regs.cs) {
+		        case 0x23:
+				personality = P_32BIT;
+				break;
+		        case 0x33:
+				/**
+				 * we do not support x32 mode
+				 *
+				 * if (x86_64_regs.ds == 0x2b) {
+		                 *       currpers = 2;
+		                 *       scno &= ~__X32_SYSCALL_BIT;
+				 */
+				personality = P_64BIT;
+		                break;
+		        default:
+		                ABORT("Unknown value CS=0x%08X while "
+		                         "detecting personality of process "
+		                         "PID=%d\n", (int)regs.cs, pid);
+		}
+		debug(LOG_EVENT, "event: setting personality of %d to %s", pid,
+			(personality == P_64BIT) ? "32 bit" : "64 bit" );
 	}
 
 	if (WIFSIGNALED(status)) {
