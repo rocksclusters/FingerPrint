@@ -625,8 +625,11 @@ main(int argc, char *argv[]) {
 				setting_up_shm = 2;
 				debug(LOG_INFO, "info: shared memory end setup address %p", childshm);
 			/* -- end -- set up the shared memory region */
-			} else if (!syscall_return && (sysnum == SYS_open ||
-					sysnum == SYS_stat )) {
+			} else if (!syscall_return &&
+					((personality == P_64BIT &&
+						(sysnum == SYS_open || sysnum == SYS_stat )) ||
+					(personality == P_32BIT &&
+						(sysnum == 5 || sysnum == 195)))) {
 				ptrace(PTRACE_GETREGS, pid, 0, &iregs);
 				read_string(pid, iregs.rdi, original_path);
 				/* lookup up if we have a mapping for the current path */
@@ -641,8 +644,11 @@ main(int argc, char *argv[]) {
 					debug(LOG_MAPPING, "mapping: file not found %s", original_path);
 				}
 				syscall_return = 1;
-			}else if (syscall_return && (sysnum == SYS_open ||
-					sysnum == SYS_stat)) {
+			}else if (syscall_return &&
+					((personality == P_64BIT &&
+                                                (sysnum == SYS_open || sysnum == SYS_stat )) ||
+                                        (personality == P_32BIT &&
+                                                (sysnum == 5 || sysnum == 195)))){
 				//fprintf(stderr, "Ret from open\n");
 				syscall_return = 0;
 			}
