@@ -438,7 +438,7 @@ next_event(pid_t pid){
 		                         "PID=%d\n", (int)regs.cs, pid);
 		}
 		debug(LOG_EVENT, "event: setting personality of %d to %s", pid,
-			(personality == P_64BIT) ? "32 bit" : "64 bit" );
+			(personality == P_64BIT) ? "64 bit" : "32 bit" );
 	}
 
 	if (WIFSIGNALED(status)) {
