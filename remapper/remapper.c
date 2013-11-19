@@ -718,15 +718,22 @@ main(int argc, char *argv[]) {
 						(sysnum == SYS_open || sysnum == SYS_stat )) ||
 					(personality == P_32BIT &&
 						(sysnum == 5 || sysnum == 195)))) {
-				ptrace(PTRACE_GETREGS, pid, 0, &iregs);
-				read_string(pid, iregs.rdi, original_path);
+				EXITIF(ptrace(PTRACE_GETREGS, pid, 0, &iregs) == -1);
+				if (personality == P_64BIT)
+					read_string(pid, iregs.rdi, original_path);
+				else
+					//umovestr(pid, iregs.rbx, original_path);
+					read_string(pid, iregs.rbx, original_path);
 				/* lookup up if we have a mapping for the current path */
 				HASH_FIND_STR(global_mappings, original_path, mapping);
 				if (mapping) {
 					/* we have to rewrite the file path */
 					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s", original_path, mapping->rewritten_path);
 					strcpy(localshm, mapping->rewritten_path);
-					iregs.rdi = (unsigned long int)childshm;
+					if (personality == P_64BIT)
+						iregs.rdi = (unsigned long)childshm;
+					else
+						iregs.rbx = (unsigned long)childshm;
 					EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&iregs) < 0);
 				} else {
 					debug(LOG_MAPPING, "mapping: file not found %s", original_path);
