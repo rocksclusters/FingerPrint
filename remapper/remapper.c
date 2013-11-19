@@ -43,7 +43,7 @@
 #include <sys/shm.h>
 #include <unistd.h>
 
-#include "debug.h"
+#include "defs.h"
 #include "uthash.h"
 
 
