@@ -628,7 +628,7 @@ main(int argc, char *argv[]) {
 					((IS_64BITS &&
 					  (sysnum == SYS_open || sysnum == SYS_stat )) ||
 					 (IS_32BITS &&
-					  (sysnum == 5 || sysnum == 195)))) {
+					  (sysnum == SYS_open_32bits || sysnum == SYS_stat64_32bits)))) {
 				/**
 				 *  open syscall enter
 				 **/
@@ -641,7 +641,8 @@ main(int argc, char *argv[]) {
 				HASH_FIND_STR(global_mappings, original_path, mapping);
 				if (mapping) {
 					/* we have to rewrite the file path */
-					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s", original_path, mapping->rewritten_path);
+					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s", 
+							original_path, mapping->rewritten_path);
 					strcpy(localshm, mapping->rewritten_path);
 					if (IS_64BITS)
 						iregs.rdi = (unsigned long)childshm;
@@ -656,7 +657,7 @@ main(int argc, char *argv[]) {
 					((IS_64BITS &&
 					  (sysnum == SYS_open || sysnum == SYS_stat )) ||
 					 (IS_32BITS &&
-					  (sysnum == 5 || sysnum == 195)))){
+					  (sysnum == SYS_open_32bits || sysnum == SYS_stat64_32bits)))){
 				/**
 				 * open syscall return 
 				 **/

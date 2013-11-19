@@ -34,6 +34,10 @@
 #define ORIG_RAX 15
 #define ORIG_XAX (8 * ORIG_RAX)
 
+/* definitions taken from /usr/include/asm/unistd_32.h */
+#define SYS_open_32bits 5
+#define SYS_stat64_32bits 195
+
 /**
  * personality stuff
  * used to trace if the current traced process is 64bit or 32 bit
