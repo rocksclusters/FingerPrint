@@ -47,13 +47,6 @@
 #include "uthash.h"
 
 
-#ifdef __x86_64__
-# define ORIG_XAX (8 * ORIG_RAX)
-#else
-# define ORIG_XAX (4 * ORIG_EAX)
-#endif
-
-
 char * mapping_file = "/etc/fp_mapping";
 
 

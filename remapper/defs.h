@@ -41,6 +41,9 @@
 	} \
 	} while(0)
 
+/* off set to get the RAX register */
+#define ORIG_RAX 15
+#define ORIG_XAX (8 * ORIG_RAX)
 
 #define debug(level, expr...) debug_(level, __FILE__, __LINE__, expr)
 
