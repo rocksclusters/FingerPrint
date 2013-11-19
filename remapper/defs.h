@@ -27,8 +27,63 @@
 
 #include <stdio.h>
 
+#include "uthash.h"
 
 
+/* off set to get the RAX register */
+#define ORIG_RAX 15
+#define ORIG_XAX (8 * ORIG_RAX)
+
+/**
+ * personality stuff
+ * used to trace if the current traced process is 64bit or 32 bit
+ */
+enum personality_type {
+        UNSET = 0,
+        P_64BIT,
+        P_32BIT,
+};
+
+enum personality_type personality;
+
+#define IS_64BITS  (personality == P_64BIT)
+#define IS_32BITS  (personality == P_32BIT)
+
+
+/**
+ * global structure to hold the current remapping information
+ */
+struct file_mapping {
+        char * original_path;
+        char * rewritten_path;
+        UT_hash_handle hh;         /* makes this structure hashable */
+};
+
+struct file_mapping * global_mappings;
+
+
+/**
+ * event data structure
+ */
+enum Event_type {
+        EVENT_NONE = 0,
+        EVENT_SYSCALL,
+        EVENT_SIGNAL,
+        EVENT_EXIT,
+        EVENT_NEW,
+};
+
+struct Event {
+        int type;
+        int value;
+};
+
+struct Event event;
+
+
+/**
+ * debugging and logging stuff
+ */
 #define ABORT(msg...)            {       \
 	fprintf(options.output, msg);        \
 	exit(-1);  }
@@ -41,25 +96,6 @@
 	} \
 	} while(0)
 
-/* off set to get the RAX register */
-#define ORIG_RAX 15
-#define ORIG_XAX (8 * ORIG_RAX)
-
-
-
-/**
- * is the current traced process 64bit or 32 bit
- **/
-enum personality_type {
-        UNSET = 0,
-        P_64BIT,
-        P_32BIT,
-};
-
-enum personality_type personality;
-
-#define IS_64BITS  (personality == P_64BIT)
-#define IS_32BITS  (personality == P_32BIT)
 
 #define debug(level, expr...) debug_(level, __FILE__, __LINE__, expr)
 

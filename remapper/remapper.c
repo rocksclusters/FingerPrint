@@ -44,7 +44,6 @@
 #include <unistd.h>
 
 #include "defs.h"
-#include "uthash.h"
 
 
 char * mapping_file = "/etc/fp_mapping";
@@ -58,6 +57,8 @@ void * temp_addr;
 unsigned long temp_value;
 
 extern enum personality_type personality;
+extern struct Event event;
+extern struct file_mapping * global_mappings;
 
 
 /**
@@ -85,15 +86,15 @@ find_free_addr(int pid, int prot, unsigned long size) {
 		sscanf(s, "%lx-%lx %c%c%c%c %*x %x:%x", &cstart, &cend, &r, &w, &x, &p, &major, &minor);
 
 		if (cend - cstart < size)
-		      continue;
+			continue;
 		if (p != 'p')
-		      continue;
+			continue;
 		if ((prot & PROT_READ) && (r != 'r'))
-		      continue;
+			continue;
 		if ((prot & PROT_EXEC) && (x != 'x'))
-		      continue;
+			continue;
 		if ((prot & PROT_WRITE) && (w != 'w'))
-		      continue;
+			continue;
 
 		/* we found it */
 		fclose(f);
@@ -208,21 +209,6 @@ finish_setup_shmat(int pid) {
 }
 
 
-/**
- * hold a file remapping information
- */
-struct file_mapping {
-	char * original_path;
-	char * rewritten_path;
-	UT_hash_handle hh;         /* makes this structure hashable */
-};
-
-/**
- * global structure to hold the current remapping information
- */
-struct file_mapping * global_mappings;
-
-
 char *
 get_base_path(char * input_str){
 	unsigned int len, i;
@@ -304,23 +290,6 @@ init_mapping(){
 }//init_mapping
 
 
-enum Event_type {
-	EVENT_NONE = 0,
-	EVENT_SYSCALL,
-	EVENT_SIGNAL,
-	EVENT_EXIT,
-	EVENT_NEW,
-};
-
-
-struct Event {
-	int type;
-	int value;
-};
-
-
-struct Event event;
-
 static struct Event *
 next_event(pid_t pid){
 	pid_t new_pid;
@@ -328,20 +297,20 @@ next_event(pid_t pid){
 
 	new_pid = waitpid(-1, &status, __WALL);
 	if (new_pid == -1) {
-	        if (errno == ECHILD) {
-	                debug(LOG_EVENT, "event: No more traced programs: exiting");
-	                exit(0);
-	        } else if (errno == EINTR) {
-	                debug(LOG_EVENT, "event: none (wait received EINTR?)");
-	                event.type = EVENT_NONE;
-	                return &event;
-	        }
-	        perror("wait");
-	        exit(1);
+		if (errno == ECHILD) {
+			debug(LOG_EVENT, "event: No more traced programs: exiting");
+			exit(0);
+		} else if (errno == EINTR) {
+			debug(LOG_EVENT, "event: none (wait received EINTR?)");
+			event.type = EVENT_NONE;
+			return &event;
+		}
+		perror("wait");
+		exit(1);
 	}
 	if (new_pid != pid) {
 		/* a new process */
-	        debug(LOG_EVENT, "event: NEW: new_pid=%d old_pid=%d", new_pid, pid);
+		debug(LOG_EVENT, "event: NEW: new_pid=%d old_pid=%d", new_pid, pid);
 		event.type = EVENT_NEW;
 		return &event;
 	}
@@ -360,23 +329,23 @@ next_event(pid_t pid){
 		 * ds = 0x2b for x32 mode (x86-64 in 32 bit)
 		 */
 		switch (regs.cs) {
-		        case 0x23:
+			case 0x23:
 				personality = P_32BIT;
 				break;
-		        case 0x33:
+			case 0x33:
 				/**
 				 * we do not support x32 mode
 				 *
 				 * if (x86_64_regs.ds == 0x2b) {
-		                 *       currpers = 2;
-		                 *       scno &= ~__X32_SYSCALL_BIT;
+				 *       currpers = 2;
+				 *       scno &= ~__X32_SYSCALL_BIT;
 				 */
 				personality = P_64BIT;
-		                break;
-		        default:
-		                ABORT("Unknown value CS=0x%08X while "
-		                         "detecting personality of process "
-		                         "PID=%d\n", (int)regs.cs, pid);
+				break;
+			default:
+				ABORT("Unknown value CS=0x%08X while "
+						"detecting personality of process "
+						"PID=%d\n", (int)regs.cs, pid);
 		}
 		debug(LOG_EVENT, "event: setting personality of %d to %s", pid,
 			IS_64BITS ? "64 bit" : "32 bit" );
@@ -384,17 +353,17 @@ next_event(pid_t pid){
 
 	if (WIFSIGNALED(status)) {
 		/*return a signal */
-	        event.value = WTERMSIG(status);
+		event.value = WTERMSIG(status);
 		event.type = EVENT_EXIT;
-	        debug(LOG_EVENT, "event: EXIT_SIGNAL: pid=%d, signum=%d", new_pid, event.value);
-	        return &event;
+		debug(LOG_EVENT, "event: EXIT_SIGNAL: pid=%d, signum=%d", new_pid, event.value);
+		return &event;
 	}
 	if (WIFEXITED(status)) {
 		/*return exit status */
-	        event.value = WEXITSTATUS(status);
+		event.value = WEXITSTATUS(status);
 		event.type = EVENT_EXIT;
-	        debug(LOG_EVENT, "event: EXIT: pid=%d, status=%d", new_pid, event.value);
-	        return &event;
+		debug(LOG_EVENT, "event: EXIT: pid=%d, status=%d", new_pid, event.value);
+		return &event;
 	}
 
 	if ( WIFSTOPPED(status) ) {
@@ -408,14 +377,14 @@ next_event(pid_t pid){
 		else {
 			event.type = EVENT_SIGNAL;
 			event.value = WSTOPSIG(status);
-		        debug(LOG_EVENT, "event: SIGNAL: pid=%d, signum=%d", new_pid, event.value);
+			debug(LOG_EVENT, "event: SIGNAL: pid=%d, signum=%d", new_pid, event.value);
 			return &event;
 		}
 	}
 	
 	/* we should not get to this point */
 	event.type = EVENT_NONE;
-        debug(LOG_EVENT, "event: unknown stop: pid=%d", new_pid);
+	debug(LOG_EVENT, "event: unknown stop: pid=%d", new_pid);
 	return &event;
 }
 
@@ -526,8 +495,8 @@ read_string (int child, unsigned long addr, char * buffer) {
 	int allocated = PATH_MAX, read = 0;
 	unsigned long tmp =0;
 
-        const unsigned long x01010101 = 0x0101010101010101ul;
-        const unsigned long x80808080 = 0x8080808080808080ul;
+	const unsigned long x01010101 = 0x0101010101010101ul;
+	const unsigned long x80808080 = 0x8080808080808080ul;
 
 
 	while(1) {
@@ -542,7 +511,7 @@ read_string (int child, unsigned long addr, char * buffer) {
 		}
 		memcpy(buffer + read, &tmp, sizeof(tmp));
 		if ((tmp - x01010101) & ~tmp & x80808080)
-                        break;
+			break;
 		//if (memchr(&tmp, 0, sizeof(tmp)) != NULL)
 		read += sizeof(tmp);
 	}
@@ -582,7 +551,7 @@ main(int argc, char *argv[]) {
 		}
 		if (strstr(log_level, "mapping")){
 			options.debug |= LOG_MAPPING;
-                }
+		}
 	}
 
 	/* set up local shared memory */
@@ -624,17 +593,17 @@ main(int argc, char *argv[]) {
 		ABORT("You must provide a command to run");
 
 
-        if (waitpid(pid, NULL, __WALL) != pid) {
-                perror ("trace_pid: waitpid");
-                exit(1);
-        }
+	if (waitpid(pid, NULL, __WALL) != pid) {
+		perror ("trace_pid: waitpid");
+		exit(1);
+	}
 	assert(pid != 0);
 	
 	/* set ptrace options */
-        ptrace_options = PTRACE_O_TRACESYSGOOD;
-        if (ptrace(PTRACE_SETOPTIONS, pid, 0, (void *)ptrace_options) < 0){
-                perror("PTRACE_SETOPTIONS");
-                exit(1);
+	ptrace_options = PTRACE_O_TRACESYSGOOD;
+	if (ptrace(PTRACE_SETOPTIONS, pid, 0, (void *)ptrace_options) < 0){
+		perror("PTRACE_SETOPTIONS");
+		exit(1);
 	}
 	continue_process(pid, 0);
 
@@ -657,9 +626,12 @@ main(int argc, char *argv[]) {
 			/* -- end -- set up the shared memory region */
 			} else if (!syscall_return &&
 					((IS_64BITS &&
-						(sysnum == SYS_open || sysnum == SYS_stat )) ||
-					(IS_32BITS &&
-						(sysnum == 5 || sysnum == 195)))) {
+					  (sysnum == SYS_open || sysnum == SYS_stat )) ||
+					 (IS_32BITS &&
+					  (sysnum == 5 || sysnum == 195)))) {
+				/**
+				 *  open syscall enter
+				 **/
 				EXITIF(ptrace(PTRACE_GETREGS, pid, 0, &iregs) == -1);
 				if (IS_64BITS)
 					read_string(pid, iregs.rdi, original_path);
@@ -682,10 +654,12 @@ main(int argc, char *argv[]) {
 				syscall_return = 1;
 			}else if (syscall_return &&
 					((IS_64BITS &&
-                                                (sysnum == SYS_open || sysnum == SYS_stat )) ||
-                                        (IS_32BITS &&
-                                                (sysnum == 5 || sysnum == 195)))){
-				//fprintf(stderr, "Ret from open\n");
+					  (sysnum == SYS_open || sysnum == SYS_stat )) ||
+					 (IS_32BITS &&
+					  (sysnum == 5 || sysnum == 195)))){
+				/**
+				 * open syscall return 
+				 **/
 				syscall_return = 0;
 			}
 			continue_process(pid, 0);
