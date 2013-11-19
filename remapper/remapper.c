@@ -121,28 +121,7 @@ begin_setup_shmat(int pid) {
 	EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&cur_regs) < 0);
 	memcpy(&saved_regs, &cur_regs, sizeof(cur_regs));
 
-#if 0
-	// #if defined (I386)
-	// To make the target process execute a shmat() on 32-bit x86, we need to make
-	// it execute the special __NR_ipc syscall with SHMAT as a param:
-
-	/* The shmat call is implemented as a godawful sys_ipc. */
-	cur_regs.orig_eax = __NR_ipc;
-	/* The parameters are passed in ebx, ecx, edx, esi, edi, and ebp */
-	cur_regs.ebx = SHMAT;
-	/* The kernel names the rest of these, first, second, third, ptr,
-	 * and fifth. Only first, second and ptr are used as inputs.  Third
-	 * is a pointer to the output (unsigned long).
-	 */
-	cur_regs.ecx = shmid;
-	cur_regs.edx = 0; /* shmat flags */
-	cur_regs.esi = (long)0; /* Pointer to the return value in the
-	                                        child's address space. */
-	cur_regs.edi = (long)NULL; /* We don't use shmat's shmaddr */
-	cur_regs.ebp = 0; /* The "fifth" argument is unused. */
-	//#elif defined(X86_64)
-#endif
-	if (personality == P_32BIT) {
+	if (IS_32BITS) {
 		// If we're on a 64-bit machine but tracing a 32-bit target process, then we
 		// need to make the 32-bit __NR_ipc SHMAT syscall as though we're on a 32-bit
 		// machine (see code above), except that we use registers like 'rbx' rather
@@ -185,29 +164,7 @@ finish_setup_shmat(int pid) {
 	struct user_regs_struct cur_regs;
 	EXITIF(ptrace(PTRACE_GETREGS, pid, NULL, (long)&cur_regs) < 0);
 
-#if 0 
-	//#if defined (I386)
-	// setup had better been a success!
-	assert(cur_regs.orig_eax == __NR_ipc);
-	assert(cur_regs.eax == 0);
-
-	// the pointer to the shared memory segment allocated by shmat() is actually
-	// located in *tcp->savedaddr (in the child's address space)
-	errno = 0;
-	childshm = (void*)ptrace(PTRACE_PEEKDATA, pid, savedaddr, 0);
-	EXITIF(errno); // PTRACE_PEEKDATA reports error in errno
-
-	// restore original data in child's address space
-	EXITIF(ptrace(PTRACE_POKEDATA, pid, savedaddr, savedword));
-
-	saved_regs.eax = saved_regs.orig_eax;
-
-	// back up IP so that we can re-execute previous instruction
-	// TODO: is the use of 2 specific to 32-bit machines?
-	saved_regs.eip = saved_regs.eip - 2;
-	//#elif defined(X86_64)
-#endif
-	if (personality == P_32BIT) {
+	if (IS_32BITS) {
 		// If we're on a 64-bit machine but tracing a 32-bit target process, then we
 		// need to handle the return value of the 32-bit __NR_ipc SHMAT syscall as
 		// though we're on a 32-bit machine (see code above).	
@@ -422,17 +379,18 @@ next_event(pid_t pid){
 		                         "PID=%d\n", (int)regs.cs, pid);
 		}
 		debug(LOG_EVENT, "event: setting personality of %d to %s", pid,
-			(personality == P_64BIT) ? "64 bit" : "32 bit" );
+			IS_64BITS ? "64 bit" : "32 bit" );
 	}
 
 	if (WIFSIGNALED(status)) {
-		/*return an signal */
+		/*return a signal */
 	        event.value = WTERMSIG(status);
 		event.type = EVENT_EXIT;
 	        debug(LOG_EVENT, "event: EXIT_SIGNAL: pid=%d, signum=%d", new_pid, event.value);
 	        return &event;
 	}
 	if (WIFEXITED(status)) {
+		/*return exit status */
 	        event.value = WEXITSTATUS(status);
 		event.type = EVENT_EXIT;
 	        debug(LOG_EVENT, "event: EXIT: pid=%d, status=%d", new_pid, event.value);
@@ -698,15 +656,14 @@ main(int argc, char *argv[]) {
 				debug(LOG_INFO, "info: shared memory end setup address %p", childshm);
 			/* -- end -- set up the shared memory region */
 			} else if (!syscall_return &&
-					((personality == P_64BIT &&
+					((IS_64BITS &&
 						(sysnum == SYS_open || sysnum == SYS_stat )) ||
-					(personality == P_32BIT &&
+					(IS_32BITS &&
 						(sysnum == 5 || sysnum == 195)))) {
 				EXITIF(ptrace(PTRACE_GETREGS, pid, 0, &iregs) == -1);
-				if (personality == P_64BIT)
+				if (IS_64BITS)
 					read_string(pid, iregs.rdi, original_path);
 				else
-					//umovestr(pid, iregs.rbx, original_path);
 					read_string(pid, iregs.rbx, original_path);
 				/* lookup up if we have a mapping for the current path */
 				HASH_FIND_STR(global_mappings, original_path, mapping);
@@ -714,7 +671,7 @@ main(int argc, char *argv[]) {
 					/* we have to rewrite the file path */
 					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s", original_path, mapping->rewritten_path);
 					strcpy(localshm, mapping->rewritten_path);
-					if (personality == P_64BIT)
+					if (IS_64BITS)
 						iregs.rdi = (unsigned long)childshm;
 					else
 						iregs.rbx = (unsigned long)childshm;
@@ -724,9 +681,9 @@ main(int argc, char *argv[]) {
 				}
 				syscall_return = 1;
 			}else if (syscall_return &&
-					((personality == P_64BIT &&
+					((IS_64BITS &&
                                                 (sysnum == SYS_open || sysnum == SYS_stat )) ||
-                                        (personality == P_32BIT &&
+                                        (IS_32BITS &&
                                                 (sysnum == 5 || sysnum == 195)))){
 				//fprintf(stderr, "Ret from open\n");
 				syscall_return = 0;
