@@ -492,6 +492,87 @@ continue_process(pid_t pid, int signal){
 }
 
 
+#if 0
+
+#ifndef MAX
+# define MAX(a, b)              (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef MIN
+# define MIN(a, b)              (((a) < (b)) ? (a) : (b))
+#endif
+
+/*
+ * Read a string in the remote process address space
+ *
+ * Returns < 0 on error, > 0 if NUL was seen,
+ * else 0 if len bytes were read but no NUL byte seen.
+ *
+ * Taken from strace source code
+ *
+ */
+int
+umovestr(int pid, long addr, char *laddr)
+{
+	const unsigned long x01010101 = 0x0101010101010101ul;
+	const unsigned long x80808080 = 0x8080808080808080ul;
+
+	int n, m, nread, len;
+	union {
+	        unsigned long val;
+	        char x[sizeof(long)];
+	} u;
+
+	len = PATH_MAX;
+
+	//make 0 in the uppper part of the address
+	//if (current_wordsize < sizeof(addr))
+	//        addr &= (1ul << 8 * current_wordsize) - 1;
+
+
+	/* addr not a multiple of sizeof(long) un-aligned */
+	if (addr & (sizeof(long) - 1)) {
+		n = addr - (addr & -sizeof(long)); /* residue */
+		addr &= -sizeof(long); /* residue */
+		errno = 0;
+		u.val = ptrace(PTRACE_PEEKDATA, pid, (char *)addr, 0);
+		if(errno) {
+			perror("Unable to read remote memory (non-aligned)");
+			ABORT("umovestr: PTRACE_PEEKDATA pid:%d @0x%lx",
+		                            pid, addr);
+		}
+		m = MIN(sizeof(long) - n, len);
+		memcpy(laddr, &u.x[n], m);
+		while (n & (sizeof(long) - 1))
+			if (u.x[n++] == '\0')
+				return 1;
+		addr += sizeof(long);
+		laddr += m;
+		nread += m;
+		len -= m;
+	}
+
+	while (len) {
+		errno = 0;
+		u.val = ptrace(PTRACE_PEEKDATA, pid, (char *)addr, 0);
+		if (errno) {
+			perror("Unable to read remote memory");
+			ABORT("umovestr: PTRACE_PEEKDATA pid:%d @0x%lx",
+					pid, addr);
+		}
+		m = MIN(sizeof(long), len);
+		memcpy(laddr, u.x, m);
+		/* "If a NUL char exists in this word" */
+		if ((u.val - x01010101) & ~u.val & x80808080)
+		        return 1;
+		addr += sizeof(long);
+		laddr += m;
+		nread += m;
+		len -= m;
+	}
+	return 0;
+}
+#endif
+
 
 /**
  * read a string from the memory of process with PID equal to child 
