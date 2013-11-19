@@ -580,8 +580,14 @@ umovestr(int pid, long addr, char *laddr)
  */
 char *
 read_string (int child, unsigned long addr, char * buffer) {
+
 	int allocated = PATH_MAX, read = 0;
 	unsigned long tmp =0;
+
+        const unsigned long x01010101 = 0x0101010101010101ul;
+        const unsigned long x80808080 = 0x8080808080808080ul;
+
+
 	while(1) {
 		if (read + sizeof(tmp) > allocated) {
 			ABORT("Reading original file path");
@@ -593,8 +599,9 @@ read_string (int child, unsigned long addr, char * buffer) {
 			break;
 		}
 		memcpy(buffer + read, &tmp, sizeof(tmp));
-		if (memchr(&tmp, 0, sizeof(tmp)) != NULL)
-			break;
+		if ((tmp - x01010101) & ~tmp & x80808080)
+                        break;
+		//if (memchr(&tmp, 0, sizeof(tmp)) != NULL)
 		read += sizeof(tmp);
 	}
 	return buffer;
