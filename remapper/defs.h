@@ -45,6 +45,22 @@
 #define ORIG_RAX 15
 #define ORIG_XAX (8 * ORIG_RAX)
 
+
+
+/**
+ * is the current traced process 64bit or 32 bit
+ **/
+enum personality_type {
+        UNSET = 0,
+        P_64BIT,
+        P_32BIT,
+};
+
+enum personality_type personality;
+
+#define IS_64BITS  (personality == P_64BIT)
+#define IS_32BITS  (personality == P_32BIT)
+
 #define debug(level, expr...) debug_(level, __FILE__, __LINE__, expr)
 
 struct options_t {

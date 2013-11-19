@@ -57,16 +57,7 @@ struct user_regs_struct saved_regs;
 void * temp_addr;
 unsigned long temp_value;
 
-/**
- * is this a 64bit or a 32 bit process
- */
-enum personality_type {
-	UNSET = 0,
-	P_64BIT,
-	P_32BIT,
-};
-
-enum personality_type personality;
+extern enum personality_type personality;
 
 
 /**
