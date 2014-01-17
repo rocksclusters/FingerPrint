@@ -255,8 +255,10 @@ class Roller:
                 logger.error(" > " + "\n > ".join(output))
                 return False
             logger.debug(' > '+ '\n > '.join(output))
-            shutil.copy2(build_remapper_path + "/remapper", rpm_tmp_dir +
-                    self.remapper_base_path)
+            remapper_basedir = rpm_tmp_dir + os.path.dirname(self.remapper_executable)
+            if not os.path.exists(remapper_basedir):
+                os.makedirs(remapper_basedir)
+            shutil.copy2(build_remapper_path + "/remapper", remapper_basedir)
             #let's notify we have to build the base RPM
             rpm_list.add((rpm_tmp_dir,self.roll_name))
         #
