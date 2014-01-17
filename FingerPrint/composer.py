@@ -123,11 +123,13 @@ class Roller:
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
+        # keeps track of already processed package in self.resolve_file()
+        # so we do not process a package twice
+        self.processed_package = []
         # internal swirl package we want to include in the final rpm
         self.wanted_pcks = set()
         # list of rpm pakcage we have to exclude
         self.disable_pcks = set()
-        self.users = set()
 
         #
         #    ----------------      read the content of the archive
@@ -153,6 +155,8 @@ class Roller:
         #
         #    ----------------      make rpms with all the files
         #
+        # list of user that should be added
+        self.users = set()
         rpm_tmp_dir = tempfile.mkdtemp()
         home_rpm_tmp_dir = tempfile.mkdtemp()
         rpm_list = set()
@@ -364,8 +368,9 @@ class Roller:
         this function will add the package name to self.packages if it can find
         an rpm which can sattisfy it, if not, it will add this swirlf_file to the
         self.files """
-        if swirl_file in self.files:
+        if swirl_file in self.files or swirl_file in self.processed_package:
             return
+        self.processed_package.append(swirl_file)
         # if swirl_file.path in yum db add rpm to self.packages
         # else add swirl_file to self.files
         packages = []
