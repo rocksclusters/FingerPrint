@@ -525,6 +525,7 @@ read_string (int child, unsigned long addr, char * buffer) {
  * regs which is user_regs_struct 
  */
 #define get_first_argument(regs) IS_64BITS ? regs.rdi : regs.rbx
+#define get_second_argument(regs) IS_64BITS ? regs.rsi : regs.rcx
 
 
 int
@@ -667,7 +668,39 @@ main(int argc, char *argv[]) {
 				 * open syscall return 
 				 **/
 				syscall_return = 0;
+			}else if (!syscall_return &&
+					((IS_64BITS && (sysnum == SYS_openat)) ||
+					 (IS_32BITS && (sysnum == SYS_openat_32bits)))){
+				/**
+				 * openat syscall enter
+				 */
+				EXITIF(ptrace(PTRACE_GETREGS, pid, 0, &iregs) == -1);
+				read_string(pid, get_second_argument(iregs), original_path);
+				//TODO check the first argument and the / of the path
+
+				/* lookup up if we have a mapping for the current path */
+				HASH_FIND_STR(global_mappings, original_path, mapping);
+				if (mapping) {
+					/* we have to rewrite the file path */
+					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s",
+							original_path, mapping->rewritten_path);
+					strcpy(localshm, mapping->rewritten_path);
+					if (IS_64BITS)
+						iregs.rsi = (unsigned long)childshm;
+					else
+						iregs.rcx = (unsigned long)childshm;
+					EXITIF(ptrace(PTRACE_SETREGS, pid, NULL, (long)&iregs) < 0);
+				} else {
+					debug(LOG_MAPPING, "mapping: file not found %s", original_path);
+				}
+				syscall_return = 1;
 			}
+			else if (syscall_return &&
+					((IS_64BITS && (sysnum == SYS_openat)) ||
+					 (IS_32BITS && (sysnum == SYS_openat_32bits)))){
+				syscall_return = 0;
+			}
+
 			continue_process(pid, 0);
 
 		} else if (ev->type == EVENT_EXIT) {
