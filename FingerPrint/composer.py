@@ -214,15 +214,15 @@ class Roller:
                 if use_remapping:
                     f.write(self.remapper_executable + " ")
                     loader = self.swirl.getLoader(swf)
-                    if loader :
-                        f.write(self.remapper_base_path + '/' + str(loader.md5sum)
-                                + '/' + os.path.basename(loader.path) + " ")
+                    if loader:
+                        f.write(self.remapper_base_path +\
+					loader.path + " ")
                 f.write(swf.path + ".orig $@\n")
                 f.close()
                 os.chmod(dest_path, 0755)
             else:
                 if use_remapping:
-                    tmp_path = remapper_rpm_tmp_dir + str(swf.md5sum)
+                    tmp_path = remapper_rpm_tmp_dir + os.path.dirname(swf.path)
                     if not os.path.exists(tmp_path):
                         os.makedirs(tmp_path)
                     shutil.copy2(source_path, tmp_path + '/' + os.path.basename(swf.path))
@@ -569,11 +569,13 @@ done
 
 
 def make_mapping_file(sw_files, output_file, base_path):
-	""" TODO only for testing
-	this function makes a mapping file"""
+	""" this function makes a mapping file for the remapper process"""
 	file_desc = open(output_file, 'w')
 	for swf in sw_files:
 		for path in swf.getPaths():
 			if path[0] != '$' and swf.md5sum:
-				file_desc.write(path + '\t' + base_path + swf.md5sum + '/' +os.path.basename(swf.path) +'\n')
+				file_desc.write(path + '\t' + base_path[:-1] + swf.path +'\n')
 	file_desc.close()
+
+
+
