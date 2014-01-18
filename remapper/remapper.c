@@ -519,6 +519,14 @@ read_string (int child, unsigned long addr, char * buffer) {
 }
 
 
+
+/**
+ * return the first and second argument of the syscal from the 
+ * regs which is user_regs_struct 
+ */
+#define get_first_argument(regs) IS_64BITS ? regs.rdi : regs.rbx
+
+
 int
 main(int argc, char *argv[]) {
 
@@ -630,13 +638,10 @@ main(int argc, char *argv[]) {
 					 (IS_32BITS &&
 					  (sysnum == SYS_open_32bits || sysnum == SYS_stat64_32bits)))) {
 				/**
-				 *  open syscall enter
+				 *  open and stat syscall enter
 				 **/
 				EXITIF(ptrace(PTRACE_GETREGS, pid, 0, &iregs) == -1);
-				if (IS_64BITS)
-					read_string(pid, iregs.rdi, original_path);
-				else
-					read_string(pid, iregs.rbx, original_path);
+				read_string(pid, get_first_argument(iregs), original_path);
 				/* lookup up if we have a mapping for the current path */
 				HASH_FIND_STR(global_mappings, original_path, mapping);
 				if (mapping) {
