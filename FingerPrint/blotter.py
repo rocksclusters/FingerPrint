@@ -223,13 +223,16 @@ class Blotter:
         #dpkg based OSes
         dpkgOSs = ["debian",  "ubuntu"]
 
-        f=open('/etc/issue.net')
-        issues=f.read()
-        f.close()
-        if any(os in issues.lower() for os in rpmOSs):
-            self._getPackage = self._getPackageRpm
-        if any(os in issues.lower() for os in dpkgOSs):
-            self._getPackage = self._getPackageDpkg
+	if os.path.exists('/etc/issue.net'):
+            f=open('/etc/issue.net')
+            issues=f.read()
+            f.close()
+            if any(os in issues.lower() for os in rpmOSs):
+                self._getPackage = self._getPackageRpm
+		return
+            elif any(os in issues.lower() for os in dpkgOSs):
+                self._getPackage = self._getPackageDpkg
+		return
         if not '_getPackage' in dir(self):
             #we could not detect the pakcage manager
             self._getPackage = lambda  p : None
