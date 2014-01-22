@@ -269,6 +269,9 @@ class TracerControlBlock:
 
     def updateProcessInfo(self):
         processName = self.getProcessName()
+        if processName not in TracerControlBlock.dependencies:
+            # new binary file let's add it to the dyctionary
+            TracerControlBlock.dependencies[processName] = []
         #read the cmdline
         f = open('/proc/' + str(self.pid) + '/cmdline')
         TracerControlBlock.cmdline[processName] = f.read().split('\x00')
@@ -283,9 +286,6 @@ class TracerControlBlock:
 
         results are stored in the class variable called dependencies"""
         binaryFile = self.getProcessName()
-        if binaryFile not in TracerControlBlock.dependencies:
-            # new binary file let's add it to the dyctionary
-            TracerControlBlock.dependencies[binaryFile] = []
         f=open('/proc/' + str(self.pid) + '/maps')
         maps = f.read()
         f.close()
