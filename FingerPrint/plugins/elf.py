@@ -10,6 +10,7 @@ from subprocess import PIPE, Popen
 import StringIO
 import re
 import logging
+import string
 
 logger = logging.getLogger('fingerprint')
 
@@ -96,6 +97,8 @@ class ElfPlugin(PluginManager):
         # find rpath first
         rpath = getOutputAsList(["bash","-c", "objdump -x %s |grep RPATH|awk '{print $2}'" % swirlFile.path ])[0]
         if len( rpath ) > 0:
+            if "$ORIGIN" in rpath[0]:
+                rpath[0] = string.replace(rpath[0], "$ORIGIN", os.path.dirname(swirlFile.path))
             swirlFile.rpaths = rpath[0].split(":")
         #find deps
         for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path)[0]:
