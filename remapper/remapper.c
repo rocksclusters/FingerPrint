@@ -388,6 +388,64 @@ next_event(pid_t pid){
 	return &event;
 }
 
+/**
+ * given a path in src and its length in src_len it return a normalized copy
+ * of src. Memory must be freed by the caller
+ * 
+ * inspired by:
+ * http://stackoverflow.com/questions/4774116/c-realpath-without-resolving-symlinks
+ */
+char * norm_path(const char * src) {
+
+        char *res;
+        size_t res_len, src_len;
+        const char *ptr = src;
+        const char *end, *next, *slash;
+
+	src_len = strlen(src);
+	end = &src[src_len];
+        res = malloc((src_len > 0 ? src_len : 1) + 1);
+        res_len = 0;
+
+        for (ptr = src; ptr < end; ptr=next+1) {
+                size_t len;
+                next = memchr(ptr, '/', end-ptr);
+                if (next == NULL) {
+                        next = end;
+                }
+                len = next-ptr;
+                switch(len) {
+                case 2:
+                        if (ptr[0] == '.' && ptr[1] == '.') {
+                                slash = memrchr((const char*)res, (int)'/', res_len);
+                                if (slash != NULL) {
+                                        res_len = slash - res;
+                                }
+                                continue;
+                        }
+                        break;
+                case 1:
+                        if (ptr[0] == '.') {
+                                continue;
+
+                        }
+                        break;
+                case 0:
+                        continue;
+                }
+                res[res_len++] = '/';
+                memcpy(&res[res_len], ptr, len);
+                res_len += len;
+        }
+
+        if (res_len == 0) {
+                res[res_len++] = '/';
+        }
+        res[res_len] = '\0';
+        return res;
+}
+
+
 void
 continue_process(pid_t pid, int signal){
 	int ret;
@@ -644,7 +702,7 @@ main(int argc, char *argv[]) {
 				EXITIF(ptrace(PTRACE_GETREGS, pid, 0, &iregs) == -1);
 				read_string(pid, get_first_argument(iregs), original_path);
 				/* lookup up if we have a mapping for the current path */
-				HASH_FIND_STR(global_mappings, original_path, mapping);
+				HASH_FIND_STR(global_mappings, norm_path(original_path), mapping);
 				if (mapping) {
 					/* we have to rewrite the file path */
 					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s", 
@@ -679,7 +737,7 @@ main(int argc, char *argv[]) {
 				//TODO check the first argument and the / of the path
 
 				/* lookup up if we have a mapping for the current path */
-				HASH_FIND_STR(global_mappings, original_path, mapping);
+				HASH_FIND_STR(global_mappings, norm_path(original_path), mapping);
 				if (mapping) {
 					/* we have to rewrite the file path */
 					debug(LOG_MAPPING, "mapping: matched a file: %s -> %s",
