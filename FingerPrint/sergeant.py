@@ -56,7 +56,11 @@ def getShortPath(path):
 
 # do we have a prelinker? 
 # this variable is use by getHash and by the syscaltracer
-prelink = utils.which("prelink", "/usr/sbin")
+
+if os.path.exists('/usr/sbin/prelink'):
+	prelink = '/usr/sbin/prelink'
+else:
+	prelink = utils.which("prelink", "/usr/sbin")
 
 
 #let's skip vairous special files
