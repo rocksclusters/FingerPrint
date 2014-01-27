@@ -37,6 +37,8 @@
 /* definitions taken from /usr/include/asm/unistd_32.h */
 #define SYS_open_32bits 5
 #define SYS_stat64_32bits 195
+#define SYS_openat_32bits 295
+
 
 /**
  * personality stuff
