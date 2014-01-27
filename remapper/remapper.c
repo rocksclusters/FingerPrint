@@ -18,9 +18,9 @@
  * 02110-1301 USA
  */
 
+#define _GNU_SOURCE
 /* assert */
 #include <assert.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -41,7 +41,6 @@
 /* shared memory */
 #include <sys/ipc.h> 
 #include <sys/shm.h>
-#include <unistd.h>
 
 #include "defs.h"
 
@@ -209,6 +208,10 @@ finish_setup_shmat(int pid) {
 }
 
 
+/**
+ * given a input_str with a path (e.g. /a/v/c/d) it returns the containing
+ * path (e.g. /a/v/c). Memory must be freed by the caller.
+ */
 char *
 get_base_path(char * input_str){
 	unsigned int len, i;
@@ -232,6 +235,9 @@ get_base_path(char * input_str){
 	EXITIF(1);
 }
 
+/**
+ * initialize the hash table with the mapping values from mapping_file
+ */
 void
 init_mapping(){
 	FILE *fd;
