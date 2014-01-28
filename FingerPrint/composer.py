@@ -189,7 +189,21 @@ class Roller:
                 f=open(dest_path, 'w')
                 f.write("#!/bin/bash\n\n")
                 ldconf_written = False
-                for env_variable in swf.env:
+                env = None
+                if 'ELF' not in swf.type:
+                    # this is not a ELF but is a script so we need to get the
+                    # env from its parent swirl file (the interpreter)
+                    for execswf in self.swirl.execedFiles:
+                        if swf in execswf.openedFiles[execswf.path]:
+                            env = execswf.env
+                            break
+                else:
+                    env = swf.env
+                if env == None:
+                    logger.error('Unable to find interpreter for ', swf)
+                    logger.error('Failing on ', swf)
+                    return False
+                for env_variable in env:
                     if '=' not in env_variable:
                         continue
                     variable_name = env_variable.split('=')[0]
