@@ -259,6 +259,7 @@ class SwirlFile(Arch):
         self.env = []
         # by default all files are data files (aka unknown type)
         self.type = "Data"
+        self.executable = False
 
     def isLoader(self):
         """ return True if this swirl is a loader """
@@ -301,6 +302,7 @@ class SwirlFile(Arch):
 
     def isELFExecutable(self):
         """ return true if this swirl is executable"""
+        # TODO not used, it can be removed
         return 'ELF' in self.type and self.executable
 
     def isYourPath(self, path):

@@ -183,7 +183,7 @@ class Roller:
                 continue
             if not os.path.exists( os.path.dirname(dest_path) ):
                 os.makedirs( os.path.dirname(dest_path) )
-            if swf.isELFExecutable():
+            if getattr(swf, 'executable', False):
                 # we need a wrapper script to set the environment
                 shutil.copy2(source_path, dest_path + ".orig")
                 f=open(dest_path, 'w')
@@ -229,7 +229,7 @@ class Roller:
                 else:
                     shutil.copy2(source_path, dest_path)
             # if use remapping we don't need the symlinks
-            if use_remapping and not swf.isELFExecutable():
+            if use_remapping and not getattr(swf, 'executable', False):
                 continue
             # and the symlinks
             for i in swf.links:

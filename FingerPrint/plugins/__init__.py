@@ -82,6 +82,12 @@ class PluginManager(object):
                     return temp
         #nobady claimed the file let's make it a Data file
         swirlFile = swirl.createSwirlFile(fileName)
+        if os.path.isfile(fileName) and os.access(fileName, os.X_OK):
+            # TODO this should be in his own plugin class
+            f = open(fileName)
+            if f.read(2) == '#!':
+                swirlFile.executable = True
+            f.close()
         return swirlFile
 
     @classmethod
