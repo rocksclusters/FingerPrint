@@ -225,7 +225,7 @@ class Roller:
                     f.write("export LD_LIBRARY_PATH=\"" +
                             ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\"\n')
                 f.write("\n")
-                if use_remapping:
+                if use_remapping and 'ELF' in swf.type:
                     f.write(self.remapper_executable + " ")
                     loader = self.swirl.getLoader(swf)
                     if loader:
