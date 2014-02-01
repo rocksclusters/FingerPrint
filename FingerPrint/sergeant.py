@@ -284,7 +284,7 @@ class Sergeant:
                     connections += newConnection
                 # filename -> packagename
                 if depSwf.package :
-                    packageName = '"' + depSwf.package + '"'
+                    packageName = '"' + depSwf.package.split()[0] + '"'
                     newConnection = '  ' + fileName
                     newConnection += ' -> ' + packageName + ';\n'
                     if newConnection not in connections:
@@ -305,7 +305,7 @@ class Sergeant:
                 connections += '  ' + getShortPath(execedSwirlFile.path)
                 connections += ' -> ' + fileName + ';\n'
                 if dynDep.package :
-                    packageName = '"' + dynDep.package + '"'
+                    packageName = '"' + dynDep.package.split()[0] + '"'
                     newConnection = '  ' + fileName
                     newConnection += ' -> ' + packageName + ';\n'
                     if newConnection not in connections:
@@ -327,24 +327,26 @@ class Sergeant:
         retString += '  {\n'
         retString += '    rank=same;\n'
         retString += '    "Execution Domain" [shape=none fontsize=26];\n'
-        retString += '    node [shape=hexagon fontsize=12];\n'
+        retString += '    node [shape=hexagon fontsize=16];\n'
         retString += '    ' + string.join(clusterExec, ';\n    ') + ";\n"
         retString += "  }\n"
         # linker section
         retString += '  subgraph cluster_linker {\n'
         retString += '    label="";\n'
         retString += '    "Linker Domain" [shape=none fontsize=26];\n'
-        retString += '    node [style=filled colorscheme=set312 fontsize=12];\n'
-        retString += '    ' + string.join(clusterSoname, ';\n    ') + ';\n'
-        retString += '    rank=same;\n'
+        retString += '    node [style=filled colorscheme=set312 fontsize=16];\n'
+        retString += '    {rank=same;\n'
+
+        retString += '      ' + string.join(clusterSoname, ';\n    ') + ';\n'
+        retString += '    }\n    {rank=same;\n'
         retString += '    ' + string.join(clusterLinker, ';\n    ') + ';\n'
-        retString += "  }\n"
+        retString += "    }\n  }\n"
 
         # pakcage section
         retString += '  {\n'
         retString += '    rank=same;\n'
         retString += '    "Package Domain" [shape=none style="" fontsize=26];\n'
-        retString += '    node [shape=box style=filled colorscheme=set312 fontsize=12];\n'
+        retString += '    node [shape=box style=filled colorscheme=set312 fontsize=16];\n'
         retString += '    ' + string.join(clusterPackage, ';\n    ') + ';\n'
         retString += '  }\n'
 
