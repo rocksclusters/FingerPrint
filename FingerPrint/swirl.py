@@ -347,7 +347,7 @@ class SwirlFile(Arch):
         """a more detailed representation of this swrilfile """
         if verbosity == 0:
             # first we handle the short form
-            return separator + str(self) + "\n"
+            return separator + str(self)+ " " + dynamic + "\n"
         retString = separator + "  " + self.path + " " + dynamic
         if verbosity > 1 and self.md5sum:
             retString += " - " + self.md5sum
