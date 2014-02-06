@@ -206,6 +206,10 @@ class Roller:
                 for env_variable in env:
                     if '=' not in env_variable:
                         continue
+                    if env_variable.startswith('HYDI'):
+                        # MVAPICH 2.x HYDI_CONTROL_FD is used be hydra_proxy_mpi to comunicate
+                        # subprocesses the control socket
+                        continue
                     variable_name = env_variable.split('=')[0]
                     variable_value = env_variable.split('=')[1]
                     if any([ env_variable.startswith(i) for i in self.append_variables]):
