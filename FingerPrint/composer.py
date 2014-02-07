@@ -216,7 +216,7 @@ class Roller:
                         # for these variables we want to add their content to
                         # the corresponding system variable values
                         if self.swirl.ldconf_paths and env_variable.startswith('LD_LIBRARY_PATH'):
-                            variable_value = ':'.join(self.swirl.ldconf_paths) + ':' + variable_value
+                            variable_value = variable_value + ':' + ':'.join(self.swirl.ldconf_paths)
                             ldconf_written = True
                         f.write("export " + variable_name + "=\"" + variable_value + ":$" +
                             variable_name + "\"\n")
