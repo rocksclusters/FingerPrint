@@ -199,15 +199,12 @@ class Blotter:
 	if not utils.which(ldconf_cmd) :
 	    logger.error("Unable to find ldconfig. You need ldconfig in you PATH to properly run fingerprint.")
         (output, retcode) = utils.getOutputAsList([ldconf_cmd, "-v"])
-        default_paths = ["/lib", "/usr/lib"]
+        #default_paths = ["/lib", "/usr/lib"]
 
         # if run as a user it will fail so we don't care for retcode
         for line in output:
             if line and line[0] == '/':
-                line = line.split(":")[0]
-                if line not in default_paths:
-                    #it's a path
-                    return_paths.append(line.split(":")[0])
+                return_paths.append(line.split(":")[0])
         return return_paths
 
 
