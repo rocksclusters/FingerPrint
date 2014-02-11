@@ -31,6 +31,16 @@ def_swirl_path = os.path.join(def_base_dir, "output.swirl")
 logger = logging.getLogger('fingerprint')
 
 
+# let's skip vairous private files which should not be archived
+specialFile = ["id_rsa", "id_rsa.pub", "id_dsa", "id_dsa.pub", "known_hosts"]
+
+def is_special_file(path):
+    """return true if the filename points to a file which contains
+    personal data"""
+    return any([ path.endswith(i) for i in specialFile ])
+
+
+
 class Archiver:
     """It reads an already created swirl and:
       - it detects if it can run on this system
@@ -57,7 +67,8 @@ class Archiver:
         os.mkdir(base_path)
         # copy all the files referenced by this swirl
         for swf in self.sergeant.swirl.swirlFiles:
-            if swf.path[0] == '$' or sergeant.is_special_folder(swf.path):
+            if swf.path[0] == '$' or sergeant.is_special_folder(swf.path) or \
+                            is_special_file(swf.path):
                 #TODO maybe we could keep user data into a special folder?
                 # this file belongs to the special folders let's skip it
                 continue
