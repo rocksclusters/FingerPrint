@@ -174,6 +174,12 @@ class Roller:
         remapper_rpm_tmp_dir = rpm_tmp_dir + self.remapper_base_path
         # laydown the file
         for swf in self.files:
+            source_path = os.path.join(tar_tmp_dir, str(swf.md5sum),
+                            os.path.basename(swf.path))
+            if not os.path.exists(source_path) :
+		# if the file is not in the archive do not go on
+                logger.debug("File " + source_path + " is not present in the archive")
+                continue
             # if use_remapping = true swf must be executable 
             # if use_remapping = false just follow the first swf.path.startswith("/home/")
             if swf.path.startswith("/home/"):
@@ -187,11 +193,6 @@ class Roller:
                 rpm_list.add((rpm_tmp_dir,self.roll_name))
                 rpm_prefix_dir = rpm_tmp_dir
             dest_path = rpm_prefix_dir + swf.path
-            source_path = os.path.join(tar_tmp_dir, str(swf.md5sum),
-                            os.path.basename(swf.path))
-            if not os.path.exists(source_path) :
-                logger.debug("File " + source_path + " is not present in the archive")
-                continue
             if not os.path.exists( os.path.dirname(dest_path) ):
                 os.makedirs( os.path.dirname(dest_path) )
             if getattr(swf, 'executable', False):
