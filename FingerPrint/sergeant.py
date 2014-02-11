@@ -69,7 +69,7 @@ specialFolders = ["/proc/","/sys/","/tmp", "/dev/",
                 "/etc/localtime", "/etc/hosts", "/etc/selinux", "/etc/resolv.conf",
                 "/etc/fstab", "/etc/inittab", "/etc/rc", "/etc/sys", "/etc/security",
                 "/etc/pam", "/etc/ntp", "/etc/issue", "/etc/rpc", "/etc/grub",
-                "/etc/issue"]
+                "/etc/krb5.conf"]
 
 def is_special_folder(path):
     """ return true if path start with one of the specialFolder"""
