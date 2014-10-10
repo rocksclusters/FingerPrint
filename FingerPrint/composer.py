@@ -486,7 +486,7 @@ class Roller:
                 pass
         # do I need to exclude the installed RPM from the return list?
         # if 'installed' not in pkg.repo.name ]
-        return list(set([pkg.name for pkg in yum.misc.unique(matched)]))
+        return list(set([pkg.name + "." + pkg.arch for pkg in yum.misc.unique(matched)]))
 
 
     def useRPMPackage(self, package_name):
