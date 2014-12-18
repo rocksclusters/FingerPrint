@@ -149,11 +149,15 @@ class Sergeant:
                     ld_library = i.split('=')[1].split(':')
                     break
             rpath = swF.rpaths + self.extraPath + ld_library
-            for swf_dep in [swF] + self.swirl.getListSwirlFilesDependentStaticAndDynamic(swF):
+            for swf_dep in [swF] + self.swirl.getListSwirlFilesDependentStatic(swF):
                 for dep in swf_dep.staticDependencies:
                     if not PluginManager.getPathToLibrary(dep, rpath = rpath):
                         self.missingDeps.add(dep)
                         returnValue = False
+            for dynamic_dep in swF.dynamicDependencies:
+                if not os.path.exists(dynamic_dep.path):
+                    self.missingDeps = self.missingDeps.union(dynamic_dep.provides)
+                    returnValue = False
         return returnValue
 
     def checkHash(self, verbose=False):
