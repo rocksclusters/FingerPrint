@@ -100,19 +100,37 @@ class ElfPlugin(PluginManager):
             if "$ORIGIN" in rpath[0]:
                 rpath[0] = string.replace(rpath[0], "$ORIGIN", os.path.dirname(swirlFile.path))
             swirlFile.rpaths = rpath[0].split(":")
+	# check LD_LIBRARY_PATH
+	ld_library = []
+        if swirlFile.env:
+            for var in swirlFile.env:
+                if var.startswith('LD_LIBRARY_PATH='):
+                    ld_library = var.split('=')[1].split(':')
+                    break
+            pwd = [var.split('=')[1] for var in swirlFile.env if var.startswith('PWD=')]
+            if len(pwd) != 1:
+                logger.error("Unable to find PWD in traced process environment variables")
+                pwd = os.environ['PWD']
+            else:
+                pwd = pwd[0]
+            # make ld_library_path abolute path
+            ld_library = [path if path.startswith('/') \
+                               else os.path.normpath(os.path.join(pwd, path)) \
+                               for path in ld_library]
         #find deps
         for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path)[0]:
             if len(line) > 0:
                 newDep = Dependency.fromString( line )
                 swirlFile.addDependency( newDep )
-                p = cls.getPathToLibrary( newDep , useCache = True, rpath = swirlFile.rpaths)
+                p = cls.getPathToLibrary( newDep , useCache = True,
+                        rpath = swirlFile.rpaths + ld_library)
                 if not p:
                     # a dependency was not found complain loudly
                     logger.error("Unable to find library %s" % newDep)
                     continue
                 if p and not swirl.isFileTracked(p):
                     # p not null and p is not already in swirl
-                    cls.getSwirl(p, swirl)
+                    cls.getSwirl(p, swirl, swirlFile.env)
         
         #find provides
         for line in getOutputAsList(['bash', cls._RPM_FIND_PROV], swirlFile.path)[0]:
@@ -122,7 +140,7 @@ class ElfPlugin(PluginManager):
         
 
     @classmethod
-    def getSwirl(cls, fileName, swirl):
+    def getSwirl(cls, fileName, swirl, env = None):
         """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
@@ -155,6 +173,8 @@ class ElfPlugin(PluginManager):
             swirlFile.executable = False
         swirlFile.type = 'ELF'
         fd.close()
+        if env:
+            swirlFile.env = env
         cls._setDepsRequs(swirlFile, swirl)
         return swirlFile
 

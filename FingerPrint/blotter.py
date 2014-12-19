@@ -103,12 +103,13 @@ class Blotter:
                             # TODO this way to resolving relative path is not 100% correct
                             # it should be done in the syscalltracer
                             cmd = binPath
-                swirlFile = PluginManager.getSwirl(cmd, self.swirl)
-                # add the env
+                # load the env
+                tmpenv = []
                 if binPath in FingerPrint.syscalltracer.TracerControlBlock.env:
                     for var in FingerPrint.syscalltracer.TracerControlBlock.env[binPath]:
                         if '=' in var and '=()' not in var:
-                            swirlFile.env.append(var)
+                            tmpenv.append(var)
+                swirlFile = PluginManager.getSwirl(cmd, self.swirl, tmpenv)
                 self.swirl.execedFiles.append(swirlFile)
 
             elif os.path.isdir(binPath):
@@ -122,9 +123,11 @@ class Blotter:
             swirlFile = PluginManager.getSwirl(fileName, self.swirl)
             #let's add it to the execed file list
             if swirlFile not in self.swirl.execedFiles:
+                # TODO remove me... this should never be called
                 self.swirl.execedFiles.append(swirlFile)
             for dynamicDepFile in dynamicDependecies[fileName]:
-                newSwirlFileDependency = PluginManager.getSwirl(dynamicDepFile, self.swirl)
+                newSwirlFileDependency = PluginManager.getSwirl(dynamicDepFile, self.swirl,
+                        swirlFile.env)
                 #I need to verify it if is static dep or dynamic dep
                 #TODO need to optimize this
                 swirlDependencies = self.swirl.getListSwirlFilesDependentStatic( swirlFile )

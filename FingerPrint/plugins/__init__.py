@@ -64,7 +64,7 @@ class PluginManager(object):
             self.systemPath += paths
 
     @classmethod
-    def getSwirl(self, fileName, swirl):
+    def getSwirl(self, fileName, swirl, env = None):
         """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
@@ -77,7 +77,7 @@ class PluginManager(object):
 		FingerPrint.sergeant.is_special_folder(fileName):
             #we call all the getSwirl method of all the plugin
             for key, plugin in self.plugins.iteritems():
-                temp = plugin.getSwirl(fileName, swirl)
+                temp = plugin.getSwirl(fileName, swirl, env)
                 if temp != None:
                     return temp
         #nobady claimed the file let's make it a Data file
