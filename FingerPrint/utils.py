@@ -37,6 +37,31 @@ def which(program, extra_paths = None):
     return None
 
 
+def getLDLibraryPath(env):
+    """given a list of environment variables it return a list of
+    absolute path defined in LD_LIBRARY_PATH (if a path is relative
+    it will be transformed in an absolute with PWD)"""
+
+    ld_library_paths = []
+    if env:
+        for var in env:
+            if var.startswith('LD_LIBRARY_PATH='):
+                ld_library_paths = var.split('=')[1].split(':')
+                break
+        #now find PWD
+        pwd = [var.split('=')[1] for var in env if var.startswith('PWD=')]
+        if len(pwd) != 1:
+            #logger.error("Unable to find PWD in traced process environment variables")
+            pwd = os.environ['PWD']
+        else:
+            pwd = pwd[0]
+        # make ld_library_paths_path abolute path
+        ld_library_paths = [path if path.startswith('/') \
+                           else os.path.normpath(os.path.join(pwd, path)) \
+                           for path in ld_library_paths]
+    return ld_library_paths
+
+
 def any(iterable):
     for element in iterable:
         if element:

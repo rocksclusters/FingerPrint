@@ -143,12 +143,7 @@ class Sergeant:
         # this method of using rpath is not totaly correct but it's faster
         # so for the moment we have to live with this
         for swF in self.swirl.execedFiles:
-            ld_library = []
-            for i in swF.env :
-                if i.startswith('LD_LIBRARY_PATH') :
-                    ld_library = i.split('=')[1].split(':')
-                    break
-            rpath = swF.rpaths + self.extraPath + ld_library
+            rpath = swF.rpaths + self.extraPath + utils.getLDLibraryPath(swF.env)
             for swf_dep in [swF] + self.swirl.getListSwirlFilesDependentStatic(swF):
                 for dep in swf_dep.staticDependencies:
                     if not PluginManager.getPathToLibrary(dep, rpath = rpath):

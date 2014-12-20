@@ -14,6 +14,7 @@ import string
 
 logger = logging.getLogger('fingerprint')
 
+import FingerPrint.utils
 from FingerPrint.swirl import SwirlFile, Dependency
 from FingerPrint.plugins import PluginManager
 from FingerPrint.utils import getOutputAsList
@@ -101,22 +102,8 @@ class ElfPlugin(PluginManager):
                 rpath[0] = string.replace(rpath[0], "$ORIGIN", os.path.dirname(swirlFile.path))
             swirlFile.rpaths = rpath[0].split(":")
 	# check LD_LIBRARY_PATH
-	ld_library = []
-        if swirlFile.env:
-            for var in swirlFile.env:
-                if var.startswith('LD_LIBRARY_PATH='):
-                    ld_library = var.split('=')[1].split(':')
-                    break
-            pwd = [var.split('=')[1] for var in swirlFile.env if var.startswith('PWD=')]
-            if len(pwd) != 1:
-                logger.error("Unable to find PWD in traced process environment variables")
-                pwd = os.environ['PWD']
-            else:
-                pwd = pwd[0]
-            # make ld_library_path abolute path
-            ld_library = [path if path.startswith('/') \
-                               else os.path.normpath(os.path.join(pwd, path)) \
-                               for path in ld_library]
+	ld_library = FingerPrint.utils.getLDLibraryPath(swirlFile.env)
+
         #find deps
         for line in getOutputAsList(['bash', cls._RPM_FIND_DEPS], swirlFile.path)[0]:
             if len(line) > 0:
