@@ -32,7 +32,7 @@ logger = logging.getLogger('fingerprint')
 
 
 # let's skip vairous private files which should not be archived
-specialFile = ["id_rsa", "id_rsa.pub", "id_dsa", "id_dsa.pub", "known_hosts"]
+specialFile = ["id_rsa", "id_rsa.pub", "id_dsa", "id_dsa.pub", "known_hosts", ".Xauthority"]
 
 def is_special_file(path):
     """return true if the filename points to a file which contains
@@ -414,7 +414,8 @@ class Roller:
             # library
             # do not process it if we are using remapping
             packages = self.get_package_from_dep(swirl_file.getPaths(), False)
-        elif swirl_file.path[0] == '$' or sergeant.is_special_folder(swirl_file.path):
+        elif swirl_file.path[0] == '$' or sergeant.is_special_folder(swirl_file.path) \
+                or is_special_file(swirl_file.path):
             # this file belongs to the special folders or it's a relative path
             return
         elif 'ELF' not in swirl_file.type:
