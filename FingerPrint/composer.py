@@ -602,6 +602,10 @@ def make_mapping_file(sw_files, output_file, base_path):
 	""" this function makes a mapping file for the remapper process"""
 	file_desc = open(output_file, 'w')
 	for swf in sw_files:
+		if getattr(swf, 'executable', False):
+			# this should not be in the mapping file
+			# since executable are left in the original path
+			continue
 		for path in swf.getPaths():
 			if path[0] != '$' and swf.md5sum:
 				file_desc.write(path + '\t' + base_path[:-1] + swf.path +'\n')
