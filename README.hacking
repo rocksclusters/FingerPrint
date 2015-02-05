@@ -1,0 +1,120 @@
+Hacking README file
+-------------------
+
+This is a hacking README intended for developer and not for final users.
+
+
+Built system
+------------
+
+Fingerprint uses distutils to built so the standard task can be used
+to package, built, and install the software.
+
+   ./setup.py install
+
+to install it on the local machine (although Fingerprint can be 
+installed simply by setting the PATH, see the user guide for this)
+
+  ./setup.py sdist 
+
+to create a source package (which is the one used in the Fingerprint
+Roll).
+
+  ./setup.py upload
+
+To upload Fingerprint on the PIP. TODO add some info on how to do this.
+
+I have created an extra command to run the unit test contained in the tests
+folder (currently only 1 file contains unit tests tests/blotter_tests.py)
+which can be invoked with:
+
+  ./setup.py test
+
+
+Stack tracing functionality
+---------------------------
+
+If you wanna built Fingerprint with the stack tracing functionality
+(which is not required for its proper functioning) you need:
+
+- gcc to compile the c code
+- libunwind (minimum required version is 1.0, only Fedora 20 and 
+  Ubuntu 14 have the proper library version), make sure to have the
+  libunwind-devel package if you are using distro packages.
+
+To enable the compilation of the stack tracing functionality copy the file 
+setup.cfg.template into setup.cfg and insert the paths to your libunwind 
+then follow the standard procedure 
+
+  ./setup.py install 
+
+
+Batlab continuous testing
+-------------------------
+
+The folder `batlab` contains all the file necessary to run the
+unit tests on batlab at every commits. To enable that you need
+to request an account on batlab login to you account, 
+checkout the source code from git (checkout the repo in read
+only mode) and the configure a cron job which invoke the script
+inside batlab/crontab.sh to run as often as you want him to 
+check the source for new commits.
+
+This is to run it every hour:
+0 1-23/2 * * * ~/FingerPrint/FingerPrint/batlab/crontab.sh
+
+
+
+Source code structure
+---------------------
+
+The main executable is in bin/fingerprint and it takes care
+of simply parsing argument and calling the various component
+of the FingerPrint package. Below a list of the various sub modules
+inside Fingerprint with a short description of what is their role:
+
+- FingerPrint.swirl: it contains the data model. All the object used
+  to represent a swirl are inside this files. The main class here
+  is Swirl (used to represent a swirl), it holds references to a list
+  of SwirlFiles. SwirlFiles is a class used to keep all the info
+  relative to every single file traced inside a Swirl. Dependency is used
+  to represent _static_ dependencies between SwirlFiles.
+  Swirl contains the main methods responsible for finding SwirlFile
+  Creating new SwirlFile, finding Dependencies of SwirlFile etc.
+
+- FingerPrint.sergeant: it reads an already created swirl and it can
+  perform several checking against the current system or display the
+  swirl content. It can also be used to create a dot file to be used with
+  graphviz. Basically all the display (-d) query (-q) and verify (-y) 
+  options are implemented here
+
+- FingerPrint.blotter: This module contains only one class which is
+  responsible to creates a swirl file starting from, a list of binaries,
+  a command lines that we want to execute and trace, or a PID.
+  It uses the plugin manager (FingerPrint.plugin) to analize each file.
+  When running a dynamic tracing it uses the (FingerPrint.syscalltracer)
+  module to do the ptracing work.
+
+- FingerPrint.plugins: it is a plugable architecture which should support
+  different file types (at the moment only elf is implemented). Each plugin
+  should implement two methods getSwirl(filename, swirl, env) given
+  a file path create a SwirlFile and add it to the swirl and return it.
+  If the file is already in the swirl return it (do not duplicate it).
+  getPathToLibrary(dependency) given a dependency it should return a path
+  to that dependency. At the moment it tries to imitate the Linux dynamic
+  loader.
+
+- FingerPrint.syscalltracer: is in charge of ptracing a command line and
+  if available use the strac tracing functionality
+
+
+- FingerPrint.ptrace: a bunch of classes taken from python-ptrace used
+  to wrap ptrace system call
+
+
+TODO still missing:
+FingerPrint/utils.py
+FingerPrint/serializer.py
+FingerPrint/composer.py
+
+

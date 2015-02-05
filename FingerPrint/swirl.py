@@ -385,7 +385,16 @@ class SwirlFile(Arch):
 class Dependency(Arch):
     """this class reperesent a dependency declarations, it can be used to
     represent either a dependency or a provices in a swirlFile. It is an
-    abstract representation of a piece of software"""
+    abstract representation of a piece of software
+
+    for the sake of simplicity:
+    self.major is libc.so.6 (aka soname)
+    self.minor is (GLIBC_2.11) or (GLIBC_2.12) (aka what is contained in the
+                   version symbol table
+    self.hwcap stores special hardware capabilities (like sse3 or avx)
+                   this is a feature of the linux linker to support 
+                   different instruction set
+    """
 
     def __init__(self, major, minor = None, hwcap=None):
         Arch.__init__(self)
