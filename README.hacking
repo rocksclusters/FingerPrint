@@ -109,12 +109,24 @@ inside Fingerprint with a short description of what is their role:
 
 
 - FingerPrint.ptrace: a bunch of classes taken from python-ptrace used
-  to wrap ptrace system call
+  to wrap ptrace system call, they are used only by syscalltracer for
+  dynamic tracing
 
+- FingerPrint.composer: is a module which takes care of composing now
+  roll and of archiving. It has two classes Archive, which is used to 
+  create archive (-r flag), and Roller which supports composing Rolls
+  (-m flag).
 
-TODO still missing:
-FingerPrint/utils.py
-FingerPrint/serializer.py
-FingerPrint/composer.py
+- FingerPrint.utils: some simple general function which are used all
+  over. Function to fork external program and get their output.
+  Function to get system LD_LIBRARY_PATH paths etc.
 
+- FingerPrint.serializer: it contains only one class PickleSerializer
+  which is in charge of serializing and deserializing a swirl into a
+  file. All the other module uses this class to read and write a Swirl.
+  To make a XML serializer it is necessary to modify only this class
 
+- remapper: this directory contains the source code for the remapper
+  remapper is the process which is used when porting application using
+  the -z flag. It is in charge of remapping all the open system call
+  using the configuration file /etc/fp_mapping
