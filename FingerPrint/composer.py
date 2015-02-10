@@ -42,20 +42,32 @@ def is_special_file(path):
 
 
 class Archiver:
-    """It reads an already created swirl and:
-      - it detects if it can run on this system
-      - it detects what has been changed
-      - print this swirl on the screen
+    """
+    Given an already created swirl it creates a Swirl archive
     """
 
 
     def __init__(self, sergeant, archive_filename):
-        """ """
+        """
+        Default constructor
+
+        :type sergeant: :class:`FingerPrint.sergeant.Sergeant`
+        :param sergeant: An instance of sergenat class pointing to the swirl 
+            we want to archive
+        :type archive_filename: string
+        :param archive_filename: string containing the output file name for the archive
+
+	"""
         self.sergeant = sergeant
         self.archive_filename = archive_filename
 
     def archive(self):
-        """        """
+        """
+        It triggers the creation of the archive.
+
+        :rtype: bool
+        :return: it returns false in case of failure
+        """
         #we need a valid swirl
         if not self.sergeant.check():
             logger.error("The fingerprint " + self.sergeant.filename + " fails:\n  " +

@@ -20,25 +20,31 @@ logger = logging.getLogger('fingerprint')
 
 
 class SyscallTracer:
-    """this class can spawn a process and trace its' execution to record 
+    """
+    this class can spawn a process and trace its' execution to record 
     what are its dynamic dependency requirements
 
     Usage:
+
+    .. code:: python
 
         tracer = SyscallTracer()
         execcmd = shlex.split(execcmd)
         tracer.main(execcmd)
         # output will in the TracerControlBlock static variables
         TracerControlBlock.[files|dependencies|env|cmdline]
+
     """
 
     def main(self, command): 
-        """start the trace with the given command
+        """
+        start the trace with the given command
 
-        The input parameters are:
-            `command' command line to trace passed through shlex.split
+        :type command: string
+        :param command: command line to trace passed through shlex.split
 
-        return false if something went wrong
+        :rtype: bool
+        :return: false if something went wrong
         """
 
         import ctypes

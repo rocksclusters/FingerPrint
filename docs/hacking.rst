@@ -1,24 +1,24 @@
-Hacking README file
--------------------
+Hacking
+-------
 
-This is a hacking README intended for developer and not for final users.
+This is a hacking guide intended for developer and not for final users.
 
 
 Built system
-------------
+============
 
 Fingerprint uses distutils to built so the standard task can be used
-to package, built, and install the software.
+to package, built, and install the software::
 
    ./setup.py install
 
-to install it on the local machine (although Fingerprint can be 
-installed simply by setting the PATH, see the user guide for this)
+To install it on the local machine (although Fingerprint can be 
+installed simply by setting the PATH, see the user guide for this)::
 
   ./setup.py sdist 
 
-to create a source package (which is the one used in the Fingerprint
-Roll).
+To create a source package (which is the one used in the Fingerprint
+Roll)::
 
   ./setup.py upload
 
@@ -26,13 +26,13 @@ To upload Fingerprint on the PIP. TODO add some info on how to do this.
 
 I have created an extra command to run the unit test contained in the tests
 folder (currently only 1 file contains unit tests tests/blotter_tests.py)
-which can be invoked with:
+which can be invoked with::
 
   ./setup.py test
 
 
 Stack tracing functionality
----------------------------
+===========================
 
 If you wanna built Fingerprint with the stack tracing functionality
 (which is not required for its proper functioning) you need:
@@ -44,13 +44,13 @@ If you wanna built Fingerprint with the stack tracing functionality
 
 To enable the compilation of the stack tracing functionality copy the file 
 setup.cfg.template into setup.cfg and insert the paths to your libunwind 
-then follow the standard procedure 
+then follow the standard procedure::
 
   ./setup.py install 
 
 
 Batlab continuous testing
--------------------------
+=========================
 
 The folder `batlab` contains all the file necessary to run the
 unit tests on batlab at every commits. To enable that you need
@@ -60,13 +60,14 @@ only mode) and the configure a cron job which invoke the script
 inside batlab/crontab.sh to run as often as you want him to 
 check the source for new commits.
 
-This is to run it every hour:
-0 1-23/2 * * * ~/FingerPrint/FingerPrint/batlab/crontab.sh
+This is to run it every hour::
+
+  0 1-23/2 * * * ~/FingerPrint/FingerPrint/batlab/crontab.sh
 
 
 
 Source code structure
----------------------
+=====================
 
 The main executable is in bin/fingerprint and it takes care
 of simply parsing argument and calling the various component
