@@ -56,9 +56,13 @@ def getLDLibraryPath(env):
         else:
             pwd = pwd[0]
         # make ld_library_paths_path abolute path
-        ld_library_paths = [path if path.startswith('/') \
-                           else os.path.normpath(os.path.join(pwd, path)) \
-                           for path in ld_library_paths]
+        temp = []
+        for path in ld_library_paths:
+            if path.startswith('/'):
+                temp.append(path)
+            else:
+                temp.append(os.path.normpath(os.path.join(pwd, path)))
+        ld_library_paths = temp
     return ld_library_paths
 
 
