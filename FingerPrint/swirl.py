@@ -30,7 +30,15 @@ class Swirl(object):
 
 
     def isFileTracked(self, fileName):
-        """return true if fileName is already tracked by this swirl """
+        """
+        return true if fileName is already tracked by this swirl
+
+        :type fileName: string
+        :param fileName: the path of the file to look up
+
+        :rtype: bool
+        :return: true if fileName is tracked by this swirl
+        """
         for f in self.swirlFiles:
             if fileName in f.getPaths():
                 return True
@@ -38,8 +46,16 @@ class Swirl(object):
 
 
     def createSwirlFile(self, fileName):
-        """ given a fileName it return the associated swirlFile if present
-        otherwise it creates a new one with all the symlinks resolved"""
+        """
+        given a fileName it return the associated swirlFile if present
+        otherwise it creates a new one with all the symlinks resolved
+
+        :type fileName: string
+        :param fileName: the path of the file to add to this swirl
+
+        :rtype: :class:`FingerPrint.swirl.SwirlFile`
+        :return: a SwirlFile for the given fileName
+        """
         links = []
         while os.path.islink(fileName) :
             p = os.readlink(fileName)
@@ -57,14 +73,22 @@ class Swirl(object):
         return swirlFile
 
     def getSwirlFileByProv(self, dependency):
-        """find the swirl file which provides the given dependency"""
+        """
+        find the swirl file which provides the given dependency
+
+        :type dependency: :class:`FingerPrint.swirl.Dependency`
+        :param dependency: the dependency which should be satisfied
+
+        :rtype: :class:`FingerPrint.swirl.SwirlFile`
+        :return: a SwirlFile which provides the given dependency
+        """
         for swF in self.swirlFiles:
             if dependency in swF.provides :
                 return swF
         return None
 
-    def get_all_rpaths(self):
-        """    """
+    def _get_all_rpaths(self):
+        """ TODO unused """
         # use a list to keep unique elements
         return_list = set()
         for swf in self.swirlFiles:
@@ -73,9 +97,17 @@ class Swirl(object):
 
 
     def getLoader(self, swirlFile):
-        """ return a swirlfile which is the loader of the given swirlFile
+        """
+        return a swirlfile which is the loader of the given swirlFile
 
-        it returns None in case the binaries is static"""
+        :type swirlFile: :class:`FingerPrint.swirl.SwirlFile`
+        :param swirlFile: a swirlFile which is part of this Swirl
+
+        :rtype: :class:`FingerPrint.swirl.SwirlFile`
+        :return: a SwirlFile which is the loader of the input swirlFile
+                 or None in case the input swirlFile is static
+        """
+	# iterate through the dependencies till we find the loader
         for swf in self.getListSwirlFilesDependentStatic(swirlFile):
             if swf.isLoader():
                 return swf
@@ -83,8 +115,17 @@ class Swirl(object):
 
 
     def getListSwirlFilesDependentStaticAndDynamic(self, swirlFile):
-        """given a swirlFile it returns a list of all its required swirlfiles
-        It includes both static recursive and dynamic dependencies """
+        """
+        Given a swirlFile it returns a list of all its required swirlfiles.
+        It includes both static recursive and dynamic dependencies
+
+        :type swirlFile: :class:`FingerPrint.swirl.SwirlFile`
+        :param swirlFile: a swirlFile which is part of this Swirl
+
+        :rtype: list
+        :return: a list of :class:`FingerPrint.swirl.SwirlFile` which 
+                 are all the dependencies of the input swirlFile
+        """
         returnList = self.getListSwirlFilesDependentStatic(swirlFile)
         for swF in swirlFile.dynamicDependencies:
             if swF not in returnList:
@@ -93,14 +134,23 @@ class Swirl(object):
 
 
     def getListSwirlFilesDependentStatic(self, swirlFile):
-        """given a swirlFile it return a list of all the recursively required dependent
-        swirlFiles (only static)
+        """
+        Given a swirlFile it return a list of all the recursively required dependent
+        swirlFiles (only static).
 
-        it _recursively_ find all the required swirlFile invoking getListSwirlFile
+        It _recursively_ find all the required swirlFile invoking getListSwirlFile
         until all dependencies and dependencies of dependencies are resolved (when the
         loader start program 'a' which depend on lib 'b' which in its turn depends on
-        lib 'c', the loader will load a, b, and c at the same time).  """
+        lib 'c', the loader will load a, b, and c at the same time).  
 
+
+        :type swirlFile: :class:`FingerPrint.swirl.SwirlFile`
+        :param swirlFile: a swirlFile which is part of this Swirl
+
+        :rtype: list
+        :return: a list of :class:`FingerPrint.swirl.SwirlFile` which 
+                 are all the static dependencies of the input swirlFile
+        """
         returnList = []
         provides = set()
 
@@ -125,17 +175,23 @@ class Swirl(object):
 
 
     def getListSwirlFileProvide(self, dependencies, excludeSwirlFile=[]):
-        """return a list of swirl file if found in the current swirl which can satisfy
-        the given list of dependencies
+        """
+        return a list of :class:`FingerPrint.swirl.SwirlFile` from the current Swirl
+        which can satisfy the given list of dependencies
 
         This function does not find recursive dependencies like
         getListSwirlFilesDependentStatic and getListSwirlFilesDependentStaticAndDynamic
 
-        Parameters:
-        ----------
+        :type dependencies: list
+        :param dependencies: a list of :class:`FingerPrint.swirl.Dependency`
+        :type exludeSwirlFile: list
+        :param exludeSwirlFile: a list of :class:`FingerPrint.swirl.SwirlFile` which
+                                should be excluded from the returned list
 
-        `dependency' a list of Dependency which should be satisfied
-        `exludeSwirlFile' a list of swirlfile which should be excluded from the returned list """
+        :rtype: list
+        :return: a list of :class:`FingerPrint.swirl.SwirlFile` which can satisfy 
+                 the list of dependencies
+        """
         returnList = []
         for dep in dependencies:
             swirlFile = self.getSwirlFileByProv(dep)
@@ -145,21 +201,38 @@ class Swirl(object):
         return returnList
 
     def getDependencies(self):
-        """return a list with all the dependencies in this swirl"""
+        """return a list with all the dependencies in this swirl
+
+        :rtype: list
+        :return: a list of :class:`FingerPrint.swirl.Dependency` which are needed
+                 inside by all the binaries inside this Swirl
+        """
         depList = set()
         for i in self.execedFiles:
             depList |= set(i.staticDependencies)
         return depList
 
     def getDateString(self):
-        """ return the creation time in a readable format"""
+        """
+        return the creation time in a readable format
+
+        :rtype: string
+        :return: a string with the representation of the creation
+                 time of this swirl
+        """
         return self.creationDate.strftime("%Y-%m-%d %H:%M")
 
     def printVerbose(self, verbosity = 1):
-        """return a string representation of this swirl
+        """
+        return a string representation of this swirl. This method is called by 
+        the -d flags
 
-        this method is called by the -d flags
-        verbosity: interger representing the verbosity level (valid value is 0, 1, 2)
+        :type verbosity: int
+        :param verbosity: the level of verbosity 1 minimum 2 maximum
+
+
+        :rtype: string
+        :return: a string with a representation of this Swirl
         """
         #header
         retStr = self.name + " " + self.getDateString() + "\n"
@@ -202,9 +275,11 @@ class Arch:
     #TODO use integer to save memory
     #this function are used by SwirlFile
     def set64bits(self):
+        """set 64 bit architecture"""
         self.arch="x86_64"
 
     def set32bits(self):
+        """set 32 bit architecture"""
         self.arch="i386"
 
     def is32bits(self):
@@ -229,12 +304,13 @@ class Arch:
 
 class SwirlFile(Arch):
     """
-    describe a file which is tracked by this swirl
+    Encapsulate all the info we need to track for each file.  
+    At the moment only ELF aka binary file are really supported everything else
+    is considered 'data'.
 
-    at the moment only ELF aka binary file are really supported
-
-    1 swirlFile instance for each file in a given swirl for example if libabc is
-    used by /bin/ls and /bin/ps they will both point to the same instance of libabc
+    There is only 1 swirlFile instance for each file in a given swirl for example
+    if libabc is used by /bin/ls and /bin/ps they will both point to the same
+    instance of libabc
     """
     def __init__(self, path, links):
         """create a swirl file starting from a file name"""
@@ -262,29 +338,52 @@ class SwirlFile(Arch):
         self.executable = False
 
     def isLoader(self):
-        """ return True if this swirl is a loader """
+        """
+        :rtype: bool
+        :return: return True if this SwirlFile is a loader
+        """
         for i in self.provides :
             if i.isLoader():
                 return True
         return False
 
     def getPaths(self):
-        """ return a list of path used by this SwirlFile"""
+        """
+        return a list of path used by this SwirlFile (it includes all the
+        symbolic links)
+
+        :rtype: list
+        :return: return a list of strings
+        """
         return self.links + [self.path]
 
     def setPluginName(self, name):
-        """set the type of this file"""
+        """
+        Set the plugin type of this file (at the moment we have only elf plugin)
+
+        :type name: string
+        :param name: the plugin name as in FingerPrint/plugins
+        """
         self.type = name
 
     def setLinks(self, links):
-        """update the list of symbolic links pointing to this swirl file"""
+        """
+        update the list of symbolic links pointing to this swirl file
+
+        :type links: list
+        :param links: a list of string with file path names
+        """
         for link in links:
             if link not in self.links:
                 self.links.append(link)
 
     def addDependency(self, dependency):
         """if dependency is not already in the static dependency of this swirl file it
-        gets added"""
+        gets added
+
+        :type dependency: :class:`FingerPrint.swirl.Dependency`
+        :param dependency: an instance of Dependency to be added
+        """
         if dependency in self.staticDependencies:
             return
         else:
@@ -292,8 +391,12 @@ class SwirlFile(Arch):
             self.staticDependencies.append(dependency)
 
     def addProvide(self, dependency):
-        """if dependency is not already in the provides of this SwirlFile it gets
-        added"""
+        """
+        if dependency is not already in the provides of this SwirlFile it gets added
+
+        :type dependency: :class:`FingerPrint.swirl.Dependency`
+        :param dependency: an instance of Dependency to be added
+        """
         if dependency in self.provides:
             return
         else:
@@ -301,12 +404,23 @@ class SwirlFile(Arch):
             self.provides.append(dependency)
 
     def isELFExecutable(self):
-        """ return true if this swirl is executable"""
+        """
+        :rtype: bool
+        :return: true if this SwirlFile is executable
+        """
         # TODO not used, it can be removed
         return 'ELF' in self.type and self.executable
 
     def isYourPath(self, path):
-        """check if this path is part of this swirlFile looking into the links as well"""
+        """
+        check if this path is part of this swirlFile looking into the links as well
+
+        :type path: string
+        :param path: a file path
+
+        :rtype: bool
+        :return: true if the given path is part of this SwirlFile
+        """
         if path == self.path:
             return True
         else:
@@ -316,6 +430,11 @@ class SwirlFile(Arch):
         return False
 
     def getProvidesDict(self):
+        """
+        :rtype: dict
+        :return: a dict of :class:`FingerPrint.swirl.Dependency` containing all the
+                 static dependencies of this SwirlFile
+        """
         return self.getDependenciesDict(True)
 
     def getDependenciesDict(self, provides=False):

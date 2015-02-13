@@ -74,11 +74,13 @@ of simply parsing argument and calling the various component
 of the FingerPrint package. Below a list of the various sub modules
 inside Fingerprint with a short description of what is their role:
 
-- FingerPrint.swirl: it contains the data model. All the object used
+- :class:`FingerPrint.swirl`: it contains the data model. All the object used
   to represent a swirl are inside this files. The main class here
-  is Swirl (used to represent a swirl), it holds references to a list
-  of SwirlFiles. SwirlFiles is a class used to keep all the info
-  relative to every single file traced inside a Swirl. Dependency is used
+  is :class:`FingerPrint.swirl.Swirl` (used to represent a swirl), it holds references to a list
+  of :class:`FingerPrint.swirl.SwirlFile`. :class:`FingerPrint.swirl.SwirlFile` 
+  is a class used to keep all the info
+  relative to every single file traced inside a Swirl. 
+  :class:`FingerPrint.swirl.Dependency` is used
   to represent _static_ dependencies between SwirlFiles.
   Swirl contains the main methods responsible for finding SwirlFile
   Creating new SwirlFile, finding Dependencies of SwirlFile etc.
