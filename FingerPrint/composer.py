@@ -35,8 +35,14 @@ logger = logging.getLogger('fingerprint')
 specialFile = ["id_rsa", "id_rsa.pub", "id_dsa", "id_dsa.pub", "known_hosts", ".Xauthority"]
 
 def is_special_file(path):
-    """return true if the filename points to a file which contains
-    personal data"""
+    """
+    :type path: string
+    :param path: a path to a file
+
+    :rtype: bool
+    :return: it returns true if the path points to a file which contains
+             personal data
+    """
     return any([ path.endswith(i) for i in specialFile ])
 
 
@@ -116,15 +122,15 @@ class Roller:
     """ this class make a roll out of an fingerprint archive"""
 
     # this is a list of rpm packages which are broken or known to cause problem
-    #TODO unify this with the excludeRPMs in the get_package_from_dep
-    excluded_packages = ["fftw"] # fftw rocks rpm is compiled only statically
+    #TODO unify this with the excludeRPMs in the _get_package_from_dep
+    _excluded_packages = ["fftw"] # fftw rocks rpm is compiled only statically
 
     # these varaibles will be merged (prepended) with the local variable values
     # in the wrapper script
-    append_variables = ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']
+    _append_variables = ['PATH', 'LD_LIBRARY_PATH', 'LD_PRELOAD']
     # where all the remapped file will be placed
-    remapper_base_path = "/opt/rocks/remapper/"
-    remapper_executable = "/opt/rocks/bin/remapper"
+    _remapper_base_path = "/opt/rocks/remapper/"
+    _remapper_executable = "/opt/rocks/bin/remapper"
 
     def __init__(self, archive_filename, roll_name):
         """ """
@@ -135,7 +141,21 @@ class Roller:
 
 
     def make_roll(self, fingerprint_base_path, use_remapping = False):
-        """If use remapping is True it will use the remapper technology"""
+        """
+        It creates a roll from a swirl archive.
+
+
+        :type fingerprint_base_path: string
+        :param fingerprint_base_path: a string pointing to the base path of the
+                                      fingerprint source code. Used to find the
+                                      remapper source code
+        :type use_remapping: bool
+        :param use_remapping: if True it will use the remapper technology when 
+                              creating the roll
+
+        :rtype: bool
+        :return: it returns false in case of failure
+        """
         if not os.path.exists(self.archive_filename) :
             logger.error("The file " + self.archive_filename + " does not exist" +
                 " (specify a different one with -f option)")
@@ -146,7 +166,7 @@ class Roller:
         # this is a list of swirlFile which will need to be installed
         # the additional self.files[0].source_path attribute has been added
         self.files = []
-        # keeps track of already processed package in self.resolve_file()
+        # keeps track of already processed package in self._resolve_file()
         # so we do not process a package twice
         self.processed_package = []
         # internal swirl package we want to include in the final rpm
@@ -172,7 +192,7 @@ class Roller:
         #    ----------------      recursively resolve all dependencies of the execedFile
         #
         for swf in self.swirl.execedFiles:
-            self.resolve_file(swf, use_remapping)
+            self._resolve_file(swf, use_remapping)
         logger.debug("Dependency resolution terminated. Skipped swirl Files:\n - " +
                                 '\n - '.join([i.path for i in self.skipped_swfs]))
         #
@@ -183,7 +203,7 @@ class Roller:
         rpm_tmp_dir = tempfile.mkdtemp()
         home_rpm_tmp_dir = tempfile.mkdtemp()
         rpm_list = set()
-        remapper_rpm_tmp_dir = rpm_tmp_dir + self.remapper_base_path
+        remapper_rpm_tmp_dir = rpm_tmp_dir + self._remapper_base_path
         # laydown the file
         for swf in self.files:
             source_path = os.path.join(tar_tmp_dir, str(swf.md5sum),
@@ -236,7 +256,7 @@ class Roller:
                         continue
                     variable_name = env_variable.split('=')[0]
                     variable_value = env_variable.split('=')[1]
-                    if any([ env_variable.startswith(i) for i in self.append_variables]):
+                    if any([ env_variable.startswith(i) for i in self._append_variables]):
                         # for these variables we want to add their content to
                         # the corresponding system variable values
                         if self.swirl.ldconf_paths and env_variable.startswith('LD_LIBRARY_PATH'):
@@ -254,10 +274,10 @@ class Roller:
                             ':'.join( self.swirl.ldconf_paths ) + ':$LD_LIBRARY_PATH\"\n')
                 f.write("\n")
                 if use_remapping and 'ELF' in swf.type:
-                    f.write(self.remapper_executable + " ")
+                    f.write(self._remapper_executable + " ")
                     loader = self.swirl.getLoader(swf)
                     if loader:
-                        f.write(self.remapper_base_path +\
+                        f.write(self._remapper_base_path +\
 					loader.path + " ")
                 f.write(swf.path + ".orig $@\n")
                 f.close()
@@ -287,7 +307,7 @@ class Roller:
             if not os.path.exists(rpm_tmp_dir + "/etc"):
                 os.mkdir(rpm_tmp_dir + "/etc")
             make_mapping_file(self.files, rpm_tmp_dir + "/etc/fp_mapping",
-                    self.remapper_base_path)
+                    self._remapper_base_path)
             build_remapper_path = fingerprint_base_path + '/remapper'
             (output, retcode) = utils.getOutputAsList( ["make", "-C",
                     build_remapper_path] )
@@ -297,7 +317,7 @@ class Roller:
                 logger.error(" > " + "\n > ".join(output))
                 return False
             logger.debug(' > '+ '\n > '.join(output))
-            remapper_basedir = rpm_tmp_dir + os.path.dirname(self.remapper_executable)
+            remapper_basedir = rpm_tmp_dir + os.path.dirname(self._remapper_executable)
             if not os.path.exists(remapper_basedir):
                 os.makedirs(remapper_basedir)
             shutil.copy2(build_remapper_path + "/remapper", remapper_basedir)
@@ -307,7 +327,7 @@ class Roller:
         #    ----------------      files are in place so let's make the RPMs
         #
         for (base_dir, rpm_name) in rpm_list:
-            if self.make_rpm(base_dir, rpm_name):
+            if self._make_rpm(base_dir, rpm_name):
                 if '-home-' not in rpm_name:
                     self.packages.add(rpm_name)
             else:
@@ -336,7 +356,7 @@ class Roller:
             logger.info("Coping RPM in: " + dest + "/" + source[0])
             shutil.copy2(source[0], dest)
             # create the base-nodea.xml
-            node_base_xml = self.node_base_xml_top
+            node_base_xml = self._node_base_xml_top
             #   1. install packages
             for package in self.packages:
                 node_base_xml += '<package>' + package + '</package>\n'
@@ -347,7 +367,7 @@ class Roller:
             new_paths = set()
             for swf in self.swirl.execedFiles:
                 new_paths |= set([os.path.dirname(i) for i in swf.getPaths()])
-            node_base_xml += self.node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
+            node_base_xml += self._node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
             self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
                     node_base_xml)
         # copying -home- RPM
@@ -357,10 +377,10 @@ class Roller:
             shutil.copy2(source[0], dest)
             # create the server-node
             self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
-                    self.node_server_xml % (self.roll_name, ' '.join(self.users)))
+                    self._node_server_xml % (self.roll_name, ' '.join(self.users)))
         # create the graph xml
         self.write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
-                self.graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
+                self._graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
         # make the roll
         os.chdir(self.roll_name)
         (output, retcode) = utils.getOutputAsList(["make", "roll"])
@@ -388,7 +408,7 @@ class Roller:
         f.close()
 
 
-    def make_rpm(self, base_path, rpm_name):
+    def _make_rpm(self, base_path, rpm_name):
         """ makes an rpm called rpm_name starting from base_path
 
         return False if something went wrong
@@ -406,7 +426,7 @@ class Roller:
         return True
 
 
-    def resolve_file(self, swirl_file, use_remapping = False):
+    def _resolve_file(self, swirl_file, use_remapping = False):
         """ this function recursively try to resolve the swirlFile
 
         this function will add the package name to self.packages if it can find
@@ -421,11 +441,11 @@ class Roller:
         if 'ELF' in swirl_file.type and swirl_file.executable \
                 and not (use_remapping and swirl_file.isLoader()):
             # executable and not a loader if we are using remppaing
-            packages = self.get_package_from_dep([swirl_file.path])
+            packages = self._get_package_from_dep([swirl_file.path])
         elif 'ELF' in swirl_file.type and not swirl_file.executable and not use_remapping:
             # library
             # do not process it if we are using remapping
-            packages = self.get_package_from_dep(swirl_file.getPaths(), False)
+            packages = self._get_package_from_dep(swirl_file.getPaths(), False)
         elif swirl_file.path[0] == '$' or sergeant.is_special_folder(swirl_file.path) \
                 or is_special_file(swirl_file.path):
             # this file belongs to the special folders or it's a relative path
@@ -433,7 +453,7 @@ class Roller:
         elif 'ELF' not in swirl_file.type:
             # data
             # TODO what do we do with this when we use remapping?
-            packages = self.get_package_from_dep([swirl_file.path])
+            packages = self._get_package_from_dep([swirl_file.path])
         if packages :
             if len(packages) > 1 :
                 error_message = "The file " + swirl_file.path + " "
@@ -441,7 +461,7 @@ class Roller:
                 error_message += "\nAdding " + packages[0]
                 logger.error(error_message)
             if swirl_file.package not in self.wanted_pcks and \
-                packages[0] not in self.excluded_packages:
+                packages[0] not in self._excluded_packages:
                 self.skipped_swfs.add( swirl_file  )
                 self.packages.add( packages[0] )
                 # so we found a package which can handle this swf but we should still process its
@@ -459,13 +479,13 @@ class Roller:
         self.files.append(swirl_file)
         #
         # for each swf in swirlFile.all_dependencies
-        #   if not already in self.files resolve_file(swf)
+        #   if not already in self.files _resolve_file(swf)
         deps = self.swirl.getListSwirlFileProvide( swirl_file.staticDependencies )+\
                                 swirl_file.dynamicDependencies
         for new_swf in deps:
             if new_swf not in self.files:
                 #this file is already in the included files
-                self.resolve_file(new_swf, use_remapping)
+                self._resolve_file(new_swf, use_remapping)
         self._process_open_file(swirl_file, use_remapping)
 
 
@@ -474,10 +494,10 @@ class Roller:
         for exec_file in swirl_file.openedFiles:
             for open_file in swirl_file.openedFiles[exec_file]:
                 if open_file not in self.files:
-                    self.resolve_file(open_file, use_remapping)
+                    self._resolve_file(open_file, use_remapping)
 
 
-    def get_package_from_dep(self, package_name, match_all = True):
+    def _get_package_from_dep(self, package_name, match_all = True):
         """ given a list of requires it return a list of packages name which can satisfy them
         and they are available in the currently enabled yum repository """
         import yum
@@ -502,7 +522,7 @@ class Roller:
         return list(set([pkg.name + "." + pkg.arch for pkg in yum.misc.unique(matched)]))
 
 
-    def useRPMPackage(self, package_name):
+    def _useRPMPackage(self, package_name):
         """ return true if the package_name is available in the current yum database
         and package_name is the same version as the one available in the local yum DB
 
@@ -552,11 +572,11 @@ class Roller:
             return False
 
 
-    def findWhoProvides(self, dependencies):
+    def _findWhoProvides(self, dependencies):
         """ """
         matches = yum.YumBase.searchPackageProvides(self, [str(depstring)])
 
-    graph_node_xml = '''<?xml version="1.0" standalone="no"?>
+    _graph_node_xml = '''<?xml version="1.0" standalone="no"?>
 <graph>
 <description>
 The FingerPrint Roll
@@ -570,7 +590,7 @@ The FingerPrint Roll
 </edge>
 </graph>'''
 
-    node_server_xml = '''<?xml version="1.0" standalone="no"?>
+    _node_server_xml = '''<?xml version="1.0" standalone="no"?>
 <kickstart>
 <description>
 FingerPrint roll
@@ -587,13 +607,13 @@ done
 </post>
 </kickstart>'''
 
-    node_base_xml_top = '''<?xml version="1.0" standalone="no"?>
+    _node_base_xml_top = '''<?xml version="1.0" standalone="no"?>
 <kickstart>
 <description>
 FingerPrint
 </description>
 '''
-    node_base_xml_bottom = '''
+    _node_base_xml_bottom = '''
 <post>
 <file name="/etc/profile.d/%s-paths.sh" perms="0755">
 #!/bin/bash
