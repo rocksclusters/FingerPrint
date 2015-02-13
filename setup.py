@@ -92,7 +92,7 @@ setup(
     # readme and license files
     data_files = [('', ['README.rst', 'LICENSE', 'setup.cfg.template']),
                   ('remapper', ['remapper/Makefile', 'remapper/remapper.c',
-                               'remapper/debug.h', 'remapper/uthash.h'])],
+                               'remapper/defs.h', 'remapper/uthash.h'])],
     ext_modules = module,
     #the command line called by users    
     scripts=['bin/fingerprint'],
