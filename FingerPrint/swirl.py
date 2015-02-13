@@ -10,12 +10,17 @@ from datetime import datetime
 import string, os, re
 
 
-"""Swirl hold in memory the representation of a swirl.
-A Swirl is a container of SwirlFiles aka files tracked by this swirl
-"""
-
 class Swirl(object):
-    """main swirl class
+    """
+    Swirl hold in memory the representation of a swirl. It is made of a list
+    of SwirlFiles aka files tracked by this swirl. There is one instance of
+    this class for each fingerprint process.
+
+    :type name: string
+    :param name: a internal simbolic name for this swirl
+
+    :type creationDate: :class:`datetime.datetime`
+    :param creationDate: the creation time of this Swirl
     """
     def __init__(self, name, creationDate):
         self.name = name
@@ -272,8 +277,7 @@ class Arch:
     def __init__(self):
         self.arch = None
 
-    #TODO use integer to save memory
-    #this function are used by SwirlFile
+    #this function are used by SwirlFile and Dependency
     def set64bits(self):
         """set 64 bit architecture"""
         self.arch="x86_64"
@@ -311,6 +315,15 @@ class SwirlFile(Arch):
     There is only 1 swirlFile instance for each file in a given swirl for example
     if libabc is used by /bin/ls and /bin/ps they will both point to the same
     instance of libabc
+
+    :type path: string
+    :param path: The aboslute path of this SwirlFile this is the identificative
+                 key for this SwirlFile
+
+    :type links: list
+    :param links: a list of string with all the discovered simbolic links pointing
+                  to this SwirlFile
+
     """
     def __init__(self, path, links):
         """create a swirl file starting from a file name"""
@@ -432,17 +445,25 @@ class SwirlFile(Arch):
     def getProvidesDict(self):
         """
         :rtype: dict
-        :return: a dict of :class:`FingerPrint.swirl.Dependency` containing all the
-                 static dependencies of this SwirlFile
+        :return: a dict which represent all the Dependecy provided by this class
+                 see getDependenciesDict for the format of the dictionary
         """
         return self.getDependenciesDict(True)
 
     def getDependenciesDict(self, provides=False):
-        """ return a dictionary containing the dependencies with
-        {'soname1' : ['version1', 'version2'],
-         'soname2' : ['version1', 'version2']}
+        """
+	Return a dictionary containing the dependencies or the provides of this
+        SwirlFile
 
-         if provides==ture it returns the provides
+        :type provides: bool
+        :param provides: if provides is equal to True this function returns
+                         what this SwirlFile provides instead of what it 
+                         requires
+
+        :rtype: dict
+        :return: a dict where the keys are sonames of the values are
+                 lists of library versions (e.g. {'libc.so.6' : 
+                 ['GLIBC_2.10', 'GLIBC_2.11', 'GLIBC_2.12']})
         """
         retDict = {}
         if provides:
@@ -463,7 +484,25 @@ class SwirlFile(Arch):
 
 
     def printVerbose(self, separator="", dynamic="", verbosity = 1):
-        """a more detailed representation of this swrilfile """
+        """
+        returns a string represeting this SwrilFile
+
+        :type seprator: string
+        :param seprator: used to indent the output, it will be placed at the
+                         beginning of each line
+
+        :type dynamic: string
+        :param dynamic: used to add a string to the first output line.
+                        Currently it is used to put the --dyn-- if this
+                        SwirlFile was a dynamic loaded file
+
+        :type verbosity: int
+        :param verbosity: verbosity level. 0 for the lower level 1 or greater to
+                          print all the info
+
+        :rtype: string
+        :return: a detailed representation of this SwirlFile (used by the -d flags)
+        """
         if verbosity == 0:
             # first we handle the short form
             return separator + str(self)+ " " + dynamic + "\n"
@@ -486,7 +525,22 @@ class SwirlFile(Arch):
 
 
     def printOpenedFiles(self, execFile, tabs=""):
-        """ return a string of opened file by the given executable path execFile"""
+        """
+        return a string of opened file by the given executable path execFile
+
+        :type execFile: string
+        :param execFile: used to get the list of opened file by a specific
+                         executable, shared libs can open different file
+                         when loaded under different executable
+
+        :type tabs: string
+        :param tabs: used to indent the output, it will be placed at the
+                         beginning of each line
+
+        :rtype: string
+        :return: a string with all the opened file of this SwirlFile 
+                 (used by the -d flags)
+        """
         retStr = ""
         if execFile in self.openedFiles:
             retStr += tabs + "    Opened files:\n"
@@ -495,24 +549,33 @@ class SwirlFile(Arch):
         return retStr
 
     def __hash__(self):
-        """ so I can build sets of SwirlFile
-
-        so far the SwirlFile.path are unique among a swirl so let's use them for the hash """
+        """
+        This is needed to create sets of SwirlFile and avoid duplicate.
+        So far the SwirlFile.path are unique among a swirl so let's use
+        them for the hash
+        """
         return hash(tuple(self.path) + tuple(self.links))
 
 
 class Dependency(Arch):
-    """this class reperesent a dependency declarations, it can be used to
-    represent either a dependency or a provices in a swirlFile. It is an
-    abstract representation of a piece of software
+    """
+    this class reperesent a dependency declarations, it can be used to
+    represent either a dependency or a provides in a swirlFile. It is an
+    abstract representation of a shared library as used inside the POSIX
+    loader.
 
-    for the sake of simplicity:
-    self.major is libc.so.6 (aka soname)
-    self.minor is (GLIBC_2.11) or (GLIBC_2.12) (aka what is contained in the
-                   version symbol table
-    self.hwcap stores special hardware capabilities (like sse3 or avx)
-                   this is a feature of the linux linker to support 
-                   different instruction set
+    :type major: string
+    :param major: it is the 'soname' of this dependency (e.g. libc.so.6, 
+                  libacl.so.1, ...)
+
+    :type minor: string
+    :param minor: it is an entry in the version symbol table (e.g.
+                  GLIBC_2.11, GLIBC_2.12, etc.)
+
+    :type hwcap: string
+    :param hwcap: it stores special hardware capabilities (like sse3 or avx)
+                  this is a feature of the linux linker to support different
+                  instruction set
     """
 
     def __init__(self, major, minor = None, hwcap=None):
@@ -532,7 +595,16 @@ class Dependency(Arch):
 
     @classmethod
     def fromString(cls, string):
-        """ Create a dependency from a string returned by find-require find-provide
+        """
+        Create a dependency from a string returned by find-require find-provide
+
+        :type string: string
+        :param string: a line of output from the FingerPrint/plugin/find-requires
+                       or FingerPrint/plugin/find-provides
+
+        :rtype: :class:`FingerPrint.swirl.Dependency`
+        :return: a new instance of Dependency which represent the given input
+                 string
         """
         tempList = re.split('\(|\)',string)
         major = tempList[0]
@@ -555,20 +627,39 @@ class Dependency(Arch):
         return newDep
 
     def getMajor(self):
+        """
+        :rtype: string
+        :return: the major of this dependency
+        """
         return self.major
 
     def getMinor(self):
+        """
+        :rtype: string
+        :return: the minor of this dependency
+        """
         return self.minor
 
     def isLoader(self):
-        """ return true if this is the loader"""
+        """ 
+        return true if this is the loader
+
+        :rtype: bool
+        :return: true if this dependency is a loader
+        """
         if self.major.startswith("ld-"):
             return True
         return False
 
     def getName(self):
-        """return soname(minor_version)(arch) accordingly with the
-        find-require find-provides syntax"""
+        """
+        return a string representation of this dependency which is the
+        same format used by the find-require find-provides (e.g.
+        soname(minor_version)(arch)
+
+        :rtype: string
+        :return: a representation of this Dependency
+        """
         retString = self.major
         if self.minor or self.is64bits() :
             retString += "(" + self.minor + ")"
