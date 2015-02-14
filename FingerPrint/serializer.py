@@ -28,10 +28,11 @@ class PickleSerializer:
 
 
 class XmlSerializer:
-    """this serilizes the swirl into xml
-    we can have multiple classes for serializing in other format
-    TODO I don't really like this class structure yet...
-    TODO it doesnot work
+    """
+    this serilizes the swirl into xml
+    we can have multiple classes for serializing in other format.
+    TODO it doesnot work.
+    Unused at the moment.
     """
 
     def __init__(self, fd):

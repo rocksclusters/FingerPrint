@@ -43,11 +43,27 @@ class Blotter:
      - a list of binaries
      - command lines that we want to execute and trace
      - a list of pids
+
+    :type name: string
+    :param name: a internal simbolic name for this swirl
+
+    :type fileList: list
+    :param fileList: a list of string containing aboslute or
+                     relative paths to the file that should be
+                     included in this Swirl for **static** analysis
+
+    :type processIDs: string
+    :param processIDs: a list of comma separated PID which should
+                       be dynamically traced by this swirl
+
+    :type execCmd: string
+    :param execCmd: a command line which should be launched and dynamically
+                    traced to create a swirl.
     """
 
     def __init__(self, name, fileList, processIDs, execCmd):
         """give a file list and a name construct a swirl into memory """
-        self._detectedPackageManager() 
+        self._detectedPackageManager()
         self.swirl = Swirl(name, datetime.now())
         if execCmd :
             self.swirl.cmdLine = execCmd
@@ -171,7 +187,13 @@ class Blotter:
 
 
     def getSwirl(self):
-        """return the current swirl """
+        """
+        return the current swirl
+
+        :rtype: :class:`FingerPrint.swirl.Swirl`
+        :return: return the current Swirl
+
+        """
         return self.swirl 
 
 

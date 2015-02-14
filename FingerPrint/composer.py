@@ -50,19 +50,19 @@ def is_special_file(path):
 class Archiver:
     """
     Given an already created swirl it creates a Swirl archive
+
+    :type sergeant: :class:`FingerPrint.sergeant.Sergeant`
+    :param sergeant: An instance of sergenat class pointing to the swirl 
+        we want to archive
+
+    :type archive_filename: string
+    :param archive_filename: string containing the output file name for the archive
     """
 
 
     def __init__(self, sergeant, archive_filename):
         """
         Default constructor
-
-        :type sergeant: :class:`FingerPrint.sergeant.Sergeant`
-        :param sergeant: An instance of sergenat class pointing to the swirl 
-            we want to archive
-        :type archive_filename: string
-        :param archive_filename: string containing the output file name for the archive
-
 	"""
         self.sergeant = sergeant
         self.archive_filename = archive_filename
@@ -119,7 +119,15 @@ class Archiver:
 
 
 class Roller:
-    """ this class make a roll out of an fingerprint archive"""
+    """ 
+    this class make a roll out of an fingerprint archive
+
+    :type archive_filename: string
+    :param archive_filename: a path to the Swirl Archive file
+
+    :type roll_name: string
+    :param roll_name: the name of the roll that we want to create
+    """
 
     # this is a list of rpm packages which are broken or known to cause problem
     #TODO unify this with the excludeRPMs in the _get_package_from_dep

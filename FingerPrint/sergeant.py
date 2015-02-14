@@ -30,9 +30,17 @@ if "any" not in dir(__builtins__):
 
 
 def readFromPickle(fileName):
-    """helper function to get a swirl from a filename"""
+    """
+    helper function to get a swirl from a filename
+
+    :type fileName: string
+    :param fileName: a relative or absolute path to the file to read
+
+    :rtype: :class:`FingerPrint.swirl.Swirl`
+    :return: the Swirl read from the file
+    """
     inputfd = open(fileName)
-    pickle = PickleSerializer( inputfd )
+    pickle = PickleSerializer(inputfd)
     swirl = pickle.load()
     inputfd.close()
     serg = Sergeant(swirl)
@@ -40,8 +48,15 @@ def readFromPickle(fileName):
     return serg
 
 def getShortPath(path):
-    """given a full path it shorten it leaving only
-    /bin/../filename"""
+    """
+    Given a full path it shorten it leaving only /bin/../filename
+
+    :type path: string
+    :param path: a long absolute path to the file
+
+    :rtype: string
+    :return: the shortened path
+    """
     if len(path.split('/')) <= 3:
         #no need to shorten
         return '"' + path + '"'
@@ -72,13 +87,34 @@ specialFolders = ["/proc/","/sys/","/tmp", "/dev/",
                 "/etc/krb5.conf"]
 
 def is_special_folder(path):
-    """ return true if path start with one of the specialFolder"""
+    """
+    return true if path is to be considered special, which means it should
+    be skipped from archivingi, checksumming, etc.
+
+    :type path: string
+    :param path: an absolute path to the file
+
+    :rtype: bool
+    :return: True if the given path is special
+    """
     return any([ path.startswith(i) for i in specialFolders ])
 
 def getHash(fileName, fileType):
-    """Given a valid fileName it returns a string containing a md5sum
-    of the file content. If we are running on a system which prelink
-    binaries (aka RedHat based) the command prelink must be on the PATH"""
+    """
+    It return a md5 checksum of the given file name. If we are running
+    on a system which prelink binaries (aka RedHat based) the command
+    prelink must be on the PATH
+
+    :type fileName: string
+    :param fileName: a path to the file which we want to checksum
+
+    :type fileType: string
+    :param fileType: the file type (the only recognized value is EFL for
+                     triggering the prelink on RHEL base system)
+
+    :rtype: string
+    :return: an hexdadeciaml representation of the md5sum checksum
+    """
     # let's skip weird stuff
     if is_special_folder(fileName):
         return ""
@@ -108,36 +144,50 @@ def getHash(fileName, fileType):
 
 
 class Sergeant:
-    """It reads an already created swirl and:
+    """
+    Given an already existent Swirl:
       - it detects if it can run on this system
       - it detects what has been changed
       - print this swirl on the screen
+
+    :type swirl: :class:`FingerPrint.swirl.Swirl`
+    :param swirl: The Swirl that we want to test
+
+    :type extraPath: list
+    :param extraPath: a list of string containing system path which should
+                      be included in the search of dependencies
     """
 
 
     def __init__(self, swirl, extraPath=[]):
-        """ swirl is a valid Swirl object
-        extraPath is a list of string containing system path which should 
-        be included in the search of dependencies"""
         self.swirl = swirl
         self.extraPath = extraPath
         self.error = []
         self.missingDeps = set()
 
     def setFilename(self, filename):
-        """ """
+        """TODO remove this function"""
         self.filename = filename
 
     def setExtraPath(self, path):
-        """path is a string containing a list of path separtated by :
-        This pathes will be added to the search list when looking for dependency
+        """
+        These paths will be added to the search list when looking for
+        dependency, they overwrite the extraPath passed at the constructor
+
+        :type path: string
+        :param path: a string containing a list of path separated by :
         """
         self.extraPath = path.split(':')
 
 
     def check(self):
-        """actually perform the check on the system and return True if all 
-        the dependencies can be satisfied on the current system
+        """
+        It performs the check on the system and verifies that all the
+        dependencies of this Swirl can be satisfied.
+
+        :rtype: bool
+        :return: True if the check passes False otherwise. The list of
+                 missing dependencies can be retrieved with self.getError()
         """
         returnValue = True
         # this method of using rpath is not totaly correct but it's faster
@@ -156,8 +206,17 @@ class Sergeant:
         return returnValue
 
     def checkHash(self, verbose=False):
-        """check if any dep was modified since the swirl file creation
-        (using checksuming) """
+        """
+        It checks if any dependency was modified since the swirl file creation
+        (using checksumming) 
+
+        :type verbose: bool
+        :param verbose: if True it will generate more verbose error message
+
+        :rtype: bool
+        :return: True if the check passes False otherwise. The list of
+                 modified dependencies can be retrieved with self.getError()
+        """
         self.error = []
         pathCache = []
         returnValue = True
@@ -191,11 +250,13 @@ class Sergeant:
         return returnValue
 
     def searchModules(self):
-        """search for missing dependencies using the 'module' command line
+        """
+        It searches for missing dependencies using the 'module' command line.
+        :meth:`Sergeant.check` should be called before this
 
-        return a human readable string with a list of module which can satisfy
-        missing dependencies
-        self.check() must be called before this
+        :rtype: string
+        :return: with a human readable list of module which can satisfy
+                 missing dependencies
         """
         # loop through all the modules
         retDict = {}
@@ -240,13 +301,31 @@ class Sergeant:
 
 
     def print_swirl(self, verbosity):
-        """return a string with the representation of this swirl"""
+        """
+        return a string with the representation of this swirl
+
+        :type verbosity: int
+        :param verbosity: various verbosity level see
+                          :meth:`FingerPrint.swirl.Swirl.printVerbose`
+
+        :rtype: string
+        :return: a human readable representation of this Swirl
+        """
         return self.swirl.printVerbose(verbosity)
 
 
     def checkDependencyPath(self, fileName):
-        """return a list of SwirlFiles which requires the given fileName, if the 
-        given file is nor required in this swirl it return None"""
+        """
+        it returns a list of SwirlFiles which requires the given fileName, if the 
+        given file is not required in this swirl it returns an empty list []
+
+        :type fileName: string
+        :param fileName: a path to a file
+
+        :rtype: list
+        :return: a list of :class:`FingerPrint.swirl.SwirlFile` required by the fileName
+
+        """
         returnFilelist = []
         for execSwirlFile in self.swirl.execedFiles:
             for swDepFile in self.swirl.getListSwirlFilesDependentStaticAndDynamic(execSwirlFile):
@@ -255,7 +334,11 @@ class Sergeant:
         return returnFilelist
         
     def getDotFile(self):
-        """return a dot representation of this swirl
+        """
+        return a dot representation of this swirl
+
+        :rtype: string
+        :return: a string with the dot representation of this swirl
         """
         clusterExec = []
         clusterSoname = set()
@@ -381,14 +464,22 @@ class Sergeant:
 
 
     def getError(self):
-        """after running check or checkHash if they returned False this 
-        function return a list with the dependencies name that failed
+        """
+        After running check or checkHash it return a list of the problems found
+
+        :rtype: list
+        :return: a lit of strings with all the problems encountered
         """
         return [ i.getName() for i in self.missingDeps] + self.error
 
        
     def getSwirl(self):
-        """return the current swirl """
+        """
+        return the current swirl
+
+        :rtype: :class:`FingerPrint.swirl.Swirl`
+        :return: the current swirl
+        """
         return self.swirl 
 
 

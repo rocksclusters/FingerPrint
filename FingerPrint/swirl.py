@@ -233,7 +233,7 @@ class Swirl(object):
         the -d flags
 
         :type verbosity: int
-        :param verbosity: the level of verbosity 1 minimum 2 maximum
+        :param verbosity: the level of verbosity 0 minimum 2 maximum
 
 
         :rtype: string
@@ -497,8 +497,8 @@ class SwirlFile(Arch):
                         SwirlFile was a dynamic loaded file
 
         :type verbosity: int
-        :param verbosity: verbosity level. 0 for the lower level 1 or greater to
-                          print all the info
+        :param verbosity: verbosity level. 0 for the lower level 1 or 2 to get
+                          more info
 
         :rtype: string
         :return: a detailed representation of this SwirlFile (used by the -d flags)
