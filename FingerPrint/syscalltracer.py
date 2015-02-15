@@ -232,33 +232,57 @@ class SyscallTracer:
 
 
 class TracerControlBlock:
-    """This class hold data needed for tracing a processes
-
-    Insiperd by strace code (strct tcb)).
     """
-
-    """
-    `env' dictionary that keeps track of process environment variables
-    `cmdline' dictionary that keeps track of the executed cmdline
-    `dynamicDependencies' is a dictionary of shared libraries used by the various
-       processes e.g.: { 'binarypath' : [list of file it depends to],
-       '/bin/bash' : ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
-       '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}
-    `files' is a dictionary of dictionary of opened files by the various processes
-       for example files[libraryA][executableB] and files[libraryA][executableC]
-       return respectively the list of opened file by the libraryA when run under
-       executableB and when run under executable
+    This class hold data needed for tracing a processes. Inspired by strace code (struct tcb).
 
     PS: I don't really like this solution of static variable but for the moment ti does its job
+
+    :type pid: int
+    :param pid: the PID of the process that we are tracing
+
     """
+
     dependencies = {}
+    """
+    Dictionary of shared libraries used by the various processes.
+    E.g.: ```{ 'binarypath': [list of file it depends to], '/bin/bash':
+    ['/lib/x86_64-linux-gnu/libnss_files-2.15.so',
+    '/lib/x86_64-linux-gnu/libnss_nis-2.15.so']}```
+    """
     files = {}
+    """
+    Dictionary of dictionary of opened files by the various processes.
+    E.g. files[libraryA][executableB] and files[libraryA][executableC]
+    return respectively the list of opened file by the libraryA when run under
+    executableB and when run under executableC.
+    """
     env = {}
+    """
+    Dictionary that keeps track of process environment variables.
+    Keys are the full path to the executable of the process
+    and values are a list of strings containing all the variables
+    """
     cmdline = {}
+    """
+    dictionary that keeps track of the executed command line. Keys are the 
+    full path to the executable and values are a list of strings containing
+    all the token of the command line
+    """
 
     @classmethod
     def get_env_variable(cls, process_name, variable_name):
-        """returns the value of the variable_name if found int he process_name environment"""
+        """
+        returns the value of the variable_name if found int he process_name environment
+
+        :type process_name: string
+        :param process_name: the full path to the executable representing this process
+
+        :type variable_name: string
+        :param variable_name: the name of the variable
+
+        :rtype: string
+        :return: a environment variable value
+        """
         if process_name in cls.env:
             for i in cls.env[process_name]:
                 if i.startswith(variable_name + '='):
@@ -274,6 +298,12 @@ class TracerControlBlock:
 
 
     def updateProcessInfo(self):
+        """
+        This method updates the process information into the global static variables
+        :attr:`TracerControlBlock.cmdline`, :attr:`TracerControlBlock.env` of this class.
+        This method is called only once when this instance is created (aka when the process
+        is created).
+        """
         processName = self.getProcessName()
         if processName not in TracerControlBlock.dependencies:
             # new binary file let's add it to the dyctionary
@@ -288,9 +318,12 @@ class TracerControlBlock:
         f.close()
 
     def updateSharedLibraries(self):
-        """ it scans the procfs to find the process loaded shared libraries
-
-        results are stored in the class variable called dependencies"""
+        """
+        This method scans the procfs to find the shared libraries loaded by this
+        process and it updates the static
+        :attr:`TracerControlBlock.dependencies` variable accordingly. This
+        function is called every time the process invoke the mmap system call.
+        """
         binaryFile = self.getProcessName()
         f=open('/proc/' + str(self.pid) + '/maps')
         maps = f.read()
@@ -306,7 +339,10 @@ class TracerControlBlock:
 
     @classmethod
     def set_trace_function(cls):
-        """method function need to set up the trace function which needs C binding"""
+        """
+        This class method load the function needed to set up the stack tracer which
+        require the external shared library. Called only once.
+        """
         try:
             from FingerPrint.stacktracer import trace
             cls.trace = trace
@@ -315,21 +351,36 @@ class TracerControlBlock:
             # no tracer compiled fall back to binary name
             #import traceback
             #traceback.print_exc()
-            logger.error(" - Unable to load stacktracer - ")
+            logger.error(" - Stack tracing facility not loaded - ")
             cls.tracing = False
 
     def getProcessName(self):
+        """
+        :rtype: string
+        :return: the process name (this is used in all the static attribute of
+                 this class as a key)
+        """
         return os.readlink('/proc/' + str(self.pid) + '/exe')
 
+
     def getProcessCWD(self):
+        """
+        :rtype: string
+        :return: return the current working directory of this process
+        """
         return os.readlink('/proc/' + str(self.pid) + '/cwd')
 
     def getFileOpener(self):
-        """ return the path to the object who initiate the current open syscall
+        """
+        if Fingerprint is compiled with the stack tracer module it will find the
+        file object who contains the code which initiated this open system call
+        if not it will return the path to the current process. This function is
+        called after each open system call.
 
-        if FingerPrint is compiled with the stacktracer module it will find the
-        file object who contains the code which instantiate the open if not it will
-        return the path to the current process """
+        :rtype: string
+        :return: the path of the library who triggered the current open system 
+                 call
+        """
         if not self.tracing:
             return self.getProcessName()
         libname = self.trace(self.pid)
@@ -362,7 +413,7 @@ class TracerControlBlock:
 
     def _isOpen(self, objectFile, offset, ip):
         """return true if ip/offset are pointing to a open syscall for this 
-        objectfile
+        object file
         """
         if objectFile.isDynamic():
             # offset and ip are in the form of 0x45a3f2
@@ -390,7 +441,8 @@ class TracerControlBlock:
             else:
                 return False
         # these are the system call that we trace for the moment
-        if callname in ['fopen', '_IO_fopen', 'fopen64', 'open64', 'open', '__open', 'open64', '__open64']:
+        if callname in ['fopen', '_IO_fopen', 'fopen64', 'open64', 'open', \
+                        '__open', 'open64', '__open64']:
             return True
         else:
             return False
@@ -400,7 +452,15 @@ class TracerControlBlock:
 objectFiles = {}
 
 class ObjectFile:
-    """class that wrap an elf object file and its assembler code""" 
+    """
+    This class wraps an elf object file and its assembler code used by the
+    stack tracing facility. This class depend on objdump to disassemble
+    binaries. This class need several optimization (uses a lot of memory
+    and CPU time).
+
+    :type filename: string
+    :param filename: the path to the binary will be disassembled
+    """
 
     def __init__(self, filename):
         """ """
@@ -424,7 +484,10 @@ class ObjectFile:
         self.assembler = outputs
 
     def isDynamic(self):
-        """ return true if this is a dynamic object aka shared library """
+        """
+        :rtype: bool
+        :return: true if this is a dynamic object aka a shared library
+        """
         #we just check the first lines no need to scan the whole thing
         for line in self.assembler[0:10]:
             if "EXEC_P" in line:
@@ -435,6 +498,18 @@ class ObjectFile:
 
 
     def getInstruction(self, vma):
+        """
+        it decodes the instruction at the given virtual memory address
+
+        :type vma: string
+        :param vma: the virtual memory address in an hexadecimal format
+
+        :rtype: tuple
+        :return: a tuple of tree strings where the first string is the opcode
+                 at the given address vma, the second is the address referred
+                 by the instruction and the third is the symbolic name referred
+                 by the address
+        """
         for line in self.assembler:
             if re.match(" *" + vma + ":", line):
                 return self._decodeLine(line)
@@ -442,7 +517,18 @@ class ObjectFile:
 
 
     def getPrevInstruction(self, vma):
-        """ """
+        """
+        it decodes the previous instruction at the given virtual memory address
+
+        :type vma: string
+        :param vma: the virtual memory address in an hexadecimal format
+
+        :rtype: tuple
+        :return: a tuple of tree strings where the first string is the opcode
+                 at the given address vma, the second is the address referred
+                 by the instruction and the third is the symbolic name referred
+                 by the address
+        """
         for line in self.assembler:
             if re.match(" *" + vma + ":", line):
                 return self._decodeLine(prevLine)
@@ -451,6 +537,10 @@ class ObjectFile:
 
 
     def _decodeLine(self, line):
+        """
+        given a line of the disassemble code it returns a tuple
+        with (instruction, address, symbol)
+        """
         # take out the address part
         line = line[line.find(':') + 1:].lstrip()
         while True:
