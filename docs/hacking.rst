@@ -74,7 +74,7 @@ of simply parsing argument and calling the various component
 of the FingerPrint package. Below a list of the various sub modules
 inside Fingerprint with a short description of what is their role:
 
-- :class:`FingerPrint.swirl`: it contains the data model. All the object used
+- :mod:`FingerPrint.swirl`: it contains the data model. All the object used
   to represent a swirl are inside this files. The main class here
   is :class:`FingerPrint.swirl.Swirl` (used to represent a swirl), it holds references to a list
   of :class:`FingerPrint.swirl.SwirlFile`. :class:`FingerPrint.swirl.SwirlFile` 
@@ -85,51 +85,54 @@ inside Fingerprint with a short description of what is their role:
   Swirl contains the main methods responsible for finding SwirlFile
   Creating new SwirlFile, finding Dependencies of SwirlFile etc.
 
-- FingerPrint.sergeant: it reads an already created swirl and it can
+- :mod:`FingerPrint.sergeant`: it reads an already created swirl and it can
   perform several checking against the current system or display the
   swirl content. It can also be used to create a dot file to be used with
   graphviz. Basically all the display (-d) query (-q) and verify (-y) 
   options are implemented here
 
-- FingerPrint.blotter: This module contains only one class which is
+- :mod:`FingerPrint.blotter`: This module contains only one class which is
   responsible to creates a swirl file starting from, a list of binaries,
   a command lines that we want to execute and trace, or a PID.
   It uses the plugin manager (FingerPrint.plugin) to analize each file.
   When running a dynamic tracing it uses the (FingerPrint.syscalltracer)
   module to do the ptracing work.
 
-- FingerPrint.plugins: it is a plugable architecture which should support
-  different file types (at the moment only elf is implemented). Each plugin
-  should implement two methods getSwirl(filename, swirl, env) given
+- :mod:`FingerPrint.plugins`: it is a plugable architecture which should support
+  different file types (at the moment only an elf is implemented
+  :class:`FingerPrint.plugins.elf.ElfPlugin`). Each plugin
+  should subclass the class :class:`FingerPrint.plugins.PluginManager` and
+  implement two methods :meth:`FingerPrint.plugins.PluginManager.getSwirl` given
   a file path create a SwirlFile and add it to the swirl and return it.
   If the file is already in the swirl return it (do not duplicate it).
-  getPathToLibrary(dependency) given a dependency it should return a path
-  to that dependency. At the moment it tries to imitate the Linux dynamic
-  loader.
+  :meth:`FingerPrint.plugins.PluginManager.getPathToLibrary` should return 
+  a path to a shared library on the system given a dependency. At the moment
+  it tries to imitate the Linux dynamic loader.
 
-- FingerPrint.syscalltracer: is in charge of ptracing a command line and
+- :mod:`FingerPrint.syscalltracer`: is in charge of ptracing a command line and
   if available use the strac tracing functionality
 
-
-- FingerPrint.ptrace: a bunch of classes taken from python-ptrace used
+- :mod:`FingerPrint.ptrace`: a bunch of classes taken from python-ptrace used
   to wrap ptrace system call, they are used only by syscalltracer for
   dynamic tracing
 
-- FingerPrint.composer: is a module which takes care of composing now
-  roll and of archiving. It has two classes Archive, which is used to 
-  create archive (-r flag), and Roller which supports composing Rolls
-  (-m flag).
+- :mod:`FingerPrint.composer`: is a module which takes care of composing a
+  roll and of creating a Swirl archive. It has two classes
+  :class:`FingerPrint.composer.Archiver`, which is used to create archive
+  (-r flag), and :class:`FingerPrint.composer.Roller` which supports composing
+  Rolls (-m flag).
 
-- FingerPrint.utils: some simple general function which are used all
-  over. Function to fork external program and get their output.
-  Function to get system LD_LIBRARY_PATH paths etc.
+- :mod:`FingerPrint.utils`: some simple general function which are used all
+  over. Functions to fork external program and get their output,
+  functions to get system ``LD_LIBRARY_PATH`` paths etc.
 
-- FingerPrint.serializer: it contains only one class PickleSerializer
-  which is in charge of serializing and deserializing a swirl into a
-  file. All the other module uses this class to read and write a Swirl.
+- :mod:`FingerPrint.serializer`: it contains only one class 
+  :class:`FingerPrint.serializer.PickleSerializer` which is in charge
+  of serializing and deserializing a swirl into a file. All the other
+  module uses this class to read and write a Swirl.
   To make a XML serializer it is necessary to modify only this class
 
 - remapper: this directory contains the source code for the remapper
   remapper is the process which is used when porting application using
   the -z flag. It is in charge of remapping all the open system call
-  using the configuration file /etc/fp_mapping
+  using the configuration file ``/etc/fp_mapping``
