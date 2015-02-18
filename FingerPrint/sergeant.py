@@ -146,9 +146,10 @@ def getHash(fileName, fileType):
 class Sergeant:
     """
     Given an already existent Swirl:
-      - it detects if it can run on this system
-      - it detects what has been changed
-      - print this swirl on the screen
+      - it detects if it can run on this system (:meth:`check`)
+      - it detects what has been changed (:meth:`checkHash`)
+      - print this swirl on the screen (:meth:`print_swirl`)
+      - print this swirl as a dot file for Graphviz (:meth:`getDotFile`)
 
     :type swirl: :class:`FingerPrint.swirl.Swirl`
     :param swirl: The Swirl that we want to test
@@ -187,7 +188,7 @@ class Sergeant:
 
         :rtype: bool
         :return: True if the check passes False otherwise. The list of
-                 missing dependencies can be retrieved with self.getError()
+                 missing dependencies can be retrieved with :meth:`getError`
         """
         returnValue = True
         # this method of using rpath is not totaly correct but it's faster
@@ -215,7 +216,7 @@ class Sergeant:
 
         :rtype: bool
         :return: True if the check passes False otherwise. The list of
-                 modified dependencies can be retrieved with self.getError()
+                 modified dependencies can be retrieved with :meth:getError()
         """
         self.error = []
         pathCache = []
@@ -252,7 +253,7 @@ class Sergeant:
     def searchModules(self):
         """
         It searches for missing dependencies using the 'module' command line.
-        :meth:`Sergeant.check` should be called before this
+        :meth:`check` should be called before this
 
         :rtype: string
         :return: with a human readable list of module which can satisfy

@@ -376,7 +376,7 @@ class Roller:
             for swf in self.swirl.execedFiles:
                 new_paths |= set([os.path.dirname(i) for i in swf.getPaths()])
             node_base_xml += self._node_base_xml_bottom % (self.roll_name, ' '.join(new_paths))
-            self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
+            self._write_file(self.roll_name + "/nodes/" + self.roll_name + "-base.xml",
                     node_base_xml)
         # copying -home- RPM
         source = glob.glob(self.roll_name + "-home-1.0-*.rpm")
@@ -384,10 +384,10 @@ class Roller:
             logger.info("Coping RPM in: " + dest + "/" + source[0])
             shutil.copy2(source[0], dest)
             # create the server-node
-            self.write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
+            self._write_file(self.roll_name + "/nodes/" + self.roll_name + "-server.xml",
                     self._node_server_xml % (self.roll_name, ' '.join(self.users)))
         # create the graph xml
-        self.write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
+        self._write_file(self.roll_name + "/graphs/default/" + self.roll_name + ".xml",
                 self._graph_node_xml % (self.roll_name, self.roll_name, self.roll_name))
         # make the roll
         os.chdir(self.roll_name)
@@ -407,7 +407,7 @@ class Roller:
         logger.error("rocks run roll " + self.roll_name + " | bash")
         return True
 
-    def write_file(self, file_name, string):
+    def _write_file(self, file_name, string):
         """write string into file_name and log it"""
         logger.info("Writing file: " + file_name)
         logger.debug(" > " + "\n > ".join(string.split("\n")))

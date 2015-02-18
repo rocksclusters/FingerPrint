@@ -85,7 +85,8 @@ class Swirl(object):
         :param dependency: the dependency which should be satisfied
 
         :rtype: :class:`FingerPrint.swirl.SwirlFile`
-        :return: a SwirlFile which provides the given dependency
+        :return: a SwirlFile which provides the given dependency None if it
+                 could not be found
         """
         for swF in self.swirlFiles:
             if dependency in swF.provides :
