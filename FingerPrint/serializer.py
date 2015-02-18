@@ -15,15 +15,33 @@ import pickle
 
 
 class PickleSerializer:
-    """ this class serialize a swirl into a pickle file format"""
+    """
+    this class serialize a swirl into a pickle file format
+
+    :type fd: file
+    :param fd: the file descritor to be used for serialization
+               or deserialization
+    """
 
     def __init__(self, fd):
         self.fd = fd
 
     def save(self, swirl):
+        """
+        Saves the given swirl to the file descriptor
+
+        :type swirl: :class:`FingerPrint.swirl.Swirl`
+        :param swirl: the Swirl to be serialized
+        """
         pickle.dump(swirl, self.fd)
 
     def load(self):
+        """
+        Return the Swirl read from the given file descriptor
+
+        :rtype: :class:`FingerPrint.swirl.Swirl`
+        :return: the Swirl read from fd
+        """
         return pickle.load(self.fd)
 
 
