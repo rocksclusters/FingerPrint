@@ -1,13 +1,6 @@
-FingerPrint Package
-===================
+FingerPrint internal API
+========================
 
-:mod:`FingerPrint` Package
---------------------------
-
-.. automodule:: FingerPrint.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`blotter` Module
 ---------------------
