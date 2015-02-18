@@ -17,7 +17,11 @@ should implement
 
 class PluginMount(type):
     """
-    Insipired by Marty Alchin
+    this is a singleton object which can return a list of all available
+    plugins. All plugin available inside the FingerPrint.plugins are loaded
+    inside the PluginMount when this module is loaded.
+
+    Insipired by (or totaly copied from) Marty Alchin:
     http://martyalchin.com/2008/jan/10/simple-plugin-framework/
     """
     def __init__(cls, name, bases, attrs):
@@ -33,42 +37,77 @@ class PluginMount(type):
             cls.plugins[cls.pluginName] = cls
 
     def get_plugins(cls):
+        """
+        return the list of currently registered plugins
+
+        :rtype: list
+        :return: a list of :class:`PluginManager` registered
+        """
         return cls.plugins
 
 
 class PluginManager(object):
     """
-    Super class of the various plugins. All the plugins should inherit from 
-    this class
+    Super class of the various plugins. All plugins should inherit from
+    this class.
 
-    Plugins implementing this reference should provide the following 
-    attributes/methods:
+    To implement a new Plugin you should subclass this class and provide the
+    following attributes/methods:
 
-    pluginName: this must be a unique string representing the plugin name
-    getPathToLibrary: a classmethod which return a file name pointing to the 
-                file which can provide the given dependnecy
-    getSwirl: a classmethod that given a path to a file it return None if the 
-                file can not be handled by the given plugin or a SwirlFile 
+    - :attr:`pluginName`: this must be a unique string representing the plugin name
+    - :meth:`getPathToLibrary`: a class method which return a file name pointing to the
+                file which can provide the given dependency
+    - :meth:`getSwirl`: a class method that given a path to a file it return None if the
+                file can not be handled by the given plugin or a SwirlFile
                 with the dependency set if the plugin can handle the file
-    
+
     """
 
     __metaclass__ = PluginMount
     systemPath = []
+    """list of string containing the paths we should look for dependencies"""
 
 
     @classmethod
     def addSystemPaths(self, paths):
-        """add additional path to the search for dependency """
+        """
+        add an additional paths to the search for dependency
+
+        :type paths: list
+        :param paths: a list of string with the extra path to be added
+        """
         if paths :
             self.systemPath += paths
 
     @classmethod
     def getSwirl(self, fileName, swirl, env = None):
-        """helper function given a filename it return a SwirlFile
-        if the given plugin does not support the given fileName should just 
-        return None
+        """
+        helper function given a filename it return a SwirlFile. This should be
+        re-implemented by the various plugins. If none of the plugins return
+        a SwirlFile this method will return a 'data' SwirlFile.
+
         ATT: only one plugin should return a SwirlFile for a given file
+
+        ATT2: this is a class method
+
+        :type fileName: string
+        :param fileName: a path to the new file we want to add
+
+        :type swirl: :class:`FingerPrint.swirl.Swirl`
+        :param swirl: the current Swirl object. Static dependencies of the new
+                      SwirlFile are resolved first inside the Swirl and if not
+                      found then they are resolved recursively invoking this
+                      function and recursively added to the Swirl
+
+        :type env: list
+        :param env: a list of string with all the environment variable 
+                    available to this file when it was executing. This field
+                    is used only when doing dynamic tracing.
+
+        :rtype: :class:`FingerPrint.swirl.SwirlFile`
+        :return: a SwirlFile representing the given fileName. The SwirlFile 
+                 should have all the static dependencies resolved (if they 
+                 could be find on the system)
         """
         # if the file does not exist anymore (possible with temporary file and
         # dynamic tracing) just set it to Data
@@ -92,8 +131,26 @@ class PluginManager(object):
 
     @classmethod
     def getPathToLibrary(cls, dependency, useCache = True, rpath = []):
-        """ given a dependency it find the path of the library which provides 
-        that dependency """
+        """
+        Given a dependency it find the path of the library which provides 
+        that dependency
+
+        :type dependency: :class:`FingerPrint.swirl.Dependency`
+        :param dependency: the Dependency that we need to satisfy with the
+                           returned library
+
+        :type useCache: bool
+        :param useCache: if true it will use a cache that will speed up a
+                         lot searching for libraries
+
+        :type rpath: list
+        :param rpath: a list of string which contains extra paths that
+                      we want to add during the search for the dependency
+                      Generally used to add RPATH to the search path.
+
+        :rtype: string
+        :return: the path to the library which satisfy the given dependency
+        """
         plugin = cls.plugins[dependency.type]
         return plugin.getPathToLibrary(dependency, useCache, rpath)
 

@@ -28,7 +28,14 @@ Requirements:
 
 
 class ElfPlugin(PluginManager):
-    """this plugin manages all ELF file format"""
+    """
+    This plugin manages all ELF file format. This class requires the
+    find-provides and find-requires script present in this folder
+    which require: objdump, awk, sed, grep.
+
+    For nicer documentation on this functions see
+    :class:`FingerPrint.plugins.PluginManager`
+    """
 
     pluginName="ELF"
 
@@ -92,8 +99,17 @@ class ElfPlugin(PluginManager):
 
     @classmethod
     def _setDepsRequs(cls, swirlFile, swirl):
-        """given a SwirlFile object add all the dependency and all 
-        the provides to it """
+        """
+        given a SwirlFile object add all the dependency and all the provides
+        to it
+
+        :type swirlFile: :class:`FingerPrint.swirl.SwirlFile`
+        :param swirlFile: the SwirlFile we need to find all the dependencies
+
+        :type swirl: :class:`FingerPrint.swirl.Swirl`
+        :param swirl: the Swirl that will be used to first lookup already
+                          discovered dependencies
+        """
 
         # find rpath first
         rpath = getOutputAsList(["bash","-c", "objdump -x %s |grep RPATH|awk '{print $2}'" % swirlFile.path ])[0]
@@ -131,6 +147,7 @@ class ElfPlugin(PluginManager):
         """helper function given a filename it return a SwirlFile
         if the given plugin does not support the given fileName should just 
         return None
+
         ATT: only one plugin should return a SwirlFile for a given file
         """
         fd=open(fileName)
