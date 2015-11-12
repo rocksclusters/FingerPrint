@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import commands
+import os.path
+import re
+import subprocess
+import sys
+import tempfile
+
+tempDirPath = tempfile.mkdtemp()
+executable = None
+runDirPath = '/rundir'
+swirlFile = 'output.swirl'
+if len(sys.argv) > 0:
+  swirlFile = sys.argv[-1]
+
+dockerFile = open("%s/Dockerfile" % tempDirPath, "w")
+dockerFile.write("FROM debian\n")
+for requirement in commands.getoutput("fingerprint -d -f %s" % swirlFile).split("\n"):
+  matchInfo = re.match(r'^\s*(/\S*)\s*$', requirement)
+  if not matchInfo:
+    continue
+  (requirementDir, requirementFile) = os.path.split(matchInfo.group(1))
+  if not executable:
+    executable = requirementFile
+  requirementWild = re.sub(r'\.so.*$', '.so*', requirementFile)
+  subprocess.call("/bin/cp -P %s/%s %s" % (requirementDir, requirementWild, tempDirPath), shell=True)
+dockerFile.write("ADD * %s/\n" % runDirPath)
+dockerFile.write('ENV LD_LIBRARY_PATH=%s\n' % runDirPath)
+if executable:
+  dockerFile.write('ENTRYPOINT ["%s/%s"]\n' % (runDirPath, executable))
+dockerFile.close()
+print tempDirPath
+subprocess.call("docker build -t %s -f %s/Dockerfile %s/" % (executable, tempDirPath, tempDirPath), shell=True)
