@@ -8,37 +8,42 @@ import subprocess
 import tempfile
 
 parser = OptionParser('usage: %prog [options] [swirl ...]', version='%prog v0.1')
+parser.add_option('-a', '--add', help='additional docker commands to include in image')
+parser.add_option('-b', '--base', help='docker base image; default to debian')
 parser.add_option('-t', '--tag', help='docker image tag; defaults to exec name')
 
 (options, args) = parser.parse_args()
 
-runDirPath = '/rundir'
+workDirPath = '/workdir'
 if len(args) == 0:
   args.append('output.swirl')
 
 for swirlFile in args:
   executable = None
-  tag = None
-  if options.tag:
-    tag = options.tag
+  if not options.base:
+    options.base = 'debian'
   tempDirPath = tempfile.mkdtemp()
   dockerFile = open("%s/Dockerfile" % tempDirPath, 'w')
-  dockerFile.write('FROM debian\n')
+  dockerFile.write('FROM %s\n' % options.base)
   for requirement in commands.getoutput("fingerprint -d -f %s" % swirlFile).split("\n"):
+    requirement = re.sub(r'\$([^\$]*)\$', r'\1/', requirement).replace('--(Dyn)--', '')
     matchInfo = re.match(r'^\s*(/\S*)\s*$', requirement)
-    if not matchInfo:
+    if not matchInfo or matchInfo.group(1)[0:5] == '/dev/':
       continue
     (requirementDir, requirementFile) = os.path.split(matchInfo.group(1))
     if not executable:
       executable = requirementFile
-    if not tag:
-      tag = requirementFile
+    if not options.tag:
+      options.tag = requirementFile
     requirementWild = re.sub(r'\.so.*$', '.so*', requirementFile)
     subprocess.call("/bin/cp -P %s/%s %s" % (requirementDir, requirementWild, tempDirPath), shell=True)
-  dockerFile.write("ADD * %s/\n" % runDirPath)
-  dockerFile.write('ENV LD_LIBRARY_PATH=%s\n' % runDirPath)
+  dockerFile.write("ADD * %s/\n" % workDirPath)
+  dockerFile.write('ENV LD_LIBRARY_PATH=%s\n' % workDirPath)
+  if options.add:
+    dockerFile.write('%s\n' % options.add)
   if executable:
-    dockerFile.write('ENTRYPOINT ["%s/%s"]\n' % (runDirPath, executable))
+    dockerFile.write('WORKDIR %s\n' % workDirPath)
+    dockerFile.write('ENTRYPOINT ["%s/%s"]\n' % (workDirPath, executable))
   dockerFile.close()
   print tempDirPath
-  subprocess.call("docker build -t %s -f %s/Dockerfile %s/" % (tag, tempDirPath, tempDirPath), shell=True)
+  subprocess.call("docker build -t %s -f %s/Dockerfile %s/" % (options.tag, tempDirPath, tempDirPath), shell=True)
