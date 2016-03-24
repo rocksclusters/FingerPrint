@@ -1,0 +1,266 @@
+#!/bin/env python
+
+import commands
+from distutils.version import LooseVersion, StrictVersion
+from optparse import OptionParser
+import os
+import os.path
+import re
+
+class Modulefile:
+  """ A class that represents a single environment modulefile. """
+
+  def __init__(self, pathToModulefile = None):
+    """ Class constructor. """
+    self._errors = {}
+    self._programs = None
+    self._libraries = None
+    self._path = pathToModulefile
+    self._text = ''
+    self._variablesMod = None
+    self._variablesNew = None
+    Modulefile.instances[pathToModulefile] = self
+    if pathToModulefile == None:
+      # Virtual "modulefile" for system defaults.
+      self._text = """
+append-path LD_LIBRARY_PATH /lib64:/lib:/usr/lib64:/usr/lib
+append-path PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+"""
+    else:
+      command = "module display %s 2>&1" % pathToModulefile
+      self._text = commands.getoutput(command)
+      if self._text.find('Unable to locate') >= 0:
+        self._errors[pathToModulefile] = 'Modulefile not found'
+
+  def addedLibraries(self):
+    """
+    Returns a dictionary of dynamic libraries made available by the
+    modulefile.  Each key is the name of a library; the corresponding
+    value is the full path to it.
+    """
+
+    if self._libraries == None:
+      self._libraries = {}
+      for addition in re.findall(r'(?:ap|pre)pend-path\s+LD_LIBRARY_PATH\b([^\n]*)', self._text):
+        addition = addition.strip()
+        if addition == '':
+          self._errors['LD_LIBRARY_PATH'] = 'empty append'
+          continue
+        for path in addition.split(':'):
+          if not os.path.isdir(path):
+            self._errors[path] = 'No such path'
+            continue
+          for file in os.listdir(path):
+            filePath = "%s/%s" % (path, file)
+            if not os.access(filePath, os.R_OK) or \
+               not re.search(r'\.so(\.\d+)*$', file):
+              continue
+            self._libraries[file] = filePath
+    return self._libraries
+
+  def addedPrograms(self):
+    """
+    Returns a dictionary of programs made available by the modulefile.
+    Each key is the name of a program; the corresponding value is the
+    full path to it.
+    """
+    if self._programs == None:
+      self._programs = {}
+      for addition in re.findall(r'(?:ap|pre)pend-path\s+PATH\b([^\n]*)', self._text):
+        addition = addition.strip()
+        if addition == '':
+          self._errors['PATH'] = 'empty append'
+          continue
+        for path in addition.split(':'):
+          if not os.path.isdir(path):
+            self._errors[path] = 'No such path'
+            continue
+          for file in os.listdir(path):
+            filePath = "%s/%s" % (path, file)
+            if not os.access(filePath, os.X_OK):
+              continue
+            self._programs[file] = filePath
+    return self._programs
+
+  def addedVariables(self):
+    """
+    Returns a dictionary of environment variables set by the modulefile.
+    Each key is the name of an environment variable; the corresponding
+    value is the assigned value.
+    """
+    if self._variablesNew == None:
+      self._variablesNew = {}
+      for (var, value) in re.findall(r'setenv\s+(\S+)([^\n]*)', self._text):
+        if var == 'LD_LIBRARY_PATH' or var == 'PATH':
+          # handled by addedLibraries/addedPrograms
+          continue
+        self._variablesNew[var] = value.strip()
+    return self._variablesNew
+
+  def errors(self):
+    """
+    Returns a dictionary of errors found within the modulefile.  Each key
+    is the name of a resource incorrectly modified; the corresponding
+    value describes the error.
+    """
+    self.addedPrograms()
+    self.addedLibraries()
+    self.addedVariables()
+    self.modifiedVariables()
+    return self._errors
+
+  def modifiedVariables(self):
+    """
+    Returns a dictionary of environment variables modified by the modulefile.
+    Each key is the name of an environment variable; the corresponding
+    value is the appended/prepended value.
+    """
+    if self._variablesMod == None:
+      self._variablesMod = {}
+      for (var, value) in re.findall(r'(?:ap|pre)pend-path\s+(\S+)([^\n]*)', self._text):
+        value = value.strip()
+        if value == '':
+          self._errors[var] = 'empty append'
+          continue
+        if var == 'LD_LIBRARY_PATH' or var == 'PATH':
+          # handled by addedLibraries/addedPrograms
+          continue
+        self._variablesMod[var] = value
+    return self._variablesMod
+
+  def path(self):
+    """ Returns the path used to instantiate the Modulefile instance. """
+    return self._path
+
+  @classmethod
+  def findLibrary(cls, pattern):
+    """
+    A class method that returns a list of (Modulefile, path) tuples,
+    representing the set of libraries provided by any known Modulefile
+    that have a name matching the specified pattern.
+    """
+    result = []
+    for m in Modulefile.instances.values():
+      libs = m.addedLibraries()
+      for k in libs.keys():
+        if re.search(pattern, k):
+          result.append((m, libs[k]))
+    return result
+
+  @classmethod
+  def findProgram(cls, pattern):
+    """
+    A class method that returns a list of (Modulefile, path) tuples,
+    representing the set of programs provided by any known Modulefile
+    that have a name matching the specified pattern.
+    """
+    result = []
+    for m in Modulefile.instances.values():
+      progs = m.addedPrograms()
+      for k in progs.keys():
+        if re.search(pattern, k):
+          result.append((m, progs[k]))
+    return result
+
+  @classmethod
+  def findVariable(cls, pattern):
+    """
+    A class method that returns a list of (Module, name) tuples,
+    representing the set of variables set by any known Modulefile
+    that have a name matching the specified pattern.
+    """
+    result = []
+    for m in Modulefile.instances.values():
+      vars = m.addedVariables()
+      for k in vars.keys():
+        if re.search(pattern, k):
+          result.append((m, k))
+    return result
+
+  @classmethod
+  def initAll(cls):
+    """
+    A class method that creates a Modulefile instance for every
+    modulefile accessible via the MODULEPATH environment variable.
+    """
+    for dir in os.environ['MODULEPATH'].split(':'):
+      if not os.path.exists(dir):
+        continue
+      for subdir in os.listdir(dir):
+        subdirPath = "%s/%s" % (dir, subdir)
+        if not os.path.isdir(subdirPath):
+          continue
+        for file in os.listdir(subdirPath):
+          filePath = "%s/%s" % (subdirPath, file)
+          if os.path.isdir(filePath) or file.startswith('.'):
+            continue
+          m = Modulefile("%s/%s" % (subdir, file))
+
+Modulefile.instances = {}
+
+parser = OptionParser('usage: %prog [options] [swirl ...]', version='%prog v0.1')
+parser.add_option('-v', '--verbose', help='show verbose program output')
+
+(options, args) = parser.parse_args()
+verbose = False
+if options.verbose:
+  verbose = re.match(r'^(?i)y(es)?$', options.verbose) != None
+if len(args) == 0:
+  args.append('output.swirl')
+
+Modulefile.initAll()
+systemModule = Modulefile(None)
+
+for swirlFile in args:
+
+  requirements = commands.getoutput("fingerprint -d -f %s" % swirlFile).split("\n")
+
+  # Skip initial header
+  while len(requirements) > 0 and requirements[0] != ' -- File List -- ':
+    requirements.pop(0)
+  if len(requirements) > 0:
+    requirements.pop(0)
+
+  loadedModuleNames = ['(system)']
+
+  for requirement in requirements:
+
+    requirement = requirement.strip()
+    if requirement == '':
+      continue
+
+    # Strip leading path
+    requirement = requirement.split('/')[-1]
+    # Default to exact match
+    pat = '^' + re.escape(requirement) + '$'
+
+    # Check for library with version either before or after .so
+    libVersionMatch = re.search(r'\.so\.(\d+(\.\d+)*)$', requirement) or \
+                      re.search(r'-(\d+(\.\d+)*)\.so$', requirement)
+    if libVersionMatch:
+      # Relax match to allow same lib with any version number
+      requirementVersion = LooseVersion(libVersionMatch.group(1))
+      pat = '^' + re.escape(requirement[0:libVersionMatch.start(1)]) + r'(\d+(\.\d+)*)' + re.escape(requirement[libVersionMatch.end(1):]) + '$'
+      finds = []
+      # Accept only libs with a version >= requirement version
+      for candidate in Modulefile.findLibrary(pat):
+        libVersionMatch = re.search(r'\.so\.(\d+(\.\d+)*)$', candidate[1]) or \
+                          re.search(r'-(\d+(\.\d+)*)\.so$', candidate[1])
+        if LooseVersion(libVersionMatch.group(1)) >= requirementVersion:
+          finds.append(candidate)
+    elif requirement.find('.so') >= 0:
+      finds = Modulefile.findLibrary(pat)
+    else:
+      finds = Modulefile.findProgram(pat)
+
+    if len(finds) == 0:
+      print "# %s: not found" % requirement
+    for find in finds:
+      moduleName = find[0].path()
+      if moduleName == None:
+        moduleName = '(system)'
+      if verbose:
+        print '# %s: %s provides %s' % (requirement, moduleName, find[1])
+      if not moduleName in loadedModuleNames:
+        print 'module load ' + moduleName
+        loadedModuleNames.append(moduleName)
