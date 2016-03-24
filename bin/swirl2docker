@@ -8,8 +8,9 @@ import subprocess
 import tempfile
 
 parser = OptionParser('usage: %prog [options] [swirl ...]', version='%prog v0.1')
-parser.add_option('-a', '--add', help='additional docker commands to include in image')
 parser.add_option('-b', '--base', help='docker base image; default to debian')
+parser.add_option('-e', '--env', help='additional environment vars to set in image')
+parser.add_option('-f', '--file', help='additional files to include in image')
 parser.add_option('-t', '--tag', help='docker image tag; defaults to exec name')
 
 (options, args) = parser.parse_args()
@@ -37,10 +38,14 @@ for swirlFile in args:
       options.tag = requirementFile
     requirementWild = re.sub(r'\.so.*$', '.so*', requirementFile)
     subprocess.call("/bin/cp -P %s/%s %s" % (requirementDir, requirementWild, tempDirPath), shell=True)
+  if options.file:
+    subprocess.call("/bin/cp -P %s %s" % (options.file.replace(',', ' '), tempDirPath), shell=True)
+    dockerFile.write('%s\n' % options.add)
   dockerFile.write("ADD * %s/\n" % workDirPath)
   dockerFile.write('ENV LD_LIBRARY_PATH=%s\n' % workDirPath)
-  if options.add:
-    dockerFile.write('%s\n' % options.add)
+  if options.env:
+    for env in options.env.replace(',', ' ').split():
+      dockerFile.write('ENV %s\n' % env)
   if executable:
     dockerFile.write('WORKDIR %s\n' % workDirPath)
     dockerFile.write('ENTRYPOINT ["%s/%s"]\n' % (workDirPath, executable))
